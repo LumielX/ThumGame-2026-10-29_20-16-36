@@ -1,5 +1,7 @@
 using System.IO;
 using SpiritMovers.Core;
+using SpiritMovers.Text;
+using TMPro;
 using Unity.Multiplayer.Tools.NetworkSimulator.Runtime;
 using Unity.Netcode;
 using Unity.Netcode.Components;
@@ -47,6 +49,10 @@ namespace SpiritMovers.Prototypes.NetSync.Editor
             var serialized = new SerializedObject(runner);
             serialized.FindProperty("m_PlayerPrefab").objectReferenceValue = player;
             serialized.FindProperty("m_PropPrefab").objectReferenceValue = prop;
+            serialized.FindProperty("m_ChatFont").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/_Game/Fonts/Mali/Mali-Regular SDF.asset");
+            serialized.FindProperty("m_ChatGlyphMap").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<ThaiGlyphMap>("Assets/_Game/Fonts/Mali/Mali-Regular ThaiGlyphMap.asset");
             serialized.ApplyModifiedPropertiesWithoutUndo();
 
             EditorSceneManager.SaveScene(scene, ScenePath);

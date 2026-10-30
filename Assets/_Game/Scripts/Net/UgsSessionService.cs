@@ -34,6 +34,9 @@ namespace SpiritMovers.Net
 
         public ISession Session { get; private set; }
 
+        /// <summary>Id of the current session, or null; also names its voice channels.</summary>
+        public string SessionId => Session?.Id;
+
         /// <summary>
         /// Initializes Unity Services and signs in anonymously. A distinct <paramref name="profile"/> lets
         /// several game instances on one machine sign in as different players.

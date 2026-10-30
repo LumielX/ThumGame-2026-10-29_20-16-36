@@ -5,7 +5,9 @@
         "SpiritMovers.Core",
         "SpiritMovers.Prototypes.NetSync",
         "Unity.Netcode.Runtime",
-        "Unity.Multiplayer.Tools.NetworkSimulator.Runtime"
+        "Unity.Multiplayer.Tools.NetworkSimulator.Runtime",
+        "SpiritMovers.Runtime",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [
         "Editor"

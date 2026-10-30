@@ -28,6 +28,12 @@ namespace SpiritMovers.Prototypes.NetSync
         public static CarryMode PreferredCarryMode { get; set; } = CarryMode.OwnerTransfer;
         public static ProtoPlayer Local { get; private set; }
 
+        /// <summary>True while a UI field (chat) owns the keyboard.</summary>
+        public static bool InputBlocked { get; set; }
+
+        /// <summary>Ears/mouth for positional voice: the camera when there is one.</summary>
+        public Transform Head => m_Camera != null ? m_Camera.transform : transform;
+
         public Vector3 HoldPoint => HoldPointFor(transform.position, transform.forward);
         public ProtoProp CarriedProp => m_Carried;
 
@@ -97,7 +103,7 @@ namespace SpiritMovers.Prototypes.NetSync
         {
             var keyboard = Keyboard.current;
             var mouse = Mouse.current;
-            if (keyboard == null || mouse == null)
+            if (keyboard == null || mouse == null || InputBlocked)
                 return;
 
             if (keyboard.escapeKey.wasPressedThisFrame)

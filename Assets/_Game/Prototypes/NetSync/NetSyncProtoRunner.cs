@@ -5,6 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using SpiritMovers.Core;
 using SpiritMovers.Net;
+using SpiritMovers.Text;
+using TMPro;
 using Unity.Multiplayer.Tools.NetworkSimulator.Runtime;
 using Unity.Netcode;
 using UnityEngine;
@@ -14,7 +16,8 @@ namespace SpiritMovers.Prototypes.NetSync
 {
     /// <summary>
     /// Throwaway M2 network prototype (PROJECT_PLAN M2 item 3).
-    /// Interactive: Host / Join-by-code UI, E to carry, M to switch carry mode, latency buttons.
+    /// Interactive: Host / Join-by-code UI, E to carry, M to switch carry mode, latency buttons,
+    /// voice (hold R radio, V mute) and Thai text chat (Enter) — see <see cref="VoiceProto"/>.
     /// Headless automation (command line):
     ///   -proto-role host|client  -proto-profile NAME  -proto-codefile PATH
     ///   -proto-props N  -proto-seconds S  -proto-carry A|B  -proto-latency MS
@@ -24,12 +27,15 @@ namespace SpiritMovers.Prototypes.NetSync
         [SerializeField] private GameObject m_PlayerPrefab;
         [SerializeField] private GameObject m_PropPrefab;
         [SerializeField] private int m_PropCount = 40;
+        [SerializeField] private TMP_FontAsset m_ChatFont;
+        [SerializeField] private ThaiGlyphMap m_ChatGlyphMap;
 
         private const float MetricsInterval = 5f;
         private const int MaxPlayers = 6;
 
         private readonly UgsSessionService m_Sessions = new();
         private TransportTrafficMeter m_Meter;
+        private VoiceProto m_Voice;
         private NetworkSimulator m_Simulator;
         private GameVersion m_Version;
 
@@ -61,7 +67,8 @@ namespace SpiritMovers.Prototypes.NetSync
             ProtoPlayer.PreferredCarryMode = Arg("-proto-carry") == "A" ? CarryMode.HostSimulated : CarryMode.OwnerTransfer;
             ProtoPlayer.BotMode = m_Role == "client" || m_Role == "host";
 
-            var manager = NetworkManager.Singleton;
+            // Not NetworkManager.Singleton: Awake order between scene objects is undefined, so it may not be set yet.
+            var manager = FindAnyObjectByType<NetworkManager>();
             manager.NetworkConfig.PlayerPrefab = m_PlayerPrefab;
             manager.AddNetworkPrefab(m_PlayerPrefab);
             manager.AddNetworkPrefab(m_PropPrefab);
@@ -69,6 +76,10 @@ namespace SpiritMovers.Prototypes.NetSync
             manager.OnClientDisconnectCallback += id => Debug.Log($"[Proto] client disconnected id={id} reason='{manager.DisconnectReason}'");
 
             m_Simulator = FindAnyObjectByType<NetworkSimulator>();
+
+            m_Voice = gameObject.AddComponent<VoiceProto>();
+            if (!Application.isBatchMode && m_ChatFont != null)
+                gameObject.AddComponent<ProtoChatPanel>().Init(m_ChatFont, m_ChatGlyphMap, m_Voice);
         }
 
         private IEnumerator Start()
@@ -152,6 +163,7 @@ namespace SpiritMovers.Prototypes.NetSync
 
             StartMeter(manager);
             SpawnProps();
+            JoinVoice();
         }
 
         private async Task JoinFromFileAsync()
@@ -177,6 +189,14 @@ namespace SpiritMovers.Prototypes.NetSync
                 await Task.Yield();
             m_Status = $"Joined — code {m_SessionCode}";
             StartMeter(manager);
+            JoinVoice();
+        }
+
+        /// <summary>Voice is optional: a Vivox failure must not break the network test.</summary>
+        private async void JoinVoice()
+        {
+            try { await m_Voice.JoinAsync(m_Sessions.SessionId, m_Profile ?? $"P{NetworkManager.Singleton.LocalClientId}"); }
+            catch (Exception e) { Debug.LogError($"[Voice] join failed: {e.Message}"); Debug.LogException(e); }
         }
 
         private void StartMeter(NetworkManager manager)
@@ -233,12 +253,21 @@ namespace SpiritMovers.Prototypes.NetSync
             var carryError = m_CarryErrorSamples > 0 ? m_CarryErrorSum / m_CarryErrorSamples : 0;
             Debug.Log($"[Proto] SUMMARY role={m_Role} rxTotalKB={(m_Meter?.TotalBytesReceived ?? 0) / 1024.0:F1} " +
                       $"rxAvgKBps={avgKbps:F1} carryErrAvg={carryError:F3}m samples={m_CarryErrorSamples} " +
-                      $"freeProps={props.Length} posChecksum=({checksum.x:F1},{checksum.y:F1},{checksum.z:F1})");
+                      $"freeProps={props.Length} posChecksum=({checksum.x:F1},{checksum.y:F1},{checksum.z:F1}) {m_Voice.Summary}");
         }
 
         private async Task QuitAsync()
         {
-            try { await m_Sessions.LeaveAsync(); }
+            try
+            {
+                // Bounded so a stuck voice logout cannot keep a headless test process alive.
+                var voiceLeave = m_Voice.LeaveAsync();
+                if (await Task.WhenAny(voiceLeave, Task.Delay(5000)) != voiceLeave)
+                    Debug.LogWarning("[Voice] leave timed out");
+                else if (voiceLeave.IsFaulted)
+                    Debug.LogException(voiceLeave.Exception);
+                await m_Sessions.LeaveAsync();
+            }
             finally { Application.Quit(); }
         }
 
@@ -258,7 +287,7 @@ namespace SpiritMovers.Prototypes.NetSync
             if (Application.isBatchMode)
                 return;
 
-            GUILayout.BeginArea(new Rect(12, 12, 360, 320), GUI.skin.box);
+            GUILayout.BeginArea(new Rect(12, 12, 360, 470), GUI.skin.box);
             GUILayout.Label($"Spirit Movers — network prototype v{m_Version}");
             GUILayout.Label(m_Status);
             var manager = NetworkManager.Singleton;
@@ -284,11 +313,30 @@ namespace SpiritMovers.Prototypes.NetSync
                         SetLatency(ms);
                 GUILayout.EndHorizontal();
                 GUILayout.Label("WASD move · mouse look · E carry/drop · Esc cursor");
+                VoiceGui();
             }
             GUILayout.EndArea();
 
             if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.M)
                 ToggleMode();
+        }
+
+        private void VoiceGui()
+        {
+            GUILayout.Label(m_Voice.Status);
+            if (!m_Voice.Joined)
+                return;
+            GUILayout.Label($"Talking on: {m_Voice.TransmitLabel} (hold R = radio) · mic {(m_Voice.MicMuted ? "MUTED" : "on")} (V)");
+            GUILayout.Label($"Ghost hears you: {new string('|', (int)(m_Voice.GhostHearingLevel * 20))}");
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button(m_Voice.VoiceEnabled ? "Voice chat: ON" : "Voice chat: OFF"))
+                m_Voice.ToggleVoice();
+            if (GUILayout.Button(m_Voice.GhostHearsMe ? "Ghost can hear me" : "Ghost ignores me"))
+                m_Voice.GhostHearsMe = !m_Voice.GhostHearsMe;
+            GUILayout.EndHorizontal();
+            foreach (var (name, channel, speaking) in m_Voice.Participants)
+                GUILayout.Label($"{(speaking ? ">> " : "   ")} {name} [{channel}]");
+            GUILayout.Label("Enter = text chat (Thai OK)");
         }
 
         private static void ToggleMode() =>
@@ -298,7 +346,7 @@ namespace SpiritMovers.Prototypes.NetSync
 
         private void OnDestroy() => m_Meter?.Dispose();
 
-        private static string Arg(string name)
+        internal static string Arg(string name)
         {
             var args = Environment.GetCommandLineArgs();
             var index = Array.IndexOf(args, name);
