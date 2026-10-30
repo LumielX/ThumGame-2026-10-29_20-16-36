@@ -92,15 +92,46 @@ namespace SpiritMovers.Prototypes.ThaiText.Editor
         [MenuItem("Spirit Movers/Prototypes/Thai Text: Render Font Comparison")]
         public static void RenderComparison()
         {
-            var rows = new (string label, TMP_FontAsset font)[]
+            var rows = new (string label, TMP_FontAsset font, string text)[]
             {
-                ("Mali, font features ON", CreateInMemory($"{FontFolder}/Mali-Regular.ttf", true)),
-                ("Mali, font features OFF", CreateInMemory($"{FontFolder}/Mali-Regular.ttf", false)),
-                ("Kanit, font features ON", CreateInMemory("Assets/_Game/Prototypes/ThaiText/TestFonts/Kanit-Regular.ttf", true)),
-                ("Sarabun, font features ON", CreateInMemory("Assets/_Game/Prototypes/ThaiText/TestFonts/Sarabun-Regular.ttf", true)),
+                ("Mali, font features ON", CreateInMemory($"{FontFolder}/Mali-Regular.ttf", true), CompareLine),
+                ("Mali, font features OFF", CreateInMemory($"{FontFolder}/Mali-Regular.ttf", false), CompareLine),
+                ("Kanit, font features ON", CreateInMemory("Assets/_Game/Prototypes/ThaiText/TestFonts/Kanit-Regular.ttf", true), CompareLine),
+                ("Sarabun, font features ON", CreateInMemory("Assets/_Game/Prototypes/ThaiText/TestFonts/Sarabun-Regular.ttf", true), CompareLine),
             };
 
             RenderRows(rows, "docs/screenshots/m2/thai-font-comparison.png");
+        }
+
+        /// <summary>Before/after comparison of the D-035 fix: raw TMP vs ThaiShaper + ThaiFontSupport.</summary>
+        [MenuItem("Spirit Movers/Prototypes/Thai Text: Render Shaped")]
+        public static void RenderShaped()
+        {
+            const string sample = "กี่ ญี่ปุ่น ปู่ ฝั่ง ปิ่น ที่ ปี๊บ ตั๋ว ปี่ ฟื้น ผู้ใหญ่ ไม่ ปั้น น้ำ";
+            const string sentence = "ห้องที่ผีรับแล้ว 4/5 · ปู่ย่าตายายกำลังรอ · ฝั่งซ้ายของบ้านมีปี่พาทย์";
+
+            var raw = CreateInMemory($"{FontFolder}/Mali-Regular.ttf", true);
+            var shaped = CreateInMemory($"{FontFolder}/Mali-Regular.ttf", true);
+            var map = AssetDatabase.LoadAssetAtPath<SpiritMovers.Text.ThaiGlyphMap>($"{FontFolder}/Mali-Regular ThaiGlyphMap.asset");
+            var bound = SpiritMovers.Text.ThaiFontSupport.Register(shaped, map);
+            Debug.Log($"[ThaiText] registered {bound} alternate glyphs");
+
+            var rows = new (string label, TMP_FontAsset font, string text)[]
+            {
+                ("ก่อนแก้ (TMP ตรง ๆ)", raw, sample),
+                ("หลังแก้ (ThaiShaper + Glyph สำรอง)", shaped, SpiritMovers.Core.Text.ThaiShaper.Shape(sample)),
+                ("ก่อนแก้ — ประโยค", raw, sentence),
+                ("หลังแก้ — ประโยค", shaped, SpiritMovers.Core.Text.ThaiShaper.Shape(sentence)),
+            };
+            RenderRows(rows, "docs/screenshots/m2/thai-shaped-before-after.png");
+
+            var closeUp = new (string label, TMP_FontAsset font, string text)[]
+            {
+                ("close-up 1 (หลังแก้)", shaped, SpiritMovers.Core.Text.ThaiShaper.Shape("ห้องที่ผีรับ 4/5")),
+                ("close-up 2 (หลังแก้)", shaped, SpiritMovers.Core.Text.ThaiShaper.Shape("ปี๊บ ตั๋ว ฟื้น ปั้น")),
+                ("close-up 3 (หลังแก้)", shaped, SpiritMovers.Core.Text.ThaiShaper.Shape("ปี่พาทย์ ปู่ย่า")),
+            };
+            RenderRows(closeUp, "docs/screenshots/m2/thai-shaped-closeup.png", 110);
         }
 
         /// <summary>Logs TMP's per-character layout for a few words to see where the tone mark goes.</summary>
@@ -198,7 +229,7 @@ namespace SpiritMovers.Prototypes.ThaiText.Editor
             return asset;
         }
 
-        private static void RenderRows((string label, TMP_FontAsset font)[] rows, string outputPng)
+        private static void RenderRows((string label, TMP_FontAsset font, string text)[] rows, string outputPng, float textSize = 52f)
         {
             var labelFont = GetOrCreateFontAsset("Mali-Regular");
             var cameraObject = new GameObject("ThaiTextCamera");
@@ -220,7 +251,7 @@ namespace SpiritMovers.Prototypes.ThaiText.Editor
             for (var i = 0; i < rows.Length; i++)
             {
                 AddText(canvas, labelFont, 26, new Rect(40, 30 + i * 215, 1520, 40), rows[i].label);
-                AddText(canvas, rows[i].font, 64, new Rect(40, 70 + i * 215, 1520, 140), CompareLine);
+                AddText(canvas, rows[i].font, textSize, new Rect(40, 70 + i * 215 + (textSize > 60 ? 40 : 0), 1520, 160), rows[i].text);
             }
 
             Canvas.ForceUpdateCanvases();

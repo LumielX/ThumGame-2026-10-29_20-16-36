@@ -4,7 +4,9 @@
     "references": [
         "Unity.TextMeshPro",
         "UnityEngine.UI",
-        "SpiritMovers.Prototypes.ThaiText"
+        "SpiritMovers.Prototypes.ThaiText",
+        "SpiritMovers.Core",
+        "SpiritMovers.Runtime"
     ],
     "includePlatforms": [
         "Editor"

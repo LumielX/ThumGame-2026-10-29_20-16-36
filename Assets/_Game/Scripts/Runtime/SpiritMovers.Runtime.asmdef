@@ -2,7 +2,8 @@
     "name": "SpiritMovers.Runtime",
     "rootNamespace": "SpiritMovers",
     "references": [
-        "SpiritMovers.Core"
+        "SpiritMovers.Core",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

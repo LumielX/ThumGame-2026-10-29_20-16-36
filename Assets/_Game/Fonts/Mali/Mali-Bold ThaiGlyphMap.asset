@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17e2ac3dfd406f34c86b64b853edded3, type: 3}
+  m_Name: Mali-Bold ThaiGlyphMap
+  m_EditorClassIdentifier: SpiritMovers.Runtime::SpiritMovers.Text.ThaiGlyphMap
+  m_Entries:
+  - Pua: 63232
+    Base: 3656
+    GlyphIndex: 732
+  - Pua: 63237
+    Base: 3656
+    GlyphIndex: 733
+  - Pua: 63233
+    Base: 3657
+    GlyphIndex: 735
+  - Pua: 63238
+    Base: 3657
+    GlyphIndex: 736
+  - Pua: 63234
+    Base: 3658
+    GlyphIndex: 738
+  - Pua: 63239
+    Base: 3658
+    GlyphIndex: 739
+  - Pua: 63235
+    Base: 3659
+    GlyphIndex: 741
+  - Pua: 63240
+    Base: 3659
+    GlyphIndex: 767
+  - Pua: 63236
+    Base: 3660
+    GlyphIndex: 743
+  - Pua: 63241
+    Base: 3660
+    GlyphIndex: 744
+  - Pua: 63242
+    Base: 3633
+    GlyphIndex: 730
+  - Pua: 63243
+    Base: 3636
+    GlyphIndex: 749
+  - Pua: 63244
+    Base: 3637
+    GlyphIndex: 751
+  - Pua: 63245
+    Base: 3638
+    GlyphIndex: 753
+  - Pua: 63246
+    Base: 3639
+    GlyphIndex: 755
+  - Pua: 63247
+    Base: 3655
+    GlyphIndex: 746
+  - Pua: 63248
+    Base: 3661
+    GlyphIndex: 768
+  - Pua: 63249
+    Base: 3640
+    GlyphIndex: 764
+  - Pua: 63250
+    Base: 3641
+    GlyphIndex: 766
+  - Pua: 63251
+    Base: 3642
+    GlyphIndex: 762
