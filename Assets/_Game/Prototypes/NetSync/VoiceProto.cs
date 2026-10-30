@@ -85,7 +85,13 @@ namespace SpiritMovers.Prototypes.NetSync
                 await SetRadioAsync(true);
 
             var inject = NetSyncProtoRunner.Arg("-proto-voice-inject");
-            if (!string.IsNullOrEmpty(inject))
+            if (string.IsNullOrEmpty(inject) && NetSyncProtoRunner.Arg("-proto-role") != null)
+            {
+                // Automated runs must never stream the real room microphone.
+                VivoxService.Instance.MuteInputDevice();
+                MicMuted = true;
+            }
+            else if (!string.IsNullOrEmpty(inject))
             {
                 VivoxService.Instance.StartAudioInjection(inject);
                 Debug.Log($"[Voice] injecting '{inject}' into {TransmitLabel}");

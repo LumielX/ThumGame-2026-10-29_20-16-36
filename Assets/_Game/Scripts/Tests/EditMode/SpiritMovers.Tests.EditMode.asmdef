@@ -3,6 +3,8 @@
     "rootNamespace": "SpiritMovers.Tests",
     "references": [
         "SpiritMovers.Core",
+        "SpiritMovers.Runtime",
+        "Unity.TextMeshPro",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

@@ -64,6 +64,22 @@ namespace SpiritMovers.Tests
             Assert.IsTrue(codes.All(c => c >= '' && c <= ''));
         }
 
+        [TestCase("ปู่ฟื้นน้ำ ญาติผู้ใหญ่")]
+        [TestCase("ฎีกา ปฏิทิน กุ้ง ชื่อ")]
+        [TestCase("Spirit Movers 123")]
+        public void Unshape_RestoresOriginalText(string text)
+        {
+            Assert.AreEqual(text, ThaiShaper.Unshape(ThaiShaper.Shape(text)));
+        }
+
+        [Test]
+        public void ShapeOfUnshape_ShapesTextTypedAfterAlreadyShapedPart()
+        {
+            // An input field keeps shaped text; the next keystroke appends a plain mark to it.
+            var typedSoFar = ThaiShaper.Shape("ฟื") + "้";
+            Assert.AreEqual(ThaiShaper.Shape("ฟื้"), ThaiShaper.Shape(ThaiShaper.Unshape(typedSoFar)));
+        }
+
         [Test]
         public void Variant_GlyphNameFollowsUniNaming()
         {

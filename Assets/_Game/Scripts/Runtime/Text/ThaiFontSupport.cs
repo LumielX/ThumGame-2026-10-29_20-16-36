@@ -32,6 +32,9 @@ namespace SpiritMovers.Text
                 return 0;
             }
 
+            // A freshly loaded font asset has no glyph lookup until TMP first reads it (e.g. Register in Awake).
+            font.ReadFontAssetDefinition();
+
             var bound = 0;
             foreach (var entry in map.Entries)
             {
@@ -56,6 +59,19 @@ namespace SpiritMovers.Text
 
         /// <summary>Shapes Thai text and assigns it to a TextMeshPro component.</summary>
         public static void SetThaiText(this TMP_Text target, string text) => target.text = ThaiShaper.Shape(text);
+
+        /// <summary>
+        /// Shapes Thai while the player types so tone marks stay visible. The field then holds shaped text:
+        /// read what was typed with <see cref="ThaiShaper.Unshape"/>(field.text).
+        /// </summary>
+        public static void EnableThaiShaping(this TMP_InputField field) =>
+            field.onValueChanged.AddListener(value =>
+            {
+                // Shaping is one character for one, so the caret stays where it was.
+                var shaped = ThaiShaper.Shape(ThaiShaper.Unshape(value));
+                if (shaped != value)
+                    field.SetTextWithoutNotify(shaped);
+            });
 
         private static Glyph AddGlyph(TMP_FontAsset font, uint glyphIndex)
         {

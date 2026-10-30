@@ -8,12 +8,12 @@
 |---|---|---|
 | Unity CLI (Build/Test) | **Tested** | Batch Mode เปิดโปรเจกต์ได้โดยไม่ต้อง Login · `Tools/test.ps1` EditMode 12/12 ผ่าน · `Tools/build.ps1` Build Windows สำเร็จ (~1.5 นาที, ~100 MB) · Player เปิดแล้ว Log `[Boot] Spirit Movers v0.0.1` |
 | จัดโปรเจกต์/Repo | **Implemented** (Commit แล้ว 2 ชุด, ยังไม่ Push) | โครง `_Game` + asmdef · ลบ Template · ลบแพ็กเกจที่ไม่ใช้ (D-031) · Commit identity noreply (D-030) |
-| แพ็กเกจ Network/Voice | **Implemented** | NGO **2.13.3** (รุ่น 3.x ต้องใช้ Unity 6000.7) · Multiplayer Services **2.4.1** · Multiplayer Play Mode **2.0.2** · Multiplayer Tools **2.2.12** · Vivox **16.12.1** (ยังไม่ติดตั้ง) — ตรวจจาก Registry ทางการ 2026-10-30 |
+| แพ็กเกจ Network/Voice | **Implemented** | NGO **2.13.3** (รุ่น 3.x ต้องใช้ Unity 6000.7) · Multiplayer Services **2.4.1** · Multiplayer Play Mode **2.0.2** · Multiplayer Tools **2.2.12** · Vivox **16.12.1** (ติดตั้งแล้ว — รุ่นล่าสุด 2026-09-16) — ตรวจจาก Registry/Changelog ทางการ 2026-10-30 |
 | ต้นแบบ Network ผ่าน Relay | **Tested** (2 Instance ในเครื่องนี้ ผ่านเซิร์ฟเวอร์ Relay จริง) | สร้าง/เข้าห้องด้วย Join Code ได้ · ซิงก์ผู้เล่น + ของฟิสิกส์ 40 ชิ้นตรงกัน · ไม่ต้องตั้งค่า Dashboard เพิ่ม · **ยังไม่ Verified** (ต้องทดสอบจากอีกเครื่อง/อีกเครือข่าย) |
 | เลือกวิธียกของ | **Tested** → ตัดสินแล้ว (D-034) | ดูตารางด้านล่าง |
 | Bandwidth | **Tested** | ~1–3 KB/s ต่อผู้เล่น (40 ชิ้น + 2 ผู้เล่น) |
-| ภาษาไทย | **Tested** (แสดงผล) · พิมพ์ผ่าน IME ยังไม่ทดสอบ | พบปัญหาวรรณยุกต์ใน TMP → ผู้ใช้เลือกทำตัวจัดรูปเอง (D-035) → **แก้แล้ว** ด้วย `ThaiShaper` + Glyph สำรองของฟอนต์ · ตัดบรรทัดด้วย ZWSP ใช้ได้ |
-| Voice (Vivox) | **Planned** | ต้องให้ผู้ใช้เปิดบริการ Vivox ใน Unity Dashboard ก่อน |
+| ภาษาไทย | **Tested** (แสดงผล + ช่องพิมพ์ + ส่งผ่าน Vivox) · กดแป้นพิมพ์ไทยจริงยังไม่ทดสอบ | พบปัญหาวรรณยุกต์ใน TMP → ผู้ใช้เลือกทำตัวจัดรูปเอง (D-035) → **แก้แล้ว** ด้วย `ThaiShaper` + Glyph สำรองของฟอนต์ · ตัดบรรทัดด้วย ZWSP ใช้ได้ |
+| Voice + แชต (Vivox) | **Tested** (2 Instance ในเครื่องนี้ ผ่านเซิร์ฟเวอร์ Vivox จริง, ใช้ไฟล์ WAV แทนไมค์) | เสียงตามระยะตัดที่ 25 ม. จริง · วิทยุได้ยินทั้งทีม · แชตไทยส่ง/รับครบ · **ยังไม่ Verified** (ต้องมีคนฟังจริง) — ดูหัวข้อ 3 |
 
 ---
 
@@ -67,7 +67,25 @@
 - EditMode Tests 26/26 ผ่าน · หลักฐาน: `docs/screenshots/m2/thai-shaped-before-after.png`, `thai-shaped-closeup.png`
 - ข้อจำกัดที่รู้: รูปยกสูงของไม้ตรี/จัตวาอยู่สูงตามแบบฟอนต์ → ต้องเผื่อระยะบรรทัด · ญ ฐ + สระล่าง ยังไม่ตัดเชิง (ฟอนต์ไม่มีรูปสำรอง) · ช่องพิมพ์ (TMP Input Field) ต้องแสดงผลแบบ Shape เพิ่มเติมใน M4 · ยังไม่ได้ทดสอบใน Player แบบ IL2CPP (ตอนนี้ใช้ Mono)
 
-## 3. สิ่งที่ผู้ใช้ต้องทำเพื่อปิด G6
+## 3. Voice + แชต (Vivox) — Tested 2026-10-30
+- ราคา: Free Tier **5,000 PCU** (เกินจากนั้น $2,000 ต่อ 5,000 PCU) — [UGS Pricing](https://unity.com/products/gaming-services/pricing) ตรวจ 2026-10-30 · เกมเรา 1–6 คน/ห้อง → 0 บาท
+- ต้นแบบ: `Prototypes/NetSync/VoiceProto.cs` + `ProtoChatPanel.cs` (อยู่ใน Build ต้นแบบ Network เดียวกัน) · ช่อง **proximity** = Positional (ได้ยินเต็ม 2 ม., เงียบที่ 25 ม., InverseByDistance) · ช่อง **radio** = Group (เสียงวิทยุ + แชตข้อความ) · กด R ค้าง = พูดทางวิทยุ · V = ปิดไมค์ · ปุ่ม Voice chat ON/OFF และ "Ghost ignores me" (D-010) · มิเตอร์ "Ghost hears you" = `AudioEnergy` ของผู้เล่นเอง (0–1)
+- ค่า Vivox (server/domain/issuer) ต้องดึงจาก Editor ที่ Login อยู่ → เครื่องมือ `Spirit Movers/Services/Pull Vivox Credentials` (หรือ `-executeMethod SpiritMovers.Editor.VivoxCredentialPull.PullAndExit` ตอนเปิด Unity Hub ค้างไว้) · **ไม่เก็บ Secret Key** (Test Mode ปิด → Token ออกโดย Unity Authentication) · `ProjectSettings/Packages/com.unity.services.vivox/Settings.json` มีแค่ค่าที่ฝังใน Build อยู่แล้ว
+- ทดสอบอัตโนมัติ `Tools/proto-voice-test.ps1` (Host ฉีด WAV เข้าช่อง proximity, Client ปิดไมค์ ยืนห่าง N ม.):
+
+| ระยะ | Client ได้ยิน Host (AudioEnergy สูงสุด) | แชตไทยถึง |
+|---|---|---|
+| 0 ม. | 0.71 | ✅ |
+| 15 ม. | 0.59 | ✅ |
+| 40 ม. | — (เซิร์ฟเวอร์ Vivox ไม่ส่ง Host เข้ามาในช่อง proximity เลย) | ✅ (ผ่านช่อง radio) |
+
+- วิทยุ: Client พูดทางช่อง radio → Host ได้ยิน (0.61) แม้ไม่ได้ใช้ช่อง proximity
+- `AudioEnergy` เป็นระดับเสียงของคนพูด (ก่อนลดตามระยะ) → **ความดังที่ลดตามระยะ 2–25 ม. ต้องให้คนฟังจริงตัดสิน** (TESTING ข้อ 9)
+- ภาพ: `docs/screenshots/m2/voice-chat-thai.png`, `voice-chat-thai-closeup.png` — UI เสียง (ผู้เล่น 2 คน, `>>` = กำลังพูด) + แชตไทยรับจากอีกเครื่อง + ช่องพิมพ์
+- เรื่องที่พบและแก้ระหว่างทาง: (1) `ThaiFontSupport.Register` พังใน Player ถ้าเรียกก่อนฟอนต์ถูกใช้ (NullReference ใน TMP) → เรียก `ReadFontAssetDefinition()` ก่อน + Test กันถอยหลัง · (2) ช่องพิมพ์ไม่ Shape → วรรณยุกต์หายระหว่างพิมพ์ ("นี้" → "นี") → เพิ่ม `ThaiShaper.Unshape` + `TMP_InputField.EnableThaiShaping()` (Shape แบบ 1:1 ทำให้ Caret ไม่เลื่อน; ส่งข้อความด้วยตัวอักษรปกติ) — งานจาก M4 ทำเสร็จก่อน · (3) `NetworkManager.Singleton` ยังไม่พร้อมใน Awake (ลำดับไม่แน่นอน) · (4) Process ค้างตอนปิดถ้า Vivox Logout ไม่จบ → จำกัด 5 วินาที · (5) รันอัตโนมัติไม่ฉีด WAV จะปิดไมค์จริงเสมอ (ครั้งแรกเผลอใช้ไมค์ของเครื่องราว 1 นาที)
+- เหลือสำหรับ M3+: Audio Taps (เสียงก้อง/เสียงวิทยุ) · ส่ง `AudioEnergy` ให้ Host สำหรับผีหูไว · เลือกอุปกรณ์ไมค์/ลำโพงในเมนู
+
+## 4. สิ่งที่ผู้ใช้ต้องทำเพื่อปิด G6
 1. **ทดสอบออนไลน์จริง:** เปิด `Builds/Proto-NetSync-v0.0.1/SpiritMovers.exe` บนเครื่องนี้ (กด Host) และให้เพื่อนเปิดไฟล์เดียวกันบนอีกเครื่อง/อีกเครือข่าย (ใส่รหัสห้อง → Join) → เดินและยกกล่อง (E) ลองสลับวิธี (M) และ Latency → ส่ง Log กลับ (ตำแหน่งใน `docs/TESTING.md`)
-2. **เปิดบริการ Vivox** ใน Unity Dashboard (Development → Products → Vivox Voice and Text Chat → Onboarding) สำหรับโปรเจกต์ที่ผูกไว้ — ฟรีถึง 5,000 PCU ไม่ต้องผูกบัตร (D-009) · ผมจะติดตั้งแพ็กเกจและทำต้นแบบ Voice หลังจากนั้น
-3. **ทดสอบพิมพ์ภาษาไทยในเกม (IME)** — จะใส่ช่องพิมพ์ในต้นแบบให้ลองตอนทำ Voice/Lobby
+2. ~~เปิดบริการ Vivox~~ ✅ (2026-10-30)
+3. **ระหว่างทดสอบข้อ 1 ให้ลองเสียงและแชตไทยด้วย** — Checklist ข้อ 9–12 ใน `docs/TESTING.md` (Build เดียวกัน)

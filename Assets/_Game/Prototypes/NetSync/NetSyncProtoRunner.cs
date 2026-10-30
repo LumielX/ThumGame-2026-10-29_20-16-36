@@ -20,7 +20,8 @@ namespace SpiritMovers.Prototypes.NetSync
     /// voice (hold R radio, V mute) and Thai text chat (Enter) — see <see cref="VoiceProto"/>.
     /// Headless automation (command line):
     ///   -proto-role host|client  -proto-profile NAME  -proto-codefile PATH
-    ///   -proto-props N  -proto-seconds S  -proto-carry A|B  -proto-latency MS
+    ///   -proto-props N  -proto-seconds S  -proto-carry A|B  -proto-latency MS  -proto-bot-offset METERS
+    ///   -proto-screenshot PNG  (windowed runs: capture the screen 5 s before auto-quit)
     /// </summary>
     public sealed class NetSyncProtoRunner : MonoBehaviour
     {
@@ -66,6 +67,7 @@ namespace SpiritMovers.Prototypes.NetSync
             int.TryParse(Arg("-proto-latency"), out m_LatencyMs);
             ProtoPlayer.PreferredCarryMode = Arg("-proto-carry") == "A" ? CarryMode.HostSimulated : CarryMode.OwnerTransfer;
             ProtoPlayer.BotMode = m_Role == "client" || m_Role == "host";
+            if (float.TryParse(Arg("-proto-bot-offset"), out var offset)) ProtoPlayer.BotOffsetX = offset;
 
             // Not NetworkManager.Singleton: Awake order between scene objects is undefined, so it may not be set yet.
             var manager = FindAnyObjectByType<NetworkManager>();
@@ -100,6 +102,10 @@ namespace SpiritMovers.Prototypes.NetSync
                     next += MetricsInterval;
                     LogMetrics();
                 }
+
+                var screenshot = Arg("-proto-screenshot");
+                if (screenshot != null && m_AutoQuitSeconds > 0 && Time.realtimeSinceStartup >= m_AutoQuitSeconds - 5 && !File.Exists(screenshot))
+                    ScreenCapture.CaptureScreenshot(screenshot);
 
                 if (m_AutoQuitSeconds > 0 && Time.realtimeSinceStartup >= m_AutoQuitSeconds)
                 {

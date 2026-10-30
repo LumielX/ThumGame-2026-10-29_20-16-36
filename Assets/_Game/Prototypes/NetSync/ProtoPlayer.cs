@@ -25,6 +25,9 @@ namespace SpiritMovers.Prototypes.NetSync
         private ProtoProp m_Carried;
 
         public static bool BotMode { get; set; }
+
+        /// <summary>Shifts this instance's bot circle along X (voice distance tests).</summary>
+        public static float BotOffsetX { get; set; }
         public static CarryMode PreferredCarryMode { get; set; } = CarryMode.OwnerTransfer;
         public static ProtoPlayer Local { get; private set; }
 
@@ -96,7 +99,7 @@ namespace SpiritMovers.Prototypes.NetSync
         private void UpdateBot()
         {
             BotPose(NetworkManager.ServerTime.Time, out var position, out var forward);
-            transform.SetPositionAndRotation(position, Quaternion.LookRotation(forward));
+            transform.SetPositionAndRotation(position + Vector3.right * BotOffsetX, Quaternion.LookRotation(forward));
         }
 
         private void UpdateHuman()

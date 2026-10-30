@@ -20,11 +20,14 @@
 |---|---|---|
 | `GameVersionTests` (EditMode) | Parse/TryParse, การตรวจเวอร์ชันตรงกันสำหรับเข้าห้อง | ผ่าน (2026-10-30) |
 | `ThaiShaperTests` (EditMode) | กฎจัดรูปวรรณยุกต์/สระไทย (D-035) | ผ่าน (2026-10-30) |
-| `TrueTypeGlyphNamesTests` (EditMode) | อ่านชื่อ Glyph สำรองจากฟอนต์ Mali | ผ่าน — รวม 26/26 (2026-10-30) |
+| `TrueTypeGlyphNamesTests` (EditMode) | อ่านชื่อ Glyph สำรองจากฟอนต์ Mali | ผ่าน (2026-10-30) |
+| `ThaiFontSupportTests` (EditMode) | Register บนฟอนต์ที่ยังไม่ถูกใช้ (กันถอยหลัง) · `ThaiShaper.Unshape` | ผ่าน — รวม 31/31 (2026-10-30) |
 | ต้นแบบ Network (`Tools/proto-netsync-matrix.ps1`) | Host+Client ผ่าน Relay, วิธียกของ A/B × Latency 0/100/200 ms | ผ่าน — ผลใน `docs/M2_REPORT.md` |
 
-### ต้นแบบ Voice ในเครื่องเดียว (Claude รันเองได้หลังมีค่า Vivox)
-เปิด Host+Client แบบ Headless โดยใช้ `-proto-voice-inject <WAV mono 16-bit>` แทนไมค์, `-proto-voice-tx radio` ส่งทางวิทยุ, `-proto-chat "ข้อความ"` ส่งแชต 1 ครั้ง → ตรวจบรรทัด `[Voice]` และ `SUMMARY ... peakRemoteEnergy= speechFrames= textReceived=`
+### ต้นแบบ Voice ในเครื่องเดียว (Claude รันเองได้)
+`powershell -ExecutionPolicy Bypass -File Tools\proto-voice-test.ps1 -Wav <WAV mono 16-bit 48 kHz>` → Host ฉีดไฟล์เสียงแทนไมค์, Client ยืนห่าง 0/15/40 ม. → พิมพ์ระดับเสียงที่ได้ยิน + แชตไทยถึงหรือไม่ (ผล 2026-10-30 ใน `docs/M2_REPORT.md` หัวข้อ 3)
+- ตัวเลือกเพิ่ม: `-proto-voice-tx radio` ส่งทางวิทยุ · `-proto-chat "ข้อความ"` · `-proto-bot-offset M` · `-proto-screenshot PNG` + `-proto-chat-preview "ข้อความ"` (รันแบบมีหน้าต่าง)
+- รันอัตโนมัติที่ไม่ฉีด WAV จะปิดไมค์จริงเสมอ
 
 ## 2. ทดสอบหลายผู้เล่นในเครื่องเดียว (วางแผน — M2/M3)
 - Multiplayer Play Mode (แพ็กเกจทางการ — ตรวจเวอร์ชันก่อนติดตั้ง) หรือเปิด Build หลาย Instance

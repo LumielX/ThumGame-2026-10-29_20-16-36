@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using SpiritMovers.Core.Text;
 using SpiritMovers.Text;
 using TMPro;
 using UnityEngine;
@@ -11,7 +12,7 @@ namespace SpiritMovers.Prototypes.NetSync
 {
     /// <summary>
     /// Throwaway text chat (D-013 J3) for the Thai IME test: Enter opens the field, Enter sends, Esc cancels.
-    /// Received lines go through the Thai shaper (D-035); the field itself shows unshaped text until M4.
+    /// Received lines and the field being typed in both go through the Thai shaper (D-035).
     /// </summary>
     public sealed class ProtoChatPanel : MonoBehaviour
     {
@@ -30,6 +31,14 @@ namespace SpiritMovers.Prototypes.NetSync
             voice.MessageReceived += (sender, text) => AddLine($"{sender}: {text}");
             BuildUi(font);
             AddLine("กด Enter เพื่อพิมพ์แชต (ทดสอบภาษาไทย)");
+
+            // Screenshot runs: show what an unsent Thai draft looks like in the field.
+            var preview = NetSyncProtoRunner.Arg("-proto-chat-preview");
+            if (preview != null)
+            {
+                Open();
+                m_Input.text = preview;
+            }
         }
 
         private void BuildUi(TMP_FontAsset font)
@@ -65,6 +74,7 @@ namespace SpiritMovers.Prototypes.NetSync
             m_Input.lineType = TMP_InputField.LineType.SingleLine;
             ((TMP_Text)m_Input.placeholder).text = "พิมพ์ข้อความ…";
             m_Input.onSubmit.AddListener(Submit);
+            m_Input.EnableThaiShaping();
             Place(inputObject.GetComponent<RectTransform>(), new Vector2(24, 24), new Vector2(820, 60));
             inputObject.SetActive(false);
         }
@@ -99,8 +109,9 @@ namespace SpiritMovers.Prototypes.NetSync
             Cursor.lockState = CursorLockMode.None;
         }
 
-        private void Submit(string text)
+        private void Submit(string shapedText)
         {
+            var text = ThaiShaper.Unshape(shapedText);
             if (!string.IsNullOrWhiteSpace(text))
                 _ = m_Voice.SendAsync(text);
             Close();

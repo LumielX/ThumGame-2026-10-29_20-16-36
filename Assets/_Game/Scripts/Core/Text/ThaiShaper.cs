@@ -39,6 +39,7 @@ namespace SpiritMovers.Core.Text
         private static readonly Dictionary<char, char> s_LeftUpperVowel = new();
         private static readonly Dictionary<char, char> s_LoweredLowerVowel = new();
         private static readonly List<Variant> s_Variants = new();
+        private static readonly Dictionary<char, char> s_BaseOfPua = new();
 
         static ThaiShaper()
         {
@@ -61,6 +62,9 @@ namespace SpiritMovers.Core.Text
                 s_LoweredLowerVowel[vowel] = pua;
                 s_Variants.Add(new Variant(pua++, vowel, ".small"));
             }
+
+            foreach (var variant in s_Variants)
+                s_BaseOfPua[variant.Pua] = variant.Base;
         }
 
         /// <summary>Every alternate form <see cref="Shape"/> can emit.</summary>
@@ -79,6 +83,27 @@ namespace SpiritMovers.Core.Text
         public static bool IsUpperVowel(char c) => System.Array.IndexOf(s_UpperVowels, c) >= 0;
 
         public static bool IsLowerVowel(char c) => System.Array.IndexOf(s_LowerVowels, c) >= 0;
+
+        /// <summary>
+        /// Reverses <see cref="Shape"/>: Private Use Area forms back to their Thai characters. Shaping maps
+        /// one character to one character, so an input field can shape in place and keep its caret.
+        /// </summary>
+        public static string Unshape(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+
+            StringBuilder result = null;
+            for (var i = 0; i < text.Length; i++)
+            {
+                var c = text[i];
+                var plain = s_BaseOfPua.TryGetValue(c, out var baseChar) ? baseChar : c;
+                if (plain != c)
+                    result ??= new StringBuilder(text, 0, i, text.Length);
+                result?.Append(plain);
+            }
+            return result?.ToString() ?? text;
+        }
 
         /// <summary>Returns text with repositioned marks replaced by their Private Use Area forms.</summary>
         public static string Shape(string text)
