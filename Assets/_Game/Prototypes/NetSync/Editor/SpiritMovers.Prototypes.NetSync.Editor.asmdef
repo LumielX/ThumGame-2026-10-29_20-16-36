@@ -1,0 +1,21 @@
+{
+    "name": "SpiritMovers.Prototypes.NetSync.Editor",
+    "rootNamespace": "SpiritMovers.Prototypes.NetSync.Editor",
+    "references": [
+        "SpiritMovers.Core",
+        "SpiritMovers.Prototypes.NetSync",
+        "Unity.Netcode.Runtime",
+        "Unity.Multiplayer.Tools.NetworkSimulator.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

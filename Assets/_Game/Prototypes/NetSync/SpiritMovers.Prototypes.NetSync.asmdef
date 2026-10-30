@@ -1,0 +1,21 @@
+{
+    "name": "SpiritMovers.Prototypes.NetSync",
+    "rootNamespace": "SpiritMovers.Prototypes.NetSync",
+    "references": [
+        "SpiritMovers.Core",
+        "SpiritMovers.Runtime",
+        "SpiritMovers.Net",
+        "Unity.Netcode.Runtime",
+        "Unity.InputSystem",
+        "Unity.Multiplayer.Tools.NetworkSimulator.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

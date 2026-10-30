@@ -1,0 +1,14 @@
+{
+    "name": "SpiritMovers.Prototypes.ThaiText",
+    "rootNamespace": "SpiritMovers.Prototypes.ThaiText",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

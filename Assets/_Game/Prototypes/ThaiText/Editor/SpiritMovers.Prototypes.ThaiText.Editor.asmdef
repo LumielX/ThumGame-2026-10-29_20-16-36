@@ -1,0 +1,20 @@
+{
+    "name": "SpiritMovers.Prototypes.ThaiText.Editor",
+    "rootNamespace": "SpiritMovers.Prototypes.ThaiText.Editor",
+    "references": [
+        "Unity.TextMeshPro",
+        "UnityEngine.UI",
+        "SpiritMovers.Prototypes.ThaiText"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
