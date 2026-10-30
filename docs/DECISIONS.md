@@ -356,7 +356,14 @@
 
 ---
 
-<!-- การตัดสินใจถัดไปเริ่มที่ D-037 -->
+## D-037 · 2026-10-30 · Push ต้นแบบ Voice/แชตไทย (ประเภท A)
+- **ผู้ใช้อนุญาต:** "Push them" — Push 3 Commit (`f966bde`, `53865d2`, `fcc0a7d`) ขึ้น `origin/main`
+- **ดำเนินการแล้ว:** Push `cefa9e3..fcc0a7d` + LFS 2 ไฟล์ (1.0 MB, ภาพหน้าจอ) · สแกน Secret ก่อน Commit ไม่พบ · `ProjectSettings/Packages/com.unity.services.vivox/Settings.json` มีเฉพาะ server/domain/issuer (Secret Key ว่าง, Test Mode ปิด) · ไม่มี Force Push
+- **ข้อปฏิบัติต่อไป:** การ Push ครั้งต่อไปยังต้องขออนุญาตทุกครั้ง
+
+---
+
+<!-- การตัดสินใจถัดไปเริ่มที่ D-038 -->
 
 
 
