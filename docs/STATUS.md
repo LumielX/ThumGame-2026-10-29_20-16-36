@@ -1,6 +1,6 @@
 # STATUS — สถานะโปรเจกต์
 
-อัปเดตล่าสุด: 2026-10-30
+อัปเดตล่าสุด: 2026-10-31
 
 ## ตอนนี้
 - **Milestone:** M0 ✅ · M1 ✅ (G5, D-029) · **M2 — Technical Foundation: กำลังทำ — รายงานกลางทาง `docs/M2_REPORT.md`** (2026-10-30)
@@ -8,7 +8,7 @@
 - **ขอบเขต v0.1:** V-M (D-025) · รับรอง 1–4 คน + 5–6 คนทดลอง (D-026) · อนุมัติ G4 (D-027) → `docs/discovery/05-scope-v0.1.md` · งานนอกขอบเขต → `docs/BACKLOG.md`
 - **Phase:** Phase 3 ✅ (สรุปต้น `docs/discovery/03-systems.md`) · Phase 4 ✅ (สรุปต้น `docs/discovery/04-components.md`) · Phase 5 ✅ · Phase 4 ที่ผ่าน: 4.1 มุมกล้อง = P3 (D-014) · 4.2 การเคลื่อนไหว = M1 (D-015) · 4.3 Art Direction = ผสม AD1+AD2 "บ้านซีด → ผีพอใจ → สีกลับมา" แบบหม่นมืดขึ้น (D-016 สิทธิ์ Render, D-017) · 4.4 ตัวละคร = CH3 ร่าง CC0 + หัว/ชุดเอง (D-018), ผี = GH2 อดีตเจ้าของบ้าน (D-019) · 4.5 ฉาก = L3 ไทย/เอเชียยุค 80–90 เมืองสมมติ (D-020) · 4.6 ไอเทม = IT1 มือ 2 ข้าง + เข็มขัด + กล่องทีม (D-021) · 4.7 เสียง = S1 เงียบ + ดนตรีจากของในบ้าน (D-022) · 4.8 UI = U1 HUD น้อย + ใบสั่งงาน + Wireframe (D-023) · 4.9 Tutorial = T1 งานฝึกงาน + ผีครูฝึก (D-024)
 - **Gate ล่าสุดที่ผ่าน:** **G4 ขอบเขต v0.1** (2026-10-30, D-027) · ก่อนหน้า: G3 ครบทุกหัวข้อ Phase 3–4 — Phase 3: A Core Gameplay = A1 งานเดี่ยว (D-003) · B Puzzle = B3 กล้องวิญญาณ (D-004) · C Ghost = C1 ผีเจ้าบ้านคือภัยเอง (D-005) · D Humor = D2 ฟิสิกส์ + ผีแกล้ง (D-006) · E Progression = E3 ยศ + ของแต่งตัว + อัลบั้มผี (D-007) · F Multiplayer = F1 Unity NGO + Multiplayer Services (D-008) · G Voice = Vivox (D-009) + ใกล้ได้ยิน/วิทยุ/ผีหูไวฟังเสียงพูด (D-010) · H Solo = H1 ปรับกลไกเฉพาะ Solo (D-011) · I Accessibility = I1 ชุดพื้นฐานครบ (D-012) · J ระบบเสริม = รูปเหตุการณ์ + รีวิวจากผี + แชตข้อความ (D-013)
-- **กำลังรอ (ผู้ใช้):** ทดสอบออนไลน์กับเพื่อนด้วย Build `Builds/Proto-NetSync-v0.0.1/` ตาม Checklist ข้อ 1–12 ใน `docs/TESTING.md` (Network + เสียง + แชตไทย) แล้วส่ง Log 2 เครื่อง · Voice/แชต `Tested` แล้ว (M2_REPORT หัวข้อ 3) · **Gate ล่าสุด: G5 (D-029)** · ถัดไป G6
+- **กำลังรอ (ผู้ใช้):** ทดสอบออนไลน์กับเพื่อนด้วย Build `Builds/Proto-NetSync-v0.0.1/` ตาม Checklist ข้อ 1–13 ใน `docs/TESTING.md` (Network + เสียง + วิทยุ + แชตไทย + สลับภาษา) แล้วส่ง Log 2 เครื่อง · Voice/แชต `Tested` แล้ว (M2_REPORT หัวข้อ 3) · **Gate ล่าสุด: G5 (D-029)** · ถัดไป G6
 - **ไฟล์ช่วง 4.3:** ภาพ PNG 6 ไฟล์ใน `docs/screenshots/art-direction/` (ยังไม่ Commit) · Asset Kenney Furniture Kit 2.0 (CC0) + สคริปต์ Render อยู่นอก Repo ที่ `%TEMP%\spm\` (ชั่วคราว ไม่ได้นำเข้า Unity)
 - **หัวข้อ Phase 4 (ถามเฉพาะที่ผู้ใช้ต้องตัดสิน, MASTER_PROMPT 5):** มุมกล้อง · การเคลื่อนไหว · Art Direction (3 แบบ + ภาพตัวอย่างถ้าทำได้, หัวข้อ 6.2) · ตัวละครและผี · ฉากและสถานที่ · ระบบไอเทม (รวมวิทยุสื่อสาร D-010, รถเข็น D-011, เครื่องมือป่วน D-006) · เสียงและดนตรี · UI/UX · Tutorial · ผลลัพธ์ → `docs/discovery/04-components.md`
 
@@ -52,6 +52,7 @@
 
 ## งานถัดไป
 1. **M2 ที่เหลือ:** รับผลทดสอบออนไลน์จริง (Network + Voice + พิมพ์ไทย) → อัปเดต `docs/M2_REPORT.md` → **G6**
+   - ทำแล้ว 2026-10-31 (D-038 ทำ M2 ที่เหลือระหว่างรอ): Audio Tap เสียงวิทยุ (Participant Tap + ฟิลเตอร์, Tested) · Localization 1.5.13 + Locale th/en + `LocalizedThaiText` (Tested ผ่าน `-language=`) · Tests 33/33 · ตัดคำไทยด้วยพจนานุกรม → เลื่อนไป M4
    - ทำแล้ว 2026-10-30: Vivox 16.12.1 (Free Tier 5,000 PCU) · ดึงค่า Vivox ด้วย `VivoxCredentialPull` (ไม่เก็บ Secret Key) · ต้นแบบ Voice ใกล้ได้ยิน/วิทยุ/แชตไทย **Tested** (ตัดเสียงที่ 25 ม. จริง) · แก้ `ThaiFontSupport.Register` พังใน Player · ช่องพิมพ์ไทย Shape ระหว่างพิมพ์ (`EnableThaiShaping`) · Tests 31/31
    - เสร็จก่อนหน้าใน M2: Commit แรก (D-032) · ลบแพ็กเกจ (D-031) · โครง `_Game`/asmdef/Build/Test CLI · ต้นแบบ Network ผ่าน Relay (`Tested`) · เลือกวิธียกของ B (D-034) · แก้ภาษาไทย (D-035) · Push (D-036, D-037 — ถึง `fcc0a7d`)
 - หมายเหตุสิทธิ์: งานที่ไม่ใช่ Markdown ช่วง Discovery ต้องขออนุญาตก่อน (ตัวอย่าง D-016 สำหรับ Test Render)

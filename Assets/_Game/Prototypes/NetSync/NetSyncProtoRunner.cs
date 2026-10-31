@@ -22,6 +22,7 @@ namespace SpiritMovers.Prototypes.NetSync
     ///   -proto-role host|client  -proto-profile NAME  -proto-codefile PATH
     ///   -proto-props N  -proto-seconds S  -proto-carry A|B  -proto-latency MS  -proto-bot-offset METERS
     ///   -proto-screenshot PNG  (windowed runs: capture the screen 5 s before auto-quit)
+    ///   -proto-mute-output  (windowed runs: silence the speakers; audio is still processed)
     /// </summary>
     public sealed class NetSyncProtoRunner : MonoBehaviour
     {
@@ -68,6 +69,8 @@ namespace SpiritMovers.Prototypes.NetSync
             ProtoPlayer.PreferredCarryMode = Arg("-proto-carry") == "A" ? CarryMode.HostSimulated : CarryMode.OwnerTransfer;
             ProtoPlayer.BotMode = m_Role == "client" || m_Role == "host";
             if (float.TryParse(Arg("-proto-bot-offset"), out var offset)) ProtoPlayer.BotOffsetX = offset;
+            if (Arg("-proto-mute-output") != null || Environment.GetCommandLineArgs().Contains("-proto-mute-output"))
+                AudioListener.volume = 0f; // windowed automated runs: process audio without playing it aloud
 
             // Not NetworkManager.Singleton: Awake order between scene objects is undefined, so it may not be set yet.
             var manager = FindAnyObjectByType<NetworkManager>();

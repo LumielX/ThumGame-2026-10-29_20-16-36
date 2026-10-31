@@ -16,6 +16,7 @@ namespace SpiritMovers.Prototypes.NetSync
     ///   -proto-voice-inject WAV  feed a mono 16-bit PCM file as the microphone
     ///   -proto-voice-tx pos|radio  channel the injected audio goes to
     ///   -proto-chat TEXT  send one text message after joining
+    ///   -proto-no-radio-fx  play the radio channel straight from Vivox (no Audio Tap / walkie-talkie filter)
     /// </summary>
     public sealed class VoiceProto : MonoBehaviour
     {
@@ -34,6 +35,9 @@ namespace SpiritMovers.Prototypes.NetSync
         private double m_SummaryPeakRemoteEnergy;
         private int m_SummarySpeechSamples;
         private int m_SummaryMessages;
+        private readonly Dictionary<string, RadioVoiceEffect> m_RadioEffects = new();
+        private bool m_RadioFx;
+        private float m_SummaryPeakRadioOut;
 
         public string Status { get; private set; } = "Voice: off";
         public bool Joined { get; private set; }
@@ -59,8 +63,8 @@ namespace SpiritMovers.Prototypes.NetSync
 
             Status = "Voice: connecting…";
             await vivox.InitializeAsync();
-            vivox.ParticipantAddedToChannel += p => Debug.Log($"[Voice] + {p.DisplayName} in {Kind(p.ChannelName)} self={p.IsSelf}");
-            vivox.ParticipantRemovedFromChannel += p => Debug.Log($"[Voice] - {p.DisplayName} left {Kind(p.ChannelName)}");
+            vivox.ParticipantAddedToChannel += OnParticipantAdded;
+            vivox.ParticipantRemovedFromChannel += OnParticipantRemoved;
             vivox.ChannelMessageReceived += OnMessage;
             vivox.ConnectionRecovering += () => Debug.LogWarning("[Voice] connection recovering");
             vivox.ConnectionFailedToRecover += () => Debug.LogError("[Voice] connection failed to recover");
@@ -71,6 +75,10 @@ namespace SpiritMovers.Prototypes.NetSync
             await vivox.JoinGroupChannelAsync(m_RadioChannel, ChatCapability.TextAndAudio);
             await vivox.SetChannelTransmissionModeAsync(TransmissionMode.Single, m_PositionalChannel);
             Joined = true;
+            m_RadioFx = NetSyncProtoRunner.Arg("-proto-no-radio-fx") == null;
+            if (m_RadioFx) // teammates who were already on the radio before we finished joining
+                foreach (var p in vivox.ActiveChannels[m_RadioChannel])
+                    AddRadioEffect(p);
             Status = "Voice: on";
             Debug.Log($"[Voice] joined as '{displayName}' channels={string.Join(",", vivox.ActiveChannels.Keys.Select(Kind))} " +
                       $"input='{vivox.EffectiveInputDevice?.DeviceName}' output='{vivox.EffectiveOutputDevice?.DeviceName}'");
@@ -111,6 +119,28 @@ namespace SpiritMovers.Prototypes.NetSync
                 return;
             await VivoxService.Instance.SendChannelTextMessageAsync(m_RadioChannel, text.Trim());
             Debug.Log($"[Voice] sent text len={text.Trim().Length}");
+        }
+
+        private void OnParticipantAdded(VivoxParticipant p)
+        {
+            Debug.Log($"[Voice] + {p.DisplayName} in {Kind(p.ChannelName)} self={p.IsSelf}");
+            if (Joined && m_RadioFx)
+                AddRadioEffect(p);
+        }
+
+        private void OnParticipantRemoved(VivoxParticipant p)
+        {
+            Debug.Log($"[Voice] - {p.DisplayName} left {Kind(p.ChannelName)}");
+            if (p.ChannelName == m_RadioChannel && m_RadioEffects.Remove(p.PlayerId, out var effect) && effect != null)
+                Destroy(effect.gameObject);
+        }
+
+        private void AddRadioEffect(VivoxParticipant p)
+        {
+            // A participant tap cannot target yourself (Vivox docs).
+            if (p.IsSelf || p.ChannelName != m_RadioChannel || m_RadioEffects.ContainsKey(p.PlayerId))
+                return;
+            m_RadioEffects[p.PlayerId] = RadioVoiceEffect.Create(transform, m_RadioChannel, p.PlayerId);
         }
 
         private void OnMessage(VivoxMessage message)
@@ -210,12 +240,16 @@ namespace SpiritMovers.Prototypes.NetSync
         private void LogMetrics()
         {
             var peers = m_PeakEnergy.Count == 0 ? "none" : string.Join(" ", m_PeakEnergy.Select(kv => $"{kv.Key}={kv.Value:F2}"));
-            Debug.Log($"[Voice] tx={TransmitLabel} mic={(MicMuted ? "muted" : "on")} ghostHears={GhostHearingLevel:F2} peakRemoteEnergy: {peers}");
+            var radioOut = m_RadioEffects.Values.Select(e => e.TakePeak()).DefaultIfEmpty(0f).Max();
+            m_SummaryPeakRadioOut = Mathf.Max(m_SummaryPeakRadioOut, radioOut);
+            var radioFx = !m_RadioFx ? "off" :
+                $"taps={m_RadioEffects.Values.Count(e => e.IsRunning)}/{m_RadioEffects.Count} blocks={m_RadioEffects.Values.Sum(e => e.AudioBlocks)} peakOut={radioOut:F3}";
+            Debug.Log($"[Voice] tx={TransmitLabel} mic={(MicMuted ? "muted" : "on")} ghostHears={GhostHearingLevel:F2} radioFx[{radioFx}] peakRemoteEnergy: {peers}");
             m_PeakEnergy.Clear();
         }
 
         public string Summary =>
-            $"voiceJoined={Joined} peakRemoteEnergy={m_SummaryPeakRemoteEnergy:F2} speechFrames={m_SummarySpeechSamples} textReceived={m_SummaryMessages}";
+            $"voiceJoined={Joined} peakRemoteEnergy={m_SummaryPeakRemoteEnergy:F2} speechFrames={m_SummarySpeechSamples} textReceived={m_SummaryMessages} radioFxPeakOut={m_SummaryPeakRadioOut:F3}";
 
         public IEnumerable<(string Name, string Channel, bool Speaking)> Participants =>
             Joined

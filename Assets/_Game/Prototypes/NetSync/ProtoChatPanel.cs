@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
+using UnityEngine.Localization.Settings;
 using UnityEngine.UI;
 
 namespace SpiritMovers.Prototypes.NetSync
@@ -13,6 +14,7 @@ namespace SpiritMovers.Prototypes.NetSync
     /// <summary>
     /// Throwaway text chat (D-013 J3) for the Thai IME test: Enter opens the field, Enter sends, Esc cancels.
     /// Received lines and the field being typed in both go through the Thai shaper (D-035).
+    /// Hints come from the UI string table; F2 switches Thai/English (M2 item 5).
     /// </summary>
     public sealed class ProtoChatPanel : MonoBehaviour
     {
@@ -30,7 +32,6 @@ namespace SpiritMovers.Prototypes.NetSync
             ThaiFontSupport.Register(font, glyphMap);
             voice.MessageReceived += (sender, text) => AddLine($"{sender}: {text}");
             BuildUi(font);
-            AddLine("กด Enter เพื่อพิมพ์แชต (ทดสอบภาษาไทย)");
 
             // Screenshot runs: show what an unsent Thai draft looks like in the field.
             var preview = NetSyncProtoRunner.Arg("-proto-chat-preview");
@@ -62,6 +63,9 @@ namespace SpiritMovers.Prototypes.NetSync
             m_Log.textWrappingMode = TextWrappingModes.Normal;
             Place(logObject.GetComponent<RectTransform>(), new Vector2(24, 96), new Vector2(820, 420));
 
+            CreateHint(canvasObject.transform, font, "chat.hint", new Vector2(870, 64));
+            CreateHint(canvasObject.transform, font, "language.switch", new Vector2(870, 24));
+
             var inputObject = TMP_DefaultControls.CreateInputField(new TMP_DefaultControls.Resources());
             inputObject.name = "ChatInput";
             inputObject.transform.SetParent(canvasObject.transform, false);
@@ -72,11 +76,35 @@ namespace SpiritMovers.Prototypes.NetSync
             m_Input.textComponent.color = Color.white;
             m_Input.characterLimit = 120;
             m_Input.lineType = TMP_InputField.LineType.SingleLine;
-            ((TMP_Text)m_Input.placeholder).text = "พิมพ์ข้อความ…";
+            m_Input.placeholder.gameObject.AddComponent<LocalizedThaiText>().Bind("UI", "chat.placeholder");
             m_Input.onSubmit.AddListener(Submit);
             m_Input.EnableThaiShaping();
             Place(inputObject.GetComponent<RectTransform>(), new Vector2(24, 24), new Vector2(820, 60));
             inputObject.SetActive(false);
+        }
+
+        private static void CreateHint(Transform parent, TMP_FontAsset font, string key, Vector2 offset)
+        {
+            var hint = new GameObject($"Hint {key}", typeof(RectTransform));
+            hint.transform.SetParent(parent, false);
+            var text = hint.AddComponent<TextMeshProUGUI>();
+            text.font = font;
+            text.fontSize = 26;
+            text.color = new Color(1f, 0.92f, 0.65f);
+            text.outlineWidth = 0.25f;
+            text.outlineColor = Color.black;
+            hint.AddComponent<LocalizedThaiText>().Bind("UI", key);
+            Place(hint.GetComponent<RectTransform>(), offset, new Vector2(820, 40));
+        }
+
+        private static void ToggleLanguage()
+        {
+            var locales = LocalizationSettings.AvailableLocales.Locales;
+            if (locales.Count < 2)
+                return;
+            var next = (locales.IndexOf(LocalizationSettings.SelectedLocale) + 1) % locales.Count;
+            LocalizationSettings.SelectedLocale = locales[next];
+            Debug.Log($"[Proto] language {locales[next].Identifier.Code}");
         }
 
         private static void Place(RectTransform rect, Vector2 offset, Vector2 size)
@@ -98,6 +126,8 @@ namespace SpiritMovers.Prototypes.NetSync
                 Open();
             else if (open && keyboard.escapeKey.wasPressedThisFrame)
                 Close();
+            else if (!open && keyboard.f2Key.wasPressedThisFrame)
+                ToggleLanguage();
         }
 
         private void Open()

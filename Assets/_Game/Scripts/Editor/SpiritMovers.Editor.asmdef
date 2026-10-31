@@ -3,7 +3,10 @@
     "rootNamespace": "SpiritMovers.Editor",
     "references": [
         "SpiritMovers.Core",
-        "SpiritMovers.Runtime"
+        "SpiritMovers.Runtime",
+        "Unity.Localization",
+        "Unity.Localization.Editor",
+        "Unity.Addressables.Editor"
     ],
     "includePlatforms": [
         "Editor"

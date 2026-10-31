@@ -3,7 +3,8 @@
     "rootNamespace": "SpiritMovers",
     "references": [
         "SpiritMovers.Core",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "Unity.Localization"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

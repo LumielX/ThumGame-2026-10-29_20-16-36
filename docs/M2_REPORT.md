@@ -13,6 +13,7 @@
 | เลือกวิธียกของ | **Tested** → ตัดสินแล้ว (D-034) | ดูตารางด้านล่าง |
 | Bandwidth | **Tested** | ~1–3 KB/s ต่อผู้เล่น (40 ชิ้น + 2 ผู้เล่น) |
 | ภาษาไทย | **Tested** (แสดงผล + ช่องพิมพ์ + ส่งผ่าน Vivox) · กดแป้นพิมพ์ไทยจริงยังไม่ทดสอบ | พบปัญหาวรรณยุกต์ใน TMP → ผู้ใช้เลือกทำตัวจัดรูปเอง (D-035) → **แก้แล้ว** ด้วย `ThaiShaper` + Glyph สำรองของฟอนต์ · ตัดบรรทัดด้วย ZWSP ใช้ได้ |
+| Localization TH/EN | **Tested** (Build จริง, สลับด้วย `-language=`) | Localization **1.5.13** · Locale th/en · ตาราง `UI` · `LocalizedThaiText` ส่งข้อความผ่าน ThaiShaper · กด F2 สลับกลางเกมยังไม่ทดสอบ — ดูหัวข้อ 3.2 |
 | Voice + แชต (Vivox) | **Tested** (2 Instance ในเครื่องนี้ ผ่านเซิร์ฟเวอร์ Vivox จริง, ใช้ไฟล์ WAV แทนไมค์) | เสียงตามระยะตัดที่ 25 ม. จริง · วิทยุได้ยินทั้งทีม · แชตไทยส่ง/รับครบ · **ยังไม่ Verified** (ต้องมีคนฟังจริง) — ดูหัวข้อ 3 |
 
 ---
@@ -83,9 +84,23 @@
 - `AudioEnergy` เป็นระดับเสียงของคนพูด (ก่อนลดตามระยะ) → **ความดังที่ลดตามระยะ 2–25 ม. ต้องให้คนฟังจริงตัดสิน** (TESTING ข้อ 9)
 - ภาพ: `docs/screenshots/m2/voice-chat-thai.png`, `voice-chat-thai-closeup.png` — UI เสียง (ผู้เล่น 2 คน, `>>` = กำลังพูด) + แชตไทยรับจากอีกเครื่อง + ช่องพิมพ์
 - เรื่องที่พบและแก้ระหว่างทาง: (1) `ThaiFontSupport.Register` พังใน Player ถ้าเรียกก่อนฟอนต์ถูกใช้ (NullReference ใน TMP) → เรียก `ReadFontAssetDefinition()` ก่อน + Test กันถอยหลัง · (2) ช่องพิมพ์ไม่ Shape → วรรณยุกต์หายระหว่างพิมพ์ ("นี้" → "นี") → เพิ่ม `ThaiShaper.Unshape` + `TMP_InputField.EnableThaiShaping()` (Shape แบบ 1:1 ทำให้ Caret ไม่เลื่อน; ส่งข้อความด้วยตัวอักษรปกติ) — งานจาก M4 ทำเสร็จก่อน · (3) `NetworkManager.Singleton` ยังไม่พร้อมใน Awake (ลำดับไม่แน่นอน) · (4) Process ค้างตอนปิดถ้า Vivox Logout ไม่จบ → จำกัด 5 วินาที · (5) รันอัตโนมัติไม่ฉีด WAV จะปิดไมค์จริงเสมอ (ครั้งแรกเผลอใช้ไมค์ของเครื่องราว 1 นาที)
-- เหลือสำหรับ M3+: Audio Taps (เสียงก้อง/เสียงวิทยุ) · ส่ง `AudioEnergy` ให้ Host สำหรับผีหูไว · เลือกอุปกรณ์ไมค์/ลำโพงในเมนู
+- เหลือสำหรับ M3+: ส่ง `AudioEnergy` ให้ Host สำหรับผีหูไว · เลือกอุปกรณ์ไมค์/ลำโพงในเมนู · เสียงก้องในบ้าน (Audio Tap บนช่อง proximity)
+
+### 3.1 Audio Tap — เสียงวิทยุ (Tested 2026-10-31)
+- `Prototypes/NetSync/RadioVoiceEffect.cs`: เพื่อนแต่ละคนบนช่อง radio ได้ `VivoxParticipantTap` 1 ตัว (`SilenceInChannelAudioMix = true` → ได้ยินผ่านฟิลเตอร์อย่างเดียว) → High-pass 400 Hz → Low-pass 3,200 Hz → Distortion 0.35 = เสียงวอล์กกี้ทอล์กกี้ · เสียงใกล้ได้ยินยังออกทาง Vivox ตรง
+- **พบระหว่างทำ:** `VivoxChannelAudioTap` ใช้ได้กับ**ช่องแรกที่เข้า**เท่านั้น ([เอกสาร Vivox](https://docs.unity.com/en-us/vivox-unity/developer-guide/audio-taps/use-audio-taps)) — ช่องแรกของเราคือ proximity จึงต้องใช้ Participant Tap แทน (ลองแล้ว Channel Tap บนช่อง radio ได้ระดับเสียง 0)
+- ผล (Host ฉีด WAV เข้าช่อง radio, Client ห่าง 60 ม.): Tap 1/1 ทำงาน · ระดับเสียงหลังฟิลเตอร์ **0.77–0.88** (ก่อนแก้ = 0.000) · ทั้ง Headless และแบบมีหน้าต่าง
+- ข้อสังเกตสำหรับ UI: เมื่อ Tap ปิดเสียงใน Mix แล้ว `AudioEnergy` ของคนนั้นบนช่อง radio จะเป็น 0 → ไฟ "กำลังพูดทางวิทยุ" ต้องอ่านระดับจาก Tap แทน
+- ต้องให้คนฟังตัดสินว่าเสียงเหมือนวิทยุพอดีหรือยัง (TESTING ข้อ 10)
+
+### 3.2 Localization TH/EN (Tested 2026-10-31)
+- แพ็กเกจ Localization **1.5.13** (ล่าสุด 2026-09-02) + Addressables (ติดมาเป็น Dependency) · Build ผู้เล่นสร้าง Addressables ให้อัตโนมัติ (`BuildWithPlayer`)
+- `Editor/LocalizationSetup` (เมนู `Spirit Movers/Localization/Create Settings and UI Table`) สร้าง Locale th/en + ตาราง `UI` — รันซ้ำได้ ไม่ทับคำแปลเดิม · เลือกภาษาเริ่มต้น: `-language=` → ภาษาของ Windows → English
+- `Runtime/Text/LocalizedThaiText` = ใช้แทน `LocalizeStringEvent` ของแพ็กเกจ (ตัวนั้นจะใส่ข้อความแบบไม่ Shape → วรรณยุกต์ซ้อน)
+- Test: `LocalizationTableTests` ตรวจว่าทุกคีย์มีทั้งไทยและอังกฤษ · ภาพ `docs/screenshots/m2/localization-th-en.png`
+- **ตัดบรรทัดภาษาไทย:** ตอนนี้ใช้ ZWSP ที่ใส่ในข้อความ (ทดสอบแล้วว่า TMP ตัดตรง ZWSP) · การตัดคำอัตโนมัติด้วยพจนานุกรมต้องใช้รายการคำจากภายนอก (เรื่องลิขสิทธิ์ = ถามก่อน) → เลื่อนไปตัดสินใน M4 ตอนทำ UI จริง ซึ่งจะรู้ว่ามีข้อความยาวแค่ไหน
 
 ## 4. สิ่งที่ผู้ใช้ต้องทำเพื่อปิด G6
 1. **ทดสอบออนไลน์จริง:** เปิด `Builds/Proto-NetSync-v0.0.1/SpiritMovers.exe` บนเครื่องนี้ (กด Host) และให้เพื่อนเปิดไฟล์เดียวกันบนอีกเครื่อง/อีกเครือข่าย (ใส่รหัสห้อง → Join) → เดินและยกกล่อง (E) ลองสลับวิธี (M) และ Latency → ส่ง Log กลับ (ตำแหน่งใน `docs/TESTING.md`)
 2. ~~เปิดบริการ Vivox~~ ✅ (2026-10-30)
-3. **ระหว่างทดสอบข้อ 1 ให้ลองเสียงและแชตไทยด้วย** — Checklist ข้อ 9–12 ใน `docs/TESTING.md` (Build เดียวกัน)
+3. **ระหว่างทดสอบข้อ 1 ให้ลองเสียงและแชตไทยด้วย** — Checklist ข้อ 9–13 ใน `docs/TESTING.md` (Build เดียวกัน)

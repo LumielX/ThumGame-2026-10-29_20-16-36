@@ -6,7 +6,10 @@
         "SpiritMovers.Runtime",
         "Unity.TextMeshPro",
         "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "UnityEditor.TestRunner",
+        "SpiritMovers.Editor",
+        "Unity.Localization",
+        "Unity.Localization.Editor"
     ],
     "includePlatforms": [
         "Editor"
