@@ -17,7 +17,8 @@ namespace SpiritMovers.Dev
     /// <summary>
     /// Bot for the M3D ghost test (Tools/m3c-job-test.ps1 -Scenario ghost). With every player in, the host starts a
     /// job; the second player ("victim") picks up the spirit camera, looks through it once and puts it down, then stands
-    /// with its back to the ghost; the host raises the anger to the hunt stage, the ghost drags the victim into a
+    /// crouching and staring at the ghost — the host checks the hunting ghost stays frozen (remote watching: synced
+    /// heading, pitch and crouch) — then turns its back; the ghost drags the victim into a
     /// cabinet; the host calms the ghost, puts one item of that room right, opens the cabinet; everyone walks to the
     /// van and the host closes the job. Each peer prints a [M3D] SUMMARY of what it saw.
     /// Optional "-dev-peek-shot PNG" / "-dev-hunt-shot PNG" (victim, windowed) capture the overlay and the ghost.
@@ -34,6 +35,8 @@ namespace SpiritMovers.Dev
         private int m_OverlayMax;
         private bool m_CapturedSeen;
         private bool m_ReleasedSeen;
+        private bool m_WatchedSeen;
+        private bool m_Frozen;
         private string m_Failure = "";
 
         public bool IsHost { get; private set; }
@@ -66,6 +69,9 @@ namespace SpiritMovers.Dev
 
         private void Update()
         {
+            var ghost = FindAnyObjectByType<ShyGhost>();
+            if (ghost != null && ghost.IsWatched && m_Director != null && m_Director.AngerStage >= 3)
+                m_WatchedSeen = true;
             if (MemoryOverlay.Current != null)
                 m_OverlayMax = Math.Max(m_OverlayMax, MemoryOverlay.Current.ActiveCount);
             var capture = VictimCapture;
@@ -105,12 +111,19 @@ namespace SpiritMovers.Dev
             if (Failed)
                 yield break;
 
-            // 1. The hunt: the victim turns its back to the ghost in the living room.
-            if (IsVictim)
-                motor.Teleport(new Vector3(-5f, 0f, 4f), 180f);
+            // 1. The hunt: the victim crouches and stares at the ghost — it must freeze although it hunts — then turns away.
             yield return Until(() => Camera.Film < new ToolConfig().FilmPerCamera, "camera used");
-            if (IsHost && !Failed)
+            if (Failed)
+                yield break;
+            if (IsHost)
+            {
                 SetAngerStage(3);
+                yield return CheckFrozen();
+            }
+            else if (IsVictim)
+            {
+                yield return StareAtGhost(motor);
+            }
             yield return Until(() => m_CapturedSeen, "victim caught");
             if (Failed)
                 yield break;
@@ -152,6 +165,45 @@ namespace SpiritMovers.Dev
             }
             yield return Until(() => m_Director.Result.IsSet, "results");
             Done = true;
+        }
+
+        /// <summary>Victim: crouch and stare at the ghost until it has hunted for a while, then turn your back.</summary>
+        private IEnumerator StareAtGhost(PlayerMotor motor)
+        {
+            var ghost = FindAnyObjectByType<ShyGhost>();
+            motor.Teleport(new Vector3(-5f, 0f, 4f), 0f);
+            m_Input.Next.Crouch = true;
+            var end = Time.time + StepTimeout;
+            while (m_Director.AngerStage < 3 && Time.time < end)
+            {
+                motor.LookAt(ghost.transform.position);
+                yield return null;
+            }
+            end = Time.time + 3.5f;
+            while (Time.time < end)
+            {
+                motor.LookAt(ghost.transform.position);
+                yield return null;
+            }
+            m_Input.Next.Crouch = false;
+            motor.Teleport(motor.Feet, 180f);
+        }
+
+        /// <summary>Host: while the victim stares, the hunting ghost must not move.</summary>
+        private IEnumerator CheckFrozen()
+        {
+            var ghost = FindAnyObjectByType<ShyGhost>();
+            yield return new WaitForSeconds(1f);
+            var start = ghost.transform.position;
+            var watched = true;
+            var end = Time.time + 1.5f;
+            while (Time.time < end)
+            {
+                watched &= ghost.IsWatched;
+                yield return null;
+            }
+            m_Frozen = watched && Vector3.Distance(start, ghost.transform.position) < 0.1f;
+            Debug.Log($"[M3D] watch check: watched={watched} moved={Vector3.Distance(start, ghost.transform.position):F2}");
         }
 
         /// <summary>Victim: pick up the camera by the van, look through it once, put it down.</summary>
@@ -225,12 +277,13 @@ namespace SpiritMovers.Dev
             var peeks = Camera != null ? Camera.PeeksSeen : -1;
             var holderOnly = IsVictim ? peeks == 1 && m_OverlayMax > 0 : peeks == 0 && m_OverlayMax == 0;
             var ok = Done && m_Failure == "" && result.IsSet && result.Ending == JobEnding.LeftEarly && m_CapturedSeen &&
-                     m_ReleasedSeen && holderOnly && (!IsHost || m_Director.SelfReleases == 0);
+                     m_ReleasedSeen && holderOnly && m_WatchedSeen && (!IsHost || (m_Director.SelfReleases == 0 && m_Frozen));
             return string.Format(CultureInfo.InvariantCulture,
                 "[M3D] SUMMARY role={0} seed={1} ending={2} teamTotal={3} captured={4} released={5} film={6} peeks={7} " +
-                "overlayMax={8} angerStage={9} failed={10} ok={11}",
+                "overlayMax={8} angerStage={9} watched={10} frozen={11} failed={12} ok={13}",
                 role, Seed, result.IsSet ? result.Ending.ToString() : "none", result.TeamTotal, m_CapturedSeen, m_ReleasedSeen,
-                film, peeks, m_OverlayMax, m_Director.AngerStage, m_Failure == "" ? "none" : m_Failure, ok ? "true" : "false");
+                film, peeks, m_OverlayMax, m_Director.AngerStage, m_WatchedSeen, IsHost ? m_Frozen.ToString() : "-",
+                m_Failure == "" ? "none" : m_Failure, ok ? "true" : "false");
         }
     }
 }

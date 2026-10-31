@@ -59,6 +59,36 @@ namespace SpiritMovers.Tests
         }
 
         [UnityTest]
+        public IEnumerator Catch_ThroughWall_DoesNotCatch()
+        {
+            // Final review: the ghost hugging one side of the dividing wall must not catch a player on the other side.
+            yield return StartJob(StageThree);
+            Motor.Teleport(new Vector3(0.5f, 0f, 5f), 90f);
+            yield return new WaitForFixedUpdate();
+            Ghost.SetPositionForTest(new Vector3(-0.45f, 0f, 5f));
+            Assume.That(Vector3.Distance(Ghost.Ground, Motor.Feet), Is.LessThan(Ghost.Config.CatchDistance));
+            Ghost.ThinkNow();
+            yield return null;
+            Assert.IsFalse(Capture.IsCaptured);
+        }
+
+        [UnityTest]
+        public IEnumerator Catch_WithNoFreeCabinet_LeavesPlayerAlone()
+        {
+            // Final review: with every cabinet taken the ghost must not hover over a player it cannot drag away.
+            yield return StartJob(StageThree);
+            foreach (var cabinet in Object.FindObjectsByType<MemoryCabinet>(FindObjectsSortMode.None))
+                cabinet.NetworkObject.Despawn();
+            Motor.Teleport(new Vector3(-5f, 0f, -3f), 180f);
+            yield return new WaitForFixedUpdate();
+            Ghost.SetPositionForTest(new Vector3(-5f, 0f, -2.5f));
+            Ghost.ThinkNow();
+            yield return null;
+            Assert.IsFalse(Capture.IsCaptured);
+            Assert.Greater(Ghost.LeaveAloneUntil(NetworkManager.ServerClientId), Time.time, "the ghost turns to someone else for a while");
+        }
+
+        [UnityTest]
         public IEnumerator Caught_DropsHeldItem()
         {
             yield return StartJob();

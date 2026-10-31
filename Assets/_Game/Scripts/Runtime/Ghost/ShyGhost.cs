@@ -24,6 +24,12 @@ namespace SpiritMovers.Ghost
         private static readonly Color s_Calm = new(1f, 0.70f, 0.28f); // memory amber #ffb347
         private static readonly Color s_Angry = new(0.88f, 0.19f, 0.19f);
         private const float RepathSeconds = 0.5f;
+        /// <summary>Height above the feet the ghost needs a clear line to before it can grab a player.</summary>
+        private const float ChestHeight = 1.0f;
+        /// <summary>Besides its centre, the ghost counts as seen if this point above it is visible.</summary>
+        private const float TopOffset = 0.5f;
+
+        private static readonly RaycastHit[] s_Hits = new RaycastHit[16];
 
         [SerializeField] private Renderer m_Body;
 
@@ -31,6 +37,7 @@ namespace SpiritMovers.Ghost
         private readonly NetworkVariable<bool> m_Watched = new();
         private readonly GhostConfig m_Config = new();
         private readonly List<Vector3> m_Corners = new();
+        private readonly Dictionary<ulong, float> m_LeaveAlone = new();
         private readonly System.Random m_Random = new();
         private NavMeshPath m_Path;
         private MaterialPropertyBlock m_Block;
@@ -55,6 +62,8 @@ namespace SpiritMovers.Ghost
         /// <summary>Host: the ghost caught this player (Task 5 drags them to a memory cabinet).</summary>
         public event Action<ulong> Caught;
 
+        /// <summary>Host: until when the ghost ignores this player (it could not drag them anywhere).</summary>
+        internal float LeaveAloneUntil(ulong clientId) => m_LeaveAlone.TryGetValue(clientId, out var until) ? until : 0f;
         internal float NextPrankAt { get; set; }
         internal float NextDisturbAt { get; set; }
 
@@ -71,7 +80,6 @@ namespace SpiritMovers.Ghost
                 return;
             GhostNavMesh.Acquire();
             m_NavMeshHeld = true;
-            Caught += DragToCabinet;
             PlaceAt(transform.position);
             NextPrankAt = Time.time + m_Config.PrankCooldown;
             NextDisturbAt = Time.time + m_Config.DisturbCooldown;
@@ -117,16 +125,19 @@ namespace SpiritMovers.Ghost
                 return; // shy: frozen while anyone looks
 
             var targets = motors.Select(m => m.TryGetComponent<PlayerCapture>(out var capture)
-                ? new Target(m.OwnerClientId, m.Feet.ToNumerics(), capture.IsCaptured, capture.ImmuneUntil)
-                : new Target(m.OwnerClientId, m.Feet.ToNumerics(), false, 0f)).ToList();
+                ? new Target(m.OwnerClientId, m.Feet.ToNumerics(), capture.IsCaptured,
+                    Mathf.Max(capture.ImmuneUntil, LeaveAloneUntil(m.OwnerClientId)))
+                : new Target(m.OwnerClientId, m.Feet.ToNumerics(), false, LeaveAloneUntil(m.OwnerClientId))).ToList();
             var target = GhostRules.PickTarget(Ground.ToNumerics(), targets, Time.time);
             if (target is { } t)
             {
                 m_Goal = t.Feet.ToUnity();
                 m_Speed = mode == GhostMode.Hunt ? m_Config.HuntSpeed : m_Config.IdleSpeed;
                 m_KeepAway = mode == GhostMode.Hunt ? 0f : m_Config.IdleKeepAway;
-                if (mode == GhostMode.Hunt && Vector3.Distance(Ground, m_Goal) <= m_Config.CatchDistance)
-                    Caught?.Invoke(t.ClientId);
+                // Close is not enough: no grabbing through a wall or the loft floor.
+                if (mode == GhostMode.Hunt && Vector3.Distance(Ground, m_Goal) <= m_Config.CatchDistance &&
+                    Clear(transform.position, m_Goal + Vector3.up * ChestHeight))
+                    Catch(t.ClientId);
             }
 
             if (mode == GhostMode.Prank && Time.time >= NextPrankAt)
@@ -138,19 +149,24 @@ namespace SpiritMovers.Ghost
         private static bool IsCaptured(PlayerMotor motor) =>
             motor.TryGetComponent<PlayerCapture>(out var capture) && capture.IsCaptured;
 
-        /// <summary>Host: drag the caught player into a free cabinet — this room's first, else the nearest.</summary>
-        private void DragToCabinet(ulong clientId)
+        /// <summary>
+        /// Host: drag the caught player into a free cabinet — this room's first, else the nearest. With every cabinet
+        /// taken the ghost leaves that player alone for a while instead of hovering over them (final review).
+        /// </summary>
+        private void Catch(ulong clientId)
         {
-            if (!PlayerCarrier.TryGet(clientId, out var player) || !player.TryGetComponent<PlayerCapture>(out var capture))
-                return;
+            Caught?.Invoke(clientId);
             var room = CurrentRoom;
             var cabinet = FindObjectsByType<MemoryCabinet>(FindObjectsSortMode.None)
                 .Where(c => !c.IsOccupied)
                 .OrderBy(c => c.RoomId == room ? 0 : 1)
                 .ThenBy(c => Vector3.Distance(c.transform.position, Ground))
                 .FirstOrDefault();
-            if (cabinet != null)
-                cabinet.Capture(capture);
+            if (PlayerCarrier.TryGet(clientId, out var player) && player.TryGetComponent<PlayerCapture>(out var capture) &&
+                cabinet != null && cabinet.Capture(capture))
+                return;
+            m_LeaveAlone[clientId] = Time.time + m_Config.ImmuneSeconds;
+            Debug.Log($"[Ghost] caught client {clientId} but no cabinet is free; leaving them alone for {m_Config.ImmuneSeconds} s");
         }
 
         /// <summary>Test hook: put the ghost on the floor at a point.</summary>
@@ -160,8 +176,35 @@ namespace SpiritMovers.Ghost
             m_NextRepathAt = 0f;
         }
 
-        private static bool ClearLine(System.Numerics.Vector3 eye, System.Numerics.Vector3 ghost) =>
-            !Physics.Linecast(eye.ToUnity(), ghost.ToUnity(), Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+        /// <summary>The ghost is seen if its centre or its top is in clear view.</summary>
+        private static bool ClearLine(System.Numerics.Vector3 eye, System.Numerics.Vector3 ghost)
+        {
+            var from = eye.ToUnity();
+            var centre = ghost.ToUnity();
+            return Clear(from, centre) || Clear(from, centre + Vector3.up * TopOffset);
+        }
+
+        /// <summary>
+        /// Nothing fixed in between. Items and players never hide anything: the box in your own hands must not hide the
+        /// ghost you stare at (final review), and the ghost drifts through them anyway.
+        /// </summary>
+        private static bool Clear(Vector3 from, Vector3 to)
+        {
+            var delta = to - from;
+            var distance = delta.magnitude;
+            if (distance < 1e-4f)
+                return true;
+            var count = Physics.RaycastNonAlloc(from, delta / distance, s_Hits, distance, Physics.DefaultRaycastLayers,
+                QueryTriggerInteraction.Ignore);
+            for (var i = 0; i < count; i++)
+            {
+                var hit = s_Hits[i].collider;
+                if (hit is CharacterController || hit.GetComponentInParent<Carryable>() != null)
+                    continue;
+                return false;
+            }
+            return true;
+        }
 
         private void PlaceAt(Vector3 point)
         {

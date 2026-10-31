@@ -55,7 +55,7 @@ for ($run = 0; $run -lt $Runs; $run++) {
     $ok = ($summaries | Where-Object { $_ -eq $null }).Count -eq 0
     if ($ok) {
         $ok = ($summaries | Where-Object { $_.ok -ne 'true' }).Count -eq 0
-        $keys = if ($Scenario -eq 'ghost') { 'ending', 'teamTotal', 'captured', 'released', 'film' } else { 'ending', 'accepted', 'teamTotal', 'stars', 'carried' }
+        $keys = if ($Scenario -eq 'ghost') { 'ending', 'teamTotal', 'captured', 'released', 'film', 'watched' } else { 'ending', 'accepted', 'teamTotal', 'stars', 'carried' }
         foreach ($key in $keys) {
             if (($summaries | ForEach-Object { $_[$key] } | Select-Object -Unique).Count -ne 1) { $ok = $false }
         }

@@ -59,6 +59,28 @@ namespace SpiritMovers.Tests
         }
 
         [UnityTest]
+        public IEnumerator Ghost_WatchedOverOwnCarriedItem_StaysStill()
+        {
+            // Final review: the box in your own hands must not hide the ghost you are staring at.
+            yield return StartJob(StageThree);
+            yield return Stand(new Vector3(-5f, 0f, -2f), 0f);
+            var box = Director.Plan.Rooms.SelectMany(r => r.Slots).Select(t => House.Slot(t.Slot.Id).Item).First(i => i.Mass < 10f);
+            var hands = Motor.GetComponent<SpiritMovers.Interaction.PlayerCarrier>();
+            box.SetSingleCarrierForTest(Unity.Netcode.NetworkManager.ServerClientId);
+            box.GetComponent<Rigidbody>().position = hands.HoldPoint;
+            yield return new WaitForSeconds(0.5f);
+            Assume.That(box.IsCarried, "still in hand");
+            Assume.That(Vector3.Distance(box.transform.position, hands.HoldPoint), Is.LessThan(0.2f));
+            Ghost.SetPositionForTest(new Vector3(-5f, 0f, 1f));
+            Motor.LookAt(Ghost.transform.position);
+            Ghost.ThinkNow();
+            var start = Ghost.transform.position;
+            yield return new WaitForSeconds(0.5f);
+            Assert.IsTrue(Ghost.IsWatched, "watched over the carried box");
+            Assert.Less(Vector3.Distance(start, Ghost.transform.position), 0.05f);
+        }
+
+        [UnityTest]
         public IEnumerator Ghost_Unwatched_HuntsTowardPlayer()
         {
             yield return StartJob(StageThree);
