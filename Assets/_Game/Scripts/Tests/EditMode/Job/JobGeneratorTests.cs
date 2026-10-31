@@ -1,0 +1,144 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using NUnit.Framework;
+using SpiritMovers.Core.Job;
+
+namespace SpiritMovers.Tests
+{
+    public class JobGeneratorTests
+    {
+        private static readonly ProblemType[] AllProblems =
+            { ProblemType.Moved, ProblemType.Hidden, ProblemType.Order, ProblemType.Possessed };
+
+        /// <summary>5 rooms × 8 slots, 10 scatter points, 6 hiding spots.</summary>
+        private static HouseLayout TestHouse(int rooms = 5, int slotsPerRoom = 8, IReadOnlyList<ProblemType> supports = null)
+        {
+            supports ??= AllProblems;
+            var roomList = new List<RoomLayout>();
+            var scatter = new List<Placement>();
+            var hiding = new List<Placement>();
+            for (var r = 0; r < rooms; r++)
+            {
+                var roomId = $"r{r}";
+                var slots = new List<SlotDefinition>();
+                for (var i = 0; i < slotsPerRoom; i++)
+                    slots.Add(new SlotDefinition($"{roomId}-s{i}", $"item{r}-{i}",
+                        new Placement(roomId, new Vector3(r * 10 + i, 0f, 0f), Quaternion.Identity), Tolerance.Default, supports));
+                roomList.Add(new RoomLayout(roomId, slots));
+                scatter.Add(new Placement(roomId, new Vector3(r * 10, 0f, 7f), Quaternion.Identity));
+                scatter.Add(new Placement(roomId, new Vector3(r * 10 + 3, 0f, 7f), Quaternion.Identity));
+            }
+            for (var h = 0; h < 6; h++)
+                hiding.Add(new Placement($"r{h % rooms}", new Vector3(h * 10, 0f, -5f), Quaternion.Identity));
+            return new HouseLayout("test", roomList, scatter, hiding);
+        }
+
+        private static string Signature(JobPlan plan) => string.Join("|", plan.Rooms.SelectMany(room =>
+            room.Slots.Select(t => $"{room.RoomId}/{t.Slot.Id}/{t.Problem}/{t.StartPlacement.RoomId}/{t.StartPlacement.Position}")));
+
+        private static IEnumerable<JobPlan> Plans(JobDifficulty difficulty, int players, HouseLayout house = null) =>
+            Enumerable.Range(1, 30).Select(seed => JobGenerator.Generate(seed, house ?? TestHouse(), difficulty, players));
+
+        [Test]
+        public void Generate_SameSeed_GivesIdenticalPlan()
+        {
+            var a = JobGenerator.Generate(42, TestHouse(), JobDifficulty.Hard, 3);
+            var b = JobGenerator.Generate(42, TestHouse(), JobDifficulty.Hard, 3);
+            Assert.AreEqual(Signature(a), Signature(b));
+            Assert.AreEqual(42, a.Seed);
+        }
+
+        [Test]
+        public void Generate_DifferentSeed_GivesDifferentPlan()
+        {
+            var a = JobGenerator.Generate(1, TestHouse(), JobDifficulty.Normal, 2);
+            var b = JobGenerator.Generate(2, TestHouse(), JobDifficulty.Normal, 2);
+            Assert.AreNotEqual(Signature(a), Signature(b));
+        }
+
+        [Test]
+        public void Generate_Normal_TwoPlayers_ThreeRoomsThreeToFourItems()
+        {
+            foreach (var plan in Plans(JobDifficulty.Normal, 2))
+            {
+                Assert.AreEqual(3, plan.Rooms.Count);
+                Assert.That(plan.Rooms.Select(r => r.Slots.Count), Is.All.InRange(3, 4));
+            }
+        }
+
+        [Test]
+        public void Generate_Hard_FourToFiveRoomsFiveToSixItems()
+        {
+            foreach (var plan in Plans(JobDifficulty.Hard, 2))
+            {
+                Assert.That(plan.Rooms.Count, Is.InRange(4, 5));
+                Assert.That(plan.Rooms.Select(r => r.Slots.Count), Is.All.InRange(5, 6));
+            }
+        }
+
+        [Test]
+        public void Generate_Solo_RemovesOneItemPerRoom()
+        {
+            foreach (var plan in Plans(JobDifficulty.Normal, 1))
+                Assert.That(plan.Rooms.Select(r => r.Slots.Count), Is.All.InRange(2, 3));
+        }
+
+        [Test]
+        public void Generate_OnlyUsesProblemsAllowedByDifficultyAndSlot()
+        {
+            var normal = Plans(JobDifficulty.Normal, 2).SelectMany(p => p.Rooms).SelectMany(r => r.Slots).Select(t => t.Problem);
+            Assert.IsTrue(normal.All(p => p == ProblemType.Moved || p == ProblemType.Hidden));
+
+            var movedOnly = TestHouse(supports: new[] { ProblemType.Moved });
+            var hard = Plans(JobDifficulty.Hard, 2, movedOnly).SelectMany(p => p.Rooms).SelectMany(r => r.Slots).Select(t => t.Problem);
+            Assert.That(hard, Is.All.EqualTo(ProblemType.Moved));
+        }
+
+        [Test]
+        public void Generate_MovedItemsStartAwayFromTarget()
+        {
+            foreach (var task in Plans(JobDifficulty.Hard, 2).SelectMany(p => p.Rooms).SelectMany(r => r.Slots)
+                         .Where(t => t.Problem == ProblemType.Moved))
+                Assert.IsFalse(PlacementMath.IsCorrect(task.Slot.Target, task.StartPlacement, task.Slot.Tolerance), task.Slot.Id);
+        }
+
+        [Test]
+        public void Generate_HiddenItemsStartAtHidingSpot()
+        {
+            var house = TestHouse();
+            var hidden = Plans(JobDifficulty.Normal, 2, house).SelectMany(p => p.Rooms).SelectMany(r => r.Slots)
+                .Where(t => t.Problem == ProblemType.Hidden).ToList();
+            Assert.IsNotEmpty(hidden);
+            foreach (var task in hidden)
+                Assert.IsTrue(house.HidingSpots.Any(h => h.RoomId == task.StartPlacement.RoomId && h.Position == task.StartPlacement.Position),
+                    task.Slot.Id);
+        }
+
+        [Test]
+        public void Generate_NeverUsesSameSlotTwice()
+        {
+            foreach (var plan in Plans(JobDifficulty.Hard, 6))
+            {
+                var ids = plan.Rooms.SelectMany(r => r.Slots).Select(t => t.Slot.Id).ToList();
+                Assert.AreEqual(ids.Count, ids.Distinct().Count());
+            }
+        }
+
+        [Test]
+        public void Generate_WhenHouseHasFewerSlotsThanRequested_UsesAllAvailable()
+        {
+            var plan = JobGenerator.Generate(7, TestHouse(rooms: 2, slotsPerRoom: 2), JobDifficulty.Hard, 6);
+            Assert.AreEqual(2, plan.Rooms.Count);
+            Assert.That(plan.Rooms.Select(r => r.Slots.Count), Is.All.EqualTo(2));
+        }
+
+        [Test]
+        public void PlayerCountScaling_ClampsOutOfRange()
+        {
+            Assert.AreEqual(PlayerCountScaling.ItemOffset(1), PlayerCountScaling.ItemOffset(0));
+            Assert.AreEqual(PlayerCountScaling.AngerMultiplier(6), PlayerCountScaling.AngerMultiplier(9));
+        }
+    }
+}
