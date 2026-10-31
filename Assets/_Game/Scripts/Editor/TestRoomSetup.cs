@@ -192,6 +192,18 @@ namespace SpiritMovers.Editor
                 EditorApplication.Exit(1);
         }
 
+        private static Material FloorTintMaterial()
+        {
+            const string path = PrefabDir + "/FloorTint.mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material != null)
+                return material;
+            material = new Material(AssetDatabase.LoadAssetAtPath<Material>(UrpLitMaterialPath));
+            material.SetColor("_BaseColor", new Color(0.72f, 0.48f, 0.3f));
+            AssetDatabase.CreateAsset(material, path);
+            return material;
+        }
+
         private static GameObject CreateJobDirectorPrefab()
         {
             var go = new GameObject("JobDirector");
@@ -211,6 +223,16 @@ namespace SpiritMovers.Editor
             var so = new SerializedObject(room.AddComponent<RoomVolume>());
             so.FindProperty("m_RoomId").stringValue = id;
             so.ApplyModifiedPropertiesWithoutUndo();
+            room.AddComponent<RoomRestoration>();
+
+            // A floor tile per room so the returning colour is visible beyond the items (warm wood for now).
+            var tile = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            tile.name = "FloorTint";
+            Object.DestroyImmediate(tile.GetComponent<Collider>());
+            tile.transform.SetParent(room.transform, false);
+            tile.transform.position = new Vector3(center.x, center.y - size.y / 2f + 0.005f, center.z);
+            tile.transform.localScale = new Vector3(size.x - 0.2f, 0.01f, size.z - 0.2f);
+            tile.GetComponent<Renderer>().sharedMaterial = FloorTintMaterial();
             return room.transform;
         }
 

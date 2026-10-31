@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using SpiritMovers.Core.Job;
 using SpiritMovers.Interaction;
@@ -43,24 +44,123 @@ namespace SpiritMovers.Job
 
         private readonly NetworkVariable<JobSpec> m_Spec = new();
         private readonly NetworkVariable<JobPhase> m_Phase = new(JobPhase.Briefing);
+        private readonly NetworkVariable<int> m_AngerStage = new();
+        private NetworkList<FixedString32Bytes> m_Accepted;
 
+        private const float EvaluateInterval = 0.5f;
+        private const float SettledSpeed = 0.05f;
+
+        private readonly List<string> m_AcceptedCache = new();
+        private readonly List<SlotState> m_SlotStates = new();
         private JobProgress m_Progress;
         private AngerModel m_Anger;
         private JobDifficulty m_Difficulty;
+        private float m_NextEvaluate;
 
         public HouseAuthoring House => m_House;
         public JobPhase Phase => m_Phase.Value;
         public JobPlan Plan { get; private set; }
         /// <summary>False when this peer's house data gives a different plan than the host's.</summary>
         public bool PlanMatchesHost { get; private set; } = true;
+        /// <summary>Rooms the ghost has accepted, in order; every peer.</summary>
+        public IReadOnlyList<string> AcceptedRooms => m_AcceptedCache;
+        /// <summary>Anger stage 0–4 as the host sees it; every peer.</summary>
+        public int AngerStage => m_AngerStage.Value;
+        /// <summary>Host only: the anger value (0 elsewhere).</summary>
+        public float AngerValue => m_Anger?.Value ?? 0f;
+
+        /// <summary>Every peer: a room was accepted (its colour starts coming back).</summary>
+        public event Action<string> RoomAccepted;
+
+        private void Awake() => m_Accepted = new NetworkList<FixedString32Bytes>();
 
         public override void OnNetworkSpawn()
         {
+            m_Accepted.OnListChanged += OnAcceptedChanged;
+            // Late joiners see already-accepted rooms in colour straight away.
+            foreach (var room in m_Accepted)
+                OnRoomAccepted(room.ToString(), instant: true);
+
             if (IsServer)
                 return;
             m_Spec.OnValueChanged += (_, spec) => ApplyHostPlan(spec);
             if (m_Spec.Value.IsSet)
                 ApplyHostPlan(m_Spec.Value);
+        }
+
+        private void OnAcceptedChanged(NetworkListEvent<FixedString32Bytes> change)
+        {
+            if (change.Type == NetworkListEvent<FixedString32Bytes>.EventType.Add)
+                OnRoomAccepted(change.Value.ToString(), instant: false);
+        }
+
+        private void OnRoomAccepted(string roomId, bool instant)
+        {
+            if (m_AcceptedCache.Contains(roomId))
+                return;
+            m_AcceptedCache.Add(roomId);
+            var room = m_House.Rooms.FirstOrDefault(r => r.RoomId == roomId);
+            if (room != null && room.TryGetComponent<RoomRestoration>(out var restoration))
+                restoration.Restore(instant);
+            RoomAccepted?.Invoke(roomId);
+        }
+
+        private void Update()
+        {
+            if (!IsServer || m_Progress == null || m_Progress.Phase != JobPhase.Exploring)
+                return;
+
+            m_Anger.Tick(Time.deltaTime, everyoneSilent: false);
+            m_AngerStage.Value = m_Anger.Stage;
+
+            if (Time.time < m_NextEvaluate)
+                return;
+            m_NextEvaluate = Time.time + EvaluateInterval;
+            foreach (var room in Plan.Rooms)
+                if (!m_Progress.AcceptedRooms.Contains(room.RoomId))
+                    EvaluateNow(room.RoomId);
+        }
+
+        /// <summary>
+        /// Server: score one room of the plan now and accept it if the ghost would (TECHNICAL_DESIGN 4.3) —
+        /// only once its items are put down and still. Returns how many items are in place (the ghost's nod),
+        /// or −1 for a room that is not part of this job.
+        /// </summary>
+        public int EvaluateNow(string roomId)
+        {
+            var room = Plan?.Rooms.FirstOrDefault(r => r.RoomId == roomId);
+            if (!IsServer || room == null)
+                return -1;
+
+            m_SlotStates.Clear();
+            var settled = true;
+            foreach (var task in room.Slots)
+            {
+                var item = m_House.Slot(task.Slot.Id).Item;
+                var body = item.GetComponent<Rigidbody>();
+                settled &= !item.IsCarried && body.linearVelocity.magnitude < SettledSpeed;
+                var actual = new Placement(m_House.RoomAt(body.position), body.position.ToNumerics(), body.rotation.ToNumerics());
+                m_SlotStates.Add(new SlotState(task.Slot.Id, task.Slot.Target, task.Slot.Tolerance, actual, ItemCondition.Intact));
+            }
+
+            var result = RoomEvaluator.Evaluate(m_SlotStates, RoomRules.Default);
+            if (result.Accepted && settled && m_Progress.AcceptRoom(roomId))
+            {
+                m_Anger.OnRoomAccepted();
+                m_AngerStage.Value = m_Anger.Stage;
+                m_Accepted.Add(roomId);
+                m_Phase.Value = m_Progress.Phase;
+                Debug.Log($"[Job] room accepted {roomId} ({m_Progress.AcceptedRooms.Count}/{m_Progress.RoomsRequired})");
+            }
+            return result.CorrectCount;
+        }
+
+        /// <summary>Test hook: raise anger (by breaking-item steps) until it reaches at least <paramref name="value"/>.</summary>
+        internal void ApplyAngerForTest(float value)
+        {
+            while (m_Anger.Value < value && !m_Anger.IsEvicted)
+                m_Anger.Apply(AngerEvent.ItemBroken);
+            m_AngerStage.Value = m_Anger.Stage;
         }
 
         /// <summary>Server: make the plan for this seed, unpack the house and start exploring.</summary>
