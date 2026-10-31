@@ -64,6 +64,7 @@ namespace SpiritMovers.Editor
             go.AddComponent<GameSession>();
             go.AddComponent<LobbyGate>();
             SetFont(go.AddComponent<LoadingOverlay>());
+            SetFont(go.AddComponent<PauseMenu>());
             var prefab = PrefabUtility.SaveAsPrefabAsset(go, GameNetworkPath);
             Object.DestroyImmediate(go);
             return prefab;

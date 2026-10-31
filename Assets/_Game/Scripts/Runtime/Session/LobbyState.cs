@@ -127,6 +127,9 @@ namespace SpiritMovers.Session
             NetworkManager.SceneManager.LoadScene(GameSession.JobScene, UnityEngine.SceneManagement.LoadSceneMode.Single);
         }
 
+        /// <summary>Test hook: as if this player had dropped out.</summary>
+        internal void SimulateLeftForTest(ulong clientId) => RemoveMember(clientId);
+
         private bool CanStart() => SessionRules.CanStart(Members.Select(m => m.Ready).ToList());
 
         private void AddMember(ulong clientId)

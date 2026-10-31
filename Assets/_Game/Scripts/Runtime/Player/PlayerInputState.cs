@@ -24,6 +24,8 @@ namespace SpiritMovers.Player
         public bool ReadyPressed;
         /// <summary>Confirm / go now (Enter) — the host departs or leaves the results early.</summary>
         public bool ConfirmPressed;
+        /// <summary>Open / close the pause menu (Esc).</summary>
+        public bool PausePressed;
     }
 
     public interface IPlayerInputSource
@@ -48,6 +50,7 @@ namespace SpiritMovers.Player
             Next.UsePressed = false;
             Next.ReadyPressed = false;
             Next.ConfirmPressed = false;
+            Next.PausePressed = false;
             return state;
         }
     }

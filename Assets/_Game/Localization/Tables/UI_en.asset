@@ -256,6 +256,14 @@ MonoBehaviour:
     m_Localized: 'Back to the van in {0} s (host: Enter to go now)'
     m_Metadata:
       m_Items: []
+  - m_Id: 228360597565440
+    m_Localized: Back to the game
+    m_Metadata:
+      m_Items: []
+  - m_Id: 228360660480000
+    m_Localized: Leave the room
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

@@ -100,6 +100,8 @@ namespace SpiritMovers.Interaction
         {
             ThaiFontSupport.Register(m_PromptFont, m_PromptGlyphMap);
             var canvas = new GameObject("InteractionPrompt", typeof(Canvas), typeof(CanvasScaler));
+            // A child of the player: it survives scene changes with it and is destroyed with it (M3B carry-over 5).
+            canvas.transform.SetParent(transform, false);
             canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
             var scaler = canvas.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;

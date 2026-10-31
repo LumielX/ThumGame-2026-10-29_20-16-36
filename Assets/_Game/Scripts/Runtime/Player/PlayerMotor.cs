@@ -157,7 +157,9 @@ namespace SpiritMovers.Player
             if (!IsSpawned || !IsOwner)
                 return;
 
-            var input = InputEnabled && Input != null ? Input.Read() : default;
+            var raw = Input != null ? Input.Read() : default;
+            // With gameplay input off (pause menu, chat field) only Esc gets through, so the menu can be closed again.
+            var input = InputEnabled ? raw : new PlayerInputState { PausePressed = raw.PausePressed };
             CurrentInput = input;
             if (MovementLocked)
             {

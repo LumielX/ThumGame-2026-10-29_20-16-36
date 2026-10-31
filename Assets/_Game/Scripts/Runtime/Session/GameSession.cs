@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using SpiritMovers.Core.Job;
 using SpiritMovers.Core.Session;
 using SpiritMovers.Job;
 using SpiritMovers.Net;
@@ -26,6 +27,7 @@ namespace SpiritMovers.Session
         private readonly UgsSessionService m_Ugs = new();
         private NetworkManager m_Network;
         private bool m_Loading;
+        private bool m_Leaving;
 
         public static GameSession Instance { get; private set; }
 
@@ -95,17 +97,49 @@ namespace SpiritMovers.Session
             }
         }
 
-        /// <summary>Client: the host refused us (job in progress, room full) — say why on the main menu.</summary>
+        /// <summary>
+        /// Client lost the host: refused on joining (job in progress, room full) or the host left / crashed — back to
+        /// the menu with a message for the phase, and the pay for rooms the ghost already accepted (GDD 9).
+        /// </summary>
         private void OnDisconnected(ulong clientId)
         {
-            if (m_Network.IsServer || clientId != m_Network.LocalClientId)
+            if (m_Leaving || m_Network.IsServer || clientId != m_Network.LocalClientId)
                 return;
             var reason = m_Network.DisconnectReason;
-            if (string.IsNullOrEmpty(reason) || !reason.StartsWith("error."))
-                return;
-            Debug.Log($"[Net] refused by the host: {reason}");
-            PendingMessageKey = reason;
+            if (!string.IsNullOrEmpty(reason) && reason.StartsWith("error."))
+            {
+                Debug.Log($"[Net] refused by the host: {reason}");
+                PendingMessageKey = reason;
+                PendingPay = 0;
+            }
+            else
+            {
+                var phase = Phase;
+                PendingMessageKey = MessageForHostLeft(phase);
+                PendingPay = PayForHostLeft(phase);
+                Debug.Log($"[Net] the host left during {phase}; pay {PendingPay}");
+            }
             _ = LeaveAsync();
+        }
+
+        internal static string MessageForHostLeft(SessionPhase phase) => phase switch
+        {
+            SessionPhase.Job => "session.host_left_job",
+            SessionPhase.Results => "session.host_left_results",
+            _ => "session.host_left_lobby",
+        };
+
+        /// <summary>What this player keeps: the synced job report if there was one, else the accepted rooms' share.</summary>
+        private static int PayForHostLeft(SessionPhase phase)
+        {
+            var director = FindAnyObjectByType<JobDirector>();
+            if (director == null || director.Plan == null)
+                return 0;
+            if (director.Result.IsSet)
+                return director.Result.PerPlayer;
+            var basePay = director.Plan.DifficultyId == JobDifficulty.Hard.Id ? JobDifficulty.Hard.BasePay : JobDifficulty.Normal.BasePay;
+            return SessionRules.HostLeftPay(phase, director.AcceptedRooms.Count, director.Plan.Rooms.Count, basePay,
+                director.Plan.PlayerCount);
         }
 
         private void OnDestroy()
@@ -172,6 +206,7 @@ namespace SpiritMovers.Session
         public async Task LeaveAsync()
         {
             var online = !IsSolo && JoinCode != null;
+            m_Leaving = true;
             m_Network.Shutdown();
             IsSolo = false;
             JoinCode = null;
@@ -187,6 +222,7 @@ namespace SpiritMovers.Session
                     Debug.LogWarning($"[Net] leaving the session failed: {e.Message}");
                 }
             }
+            m_Leaving = false;
             SceneManager.LoadScene(MainMenuScene);
         }
 
