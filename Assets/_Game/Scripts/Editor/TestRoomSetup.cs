@@ -200,16 +200,38 @@ namespace SpiritMovers.Editor
         private static void BuildScene(string scenePath, string folder)
         {
             var version = GameVersion.Parse(PlayerSettings.bundleVersion);
+            // Nothing may be left dirty in memory when the build starts (an unsaved material corrupted level0, M3C).
+            AssetDatabase.SaveAssets();
+            // Always a clean folder: incremental builds over an earlier one also left a corrupted level0 (M3C).
+            var outputDir = Path.Combine("Builds", $"{folder}-v{version}");
+            FileUtil.DeleteFileOrDirectory(outputDir);
             var summary = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
                 scenes = new[] { scenePath },
-                locationPathName = Path.Combine("Builds", $"{folder}-v{version}", "SpiritMovers.exe"),
+                locationPathName = Path.Combine(outputDir, "SpiritMovers.exe"),
                 target = BuildTarget.StandaloneWindows64,
                 options = BuildOptions.Development,
             }).summary;
             Debug.Log($"[TestRoom] build result={summary.result} output={summary.outputPath} errors={summary.totalErrors}");
             if (summary.result != BuildResult.Succeeded && Application.isBatchMode)
                 EditorApplication.Exit(1);
+        }
+
+        /// <summary>A URP Lit material asset of this colour, created once and only recoloured afterwards.</summary>
+        private static Material LitMaterial(string path, Color color)
+        {
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                material = new Material(AssetDatabase.LoadAssetAtPath<Material>(UrpLitMaterialPath));
+                AssetDatabase.CreateAsset(material, path);
+            }
+            if (material.GetColor("_BaseColor") != color)
+            {
+                material.SetColor("_BaseColor", color);
+                EditorUtility.SetDirty(material);
+            }
+            return material;
         }
 
         private static Material FloorTintMaterial()
@@ -371,12 +393,9 @@ namespace SpiritMovers.Editor
             var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
             go.name = name;
             go.transform.localScale = size;
-            // A copy of URP's own Lit material: one built from Shader.Find in batch mode rendered magenta in the player.
-            var material = new Material(AssetDatabase.LoadAssetAtPath<Material>(UrpLitMaterialPath));
-            material.SetColor("_BaseColor", color);
-            var materialPath = path.Replace(".prefab", ".mat");
-            AssetDatabase.DeleteAsset(materialPath);
-            AssetDatabase.CreateAsset(material, materialPath);
+            // Reuse the material asset across runs: a material deleted and re-created in the session that then
+            // builds the player renders magenta in that build (M3C finding; see TESTING.md).
+            var material = LitMaterial(path.Replace(".prefab", ".mat"), color);
             go.GetComponent<Renderer>().sharedMaterial = material;
             var body = go.AddComponent<Rigidbody>();
             body.mass = mass;

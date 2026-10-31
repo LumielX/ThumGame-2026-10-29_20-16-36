@@ -1,6 +1,6 @@
 # TESTING — วิธีทดสอบ Spirit Movers
 
-> อัปเดต: 2026-10-30 (M2) · สถานะงานตาม MASTER_PROMPT 14: ทดสอบในเครื่องเดียวได้สูงสุด `Tested` · `Verified` ต้องมาจากผู้เล่นจริงบนเครื่องจริง/ผ่านอินเทอร์เน็ต (ระบุใครและเมื่อไร)
+> อัปเดต: 2026-10-31 (M3C) · สถานะงานตาม MASTER_PROMPT 14: ทดสอบในเครื่องเดียวได้สูงสุด `Tested` · `Verified` ต้องมาจากผู้เล่นจริงบนเครื่องจริง/ผ่านอินเทอร์เน็ต (ระบุใครและเมื่อไร)
 
 ## 1. ทดสอบอัตโนมัติ (Claude รันเองได้)
 ปิด Unity Editor ก่อน (Batch Mode ใช้โปรเจกต์ที่เปิดอยู่ไม่ได้)
@@ -10,10 +10,12 @@
 | `powershell -ExecutionPolicy Bypass -File Tools\test.ps1` | EditMode Tests (`-Filter ชื่อชุด` รันเฉพาะชุด) | `Logs/test-EditMode.xml`, `Logs/test-EditMode.log` |
 | `powershell -ExecutionPolicy Bypass -File Tools\test.ps1 -Platform PlayMode` | PlayMode Tests — โหลดฉาก `M3_TestRoom` เป็น Host ในเครื่อง (ไม่ใช้ UGS) | `Logs/test-PlayMode.*` |
 | `powershell -ExecutionPolicy Bypass -File Tools\m3b-carry-test.ps1` | Host + Client Headless ผ่าน Relay จริง 6 สถานการณ์ (`carry`, `shared`, `split`, `remote`, `disconnect`, `crash`) · `-LatencyMs 150` จำลองความหน่วง — Build ก่อนด้วย `-executeMethod SpiritMovers.Editor.TestRoomSetup.BuildTestRoom` | PASS/FAIL ต่อสถานการณ์, Log ใน `Logs/m3b/` |
+| `powershell -ExecutionPolicy Bypass -File Tools\m3c-job-test.ps1` | Host + Client Headless ผ่าน Relay เล่นจบงาน (Seed 1..10 ค่าเริ่มต้น) · `-Clients 3` = 4 คน · `-FirstSeed N`, `-Seconds N` · ผ่านเมื่อทุกเครื่อง `ok=true` และ ending/accepted/teamTotal/stars ตรงกัน — Build ก่อนด้วย `-executeMethod SpiritMovers.Editor.TestRoomSetup.BuildTestHouse` | PASS/FAIL ต่อรอบ, Log ใน `Logs/m3c/` |
 | `powershell -ExecutionPolicy Bypass -File Tools\build.ps1` | Build Windows + Zip | `Builds/SpiritMovers-v<ver>-Windows(.zip)`, `Logs/build.log` |
 
 - ใช้ Editor ตัวอื่น: ตั้ง `UNITY_EXE` เป็น Path ของ `Unity.exe`
 - **Build ห้ามใช้ `-nographics`** — Material ที่สคริปต์สร้างจะเป็นสีม่วงแดงใน Build (พบใน M3B) · Test และการรัน Player แบบ Headless ใช้ได้ตามปกติ
+- **ห้ามลบแล้วสร้าง Material ใหม่ใน Session ที่ Build** (ของเป็นสีม่วงแดง) · **MonoBehaviour ต้องอยู่ไฟล์ละคลาสชื่อตรงกัน** (ไม่งั้นฉาก level0 ใน Build เสีย Player แครชตอนโหลด) — พบใน M3C · Test ผ่านทั้งที่ Build เสีย จึงต้องเปิด Build แบบมีหน้าต่างดูภาพทุกครั้งที่เพิ่ม Material/สคริปต์ และค้น Log หา `is missing or no valid script`
 - ทุกครั้งหลัง Compile/Test/Build ต้องอ่าน Log (MASTER_PROMPT 3.4)
 - Smoke test ของ Build: เปิด `SpiritMovers.exe -batchmode -nographics -logFile <path>` แล้วตรวจบรรทัด `[Boot] Spirit Movers v<ver>`
 
@@ -29,11 +31,13 @@
 | `AngerModelTests` (EditMode) | ความโกรธ 5 ขั้น · ตัวคูณ · ไหว้ห้องละครั้ง · ความเงียบ · ไม่เปลี่ยนหลังไล่ออก | ผ่าน (2026-10-31) |
 | `JobGeneratorTests` (EditMode) | สุ่มงานจาก Seed แบบ Deterministic · จำนวนห้อง/ของตามระดับและจำนวนคน · ประเภทปัญหา · บ้านช่องไม่พอ | ผ่าน (2026-10-31) |
 | `PayoutCalculatorTests` (EditMode) | ค่าจ้าง 3 แบบจบ · โบนัสดาว · หัก Hint ไม่ติดลบ · แบ่งคน | ผ่าน (2026-10-31) |
-| `JobProgressTests` (EditMode) | สถานะงาน Briefing → Exploring → Farewell → Ended · คำสั่งซ้ำ/ผิดลำดับถูกเพิกเฉย | ผ่าน (2026-10-31, หลังแก้ตามรีวิว) |
-| `MovementRulesTests`, `CarryRulesTests` (EditMode) | ความเร็ว/Stamina/ของหนัก/เสียงฝีเท้า · จุดถือไม่ขึ้นกับ Pitch · จำกัดความเร็วตามมือ · ตรวจของหลุดมือ | ผ่าน — EditMode รวม 109/109 (2026-10-31) |
+| `JobProgressTests` (EditMode) | สถานะงาน Briefing → Exploring → Farewell → Ended · คำสั่งซ้ำ/ผิดลำดับถูกเพิกเฉย · กลับก่อนตั้งแต่ Briefing | ผ่าน (2026-10-31) |
+| `MovementRulesTests`, `CarryRulesTests` (EditMode) | ความเร็ว/Stamina/ของหนัก/เสียงฝีเท้า · จุดถือไม่ขึ้นกับ Pitch · จำกัดความเร็วตามมือ · ตรวจของหลุดมือ | ผ่าน — EditMode รวม 120/120 (2026-10-31) |
 | `PlayerMotorTests` (PlayMode) | เดิน/วิ่ง/ย่อ/Stamina หมด/กระโดด/ปิด Input/ขึ้นบันได | ผ่าน (2026-10-31) |
-| `CarryTests`, `CarryAuthorityTests` (PlayMode) | ยก/วาง/หมุน/โยน · ของหนักช้าและโยนไม่ได้ · เอื้อมไม่ถึง · แย่งของ · ปิด Input ขณะถือ · Host บังคับปล่อย · คนถือหลุด | ผ่าน — PlayMode รวม 20/20 (2026-10-31) |
-| `Tools/m3b-carry-test.ps1` (2 Instance ผ่าน Relay) | ยกคนเดียว (ตำแหน่งตรงกัน 0.006 ม.) · ยก 2 คนแล้วส่งต่อให้คนเดียว · ยก 2 คนแล้วเดินแยก (ปล่อยเอง) · Client หมุน+โยน · ปิดเกม/เกมแครชขณะถือ (Host ยกต่อได้) | PASS 6/6 ที่ 0 ms และ 150 ms ต่อทาง (2026-10-31) |
+| `CarryTests`, `CarryAuthorityTests` (PlayMode) | ยก/วาง/หมุน/โยน · ของหนักช้าและโยนไม่ได้ · เอื้อมไม่ถึง · แย่งของ · ปิด Input ขณะถือ · Host บังคับปล่อย · คนถือหลุด | ผ่าน (2026-10-31) |
+| `JobStartTests`, `RoomAcceptanceTests`, `BellTests`, `JobEndingTests` (PlayMode, ฉาก `M3_TestHouse`) | เริ่มงานจาก Seed · Client สร้างแผนตรงกับ Host · ผีรับห้อง/สีกลับ · กริ่งห้องละครั้ง · จบงาน 3 แบบ + ค่าจ้าง · ใบสั่งงาน/สรุปงานภาษาไทย | ผ่าน — PlayMode รวม 44/44 (2026-10-31) |
+| `Tools/m3b-carry-test.ps1` (2 Instance ผ่าน Relay) | ยกคนเดียว (ตำแหน่งตรงกัน 0.006 ม.) · ยก 2 คนแล้วส่งต่อให้คนเดียว · ยก 2 คนแล้วเดินแยก (ปล่อยเอง) · Client หมุน+โยน · ปิดเกม/เกมแครชขณะถือ (Host ยกต่อได้) | PASS 6/6 ที่ 0 ms และ 150 ms ต่อทาง · รันซ้ำหลังแก้ Build M3C PASS 6/6 ที่ 0 ms (2026-10-31) |
+| `Tools/m3c-job-test.ps1` (หลาย Instance ผ่าน Relay) | Host + 1 Client เล่นจบงาน Seed 1–10 · Host + 3 Client Seed 11 · ทุกเครื่องได้ FullSuccess, รับ 3/3 ห้อง, 390, 3 ดาว ตรงกัน (ไม่ Desync) · ภาพ `docs/screenshots/m3/job-sheet-th.png`, `job-results-th.png` | PASS 10/10 + 1/1 (2026-10-31) |
 | ต้นแบบ Network (`Tools/proto-netsync-matrix.ps1`) | Host+Client ผ่าน Relay, วิธียกของ A/B × Latency 0/100/200 ms | ผ่าน — ผลใน `docs/M2_REPORT.md` |
 
 ### ต้นแบบ Voice ในเครื่องเดียว (Claude รันเองได้)

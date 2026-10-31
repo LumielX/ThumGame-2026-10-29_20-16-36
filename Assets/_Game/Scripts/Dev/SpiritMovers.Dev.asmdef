@@ -7,7 +7,8 @@
         "SpiritMovers.Net",
         "Unity.Netcode.Runtime",
         "Unity.InputSystem",
-        "Unity.Multiplayer.Tools.NetworkSimulator.Runtime"
+        "Unity.Multiplayer.Tools.NetworkSimulator.Runtime",
+        "Unity.Collections"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

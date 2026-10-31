@@ -315,6 +315,12 @@ namespace SpiritMovers.Job
                 Debug.LogError($"[Job] plan mismatch: host layout {spec.LayoutHash} but this build has {Plan.LayoutHash} — the house data differs");
         }
 
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+        /// <summary>Dev builds only: a bot asks the host to put a slot's item back (Tools/m3c-job-test.ps1).</summary>
+        [Rpc(SendTo.Server)]
+        public void DevPutBackRpc(FixedString32Bytes slotId) => PlaceAtTarget(slotId.ToString());
+#endif
+
         /// <summary>Server (tests, dev bots): put a slot's item exactly where the ghost remembers it.</summary>
         internal void PlaceAtTarget(string slotId)
         {

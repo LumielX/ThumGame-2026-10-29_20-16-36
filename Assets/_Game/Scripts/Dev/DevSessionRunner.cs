@@ -17,7 +17,8 @@ namespace SpiritMovers.Dev
     /// Relay session by code. Not part of the shipped game flow (the Lobby comes in M4).
     /// Headless automation (command line):
     ///   -dev-role host|client  -dev-profile NAME  -dev-codefile PATH  -dev-seconds S
-    ///   -dev-scenario NAME (see <see cref="DevBot"/>)  -dev-screenshot PNG  -dev-latency MS (simulated, each way)
+    ///   -dev-scenario NAME (see <see cref="DevBot"/>; "job" = <see cref="DevJobBot"/> with -dev-seed N -dev-players N
+    ///   -dev-sheet-shot PNG)  -dev-screenshot PNG  -dev-latency MS (simulated, each way)
     /// </summary>
     public sealed class DevSessionRunner : MonoBehaviour
     {
@@ -31,6 +32,7 @@ namespace SpiritMovers.Dev
         private float m_QuitAt;
         private string m_Role;
         private DevBot m_Bot;
+        private DevJobBot m_JobBot;
         private bool m_Finished;
 
         public string SessionCode { get; private set; }
@@ -104,8 +106,16 @@ namespace SpiritMovers.Dev
             while (!Manager.IsServer && !Manager.IsConnectedClient)
                 await Task.Yield();
             var scenario = Arg("-dev-scenario");
-            if (scenario != null)
+            if (scenario == "job")
+            {
+                int.TryParse(Arg("-dev-seed"), out var seed);
+                int.TryParse(Arg("-dev-players"), out var players);
+                m_JobBot = DevJobBot.Attach(gameObject, m_Role == "host", seed, Mathf.Max(1, players), Arg("-dev-sheet-shot"));
+            }
+            else if (scenario != null)
+            {
                 m_Bot = DevBot.Attach(gameObject, scenario, m_Role == "host");
+            }
         }
 
         private void Update()
@@ -132,6 +142,11 @@ namespace SpiritMovers.Dev
 
         private void LogSummary()
         {
+            if (m_JobBot != null)
+            {
+                Debug.Log(m_JobBot.Summary(m_Role));
+                return;
+            }
             if (m_Bot == null || m_Bot.Item == null)
             {
                 Debug.Log($"[M3B] SUMMARY role={m_Role} scenario={Arg("-dev-scenario")} ok=false reason=no-bot");
