@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SpiritMovers.Core.Ghost;
 using SpiritMovers.Core.Job;
+using SpiritMovers.Interaction;
 using SpiritMovers.Job;
 using SpiritMovers.Player;
 using Unity.Netcode;
@@ -70,6 +71,7 @@ namespace SpiritMovers.Ghost
                 return;
             GhostNavMesh.Acquire();
             m_NavMeshHeld = true;
+            Caught += DragToCabinet;
             PlaceAt(transform.position);
             NextPrankAt = Time.time + m_Config.PrankCooldown;
             NextDisturbAt = Time.time + m_Config.DisturbCooldown;
@@ -105,14 +107,18 @@ namespace SpiritMovers.Ghost
                 return;
 
             var motors = FindObjectsByType<PlayerMotor>(FindObjectsSortMode.None);
+            // Players shut in a cabinet cannot hold the ghost still by staring at it.
             var watched = GhostRules.IsWatched(transform.position.ToNumerics(),
-                motors.Select(m => new Viewer(m.OwnerClientId, m.Head.position.ToNumerics(), m.Look.ToNumerics())), m_Config, ClearLine);
+                motors.Where(m => !IsCaptured(m)).Select(m => new Viewer(m.OwnerClientId, m.Head.position.ToNumerics(), m.Look.ToNumerics())),
+                m_Config, ClearLine);
             if (m_Watched.Value != watched)
                 m_Watched.Value = watched;
             if (watched)
                 return; // shy: frozen while anyone looks
 
-            var targets = motors.Select(m => new Target(m.OwnerClientId, m.Feet.ToNumerics(), false, 0f)).ToList();
+            var targets = motors.Select(m => m.TryGetComponent<PlayerCapture>(out var capture)
+                ? new Target(m.OwnerClientId, m.Feet.ToNumerics(), capture.IsCaptured, capture.ImmuneUntil)
+                : new Target(m.OwnerClientId, m.Feet.ToNumerics(), false, 0f)).ToList();
             var target = GhostRules.PickTarget(Ground.ToNumerics(), targets, Time.time);
             if (target is { } t)
             {
@@ -127,6 +133,24 @@ namespace SpiritMovers.Ghost
                 Prank();
             if (mode == GhostMode.Disturb && Time.time >= NextDisturbAt)
                 Disturb();
+        }
+
+        private static bool IsCaptured(PlayerMotor motor) =>
+            motor.TryGetComponent<PlayerCapture>(out var capture) && capture.IsCaptured;
+
+        /// <summary>Host: drag the caught player into a free cabinet — this room's first, else the nearest.</summary>
+        private void DragToCabinet(ulong clientId)
+        {
+            if (!PlayerCarrier.TryGet(clientId, out var player) || !player.TryGetComponent<PlayerCapture>(out var capture))
+                return;
+            var room = CurrentRoom;
+            var cabinet = FindObjectsByType<MemoryCabinet>(FindObjectsSortMode.None)
+                .Where(c => !c.IsOccupied)
+                .OrderBy(c => c.RoomId == room ? 0 : 1)
+                .ThenBy(c => Vector3.Distance(c.transform.position, Ground))
+                .FirstOrDefault();
+            if (cabinet != null)
+                cabinet.Capture(capture);
         }
 
         /// <summary>Test hook: put the ghost on the floor at a point.</summary>

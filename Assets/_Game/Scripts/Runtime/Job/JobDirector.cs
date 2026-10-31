@@ -113,6 +113,8 @@ namespace SpiritMovers.Job
         public int AngerStage => m_AngerStage.Value;
         /// <summary>Host only: the anger value (0 elsewhere).</summary>
         public float AngerValue => m_Anger?.Value ?? 0f;
+        /// <summary>Host: how many times a player got out of a memory cabinet alone (costs pay, GDD 6.3).</summary>
+        public int SelfReleases { get; private set; }
         /// <summary>Set on every peer once the job has ended.</summary>
         public JobResult Result => m_Result.Value;
 
@@ -225,18 +227,7 @@ namespace SpiritMovers.Job
             if (!IsServer || room == null)
                 return -1;
 
-            m_SlotStates.Clear();
-            var settled = true;
-            foreach (var task in room.Slots)
-            {
-                var item = m_House.Slot(task.Slot.Id).Item;
-                var body = item.GetComponent<Rigidbody>();
-                settled &= !item.IsCarried && body.linearVelocity.magnitude < SettledSpeed;
-                var actual = new Placement(m_House.RoomAt(body.position), body.position.ToNumerics(), body.rotation.ToNumerics());
-                m_SlotStates.Add(new SlotState(task.Slot.Id, task.Slot.Target, task.Slot.Tolerance, actual, ItemCondition.Intact));
-            }
-
-            var result = RoomEvaluator.Evaluate(m_SlotStates, RoomRules.Default);
+            var result = Score(room, out var settled);
             if (!settled)
                 m_SettledSince.Remove(roomId);
             else if (!m_SettledSince.ContainsKey(roomId))
@@ -251,6 +242,40 @@ namespace SpiritMovers.Job
                 Debug.Log($"[Job] room accepted {roomId} ({m_Progress.AcceptedRooms.Count}/{m_Progress.RoomsRequired})");
             }
             return result.CorrectCount;
+        }
+
+        /// <summary>Host: how many of a planned room's items are in place right now (0 for a room not in the job).</summary>
+        internal int CorrectCount(string roomId)
+        {
+            var room = Plan?.Rooms.FirstOrDefault(r => r.RoomId == roomId);
+            return IsServer && room != null ? Score(room, out _).CorrectCount : 0;
+        }
+
+        private RoomResult Score(RoomTask room, out bool settled)
+        {
+            m_SlotStates.Clear();
+            settled = true;
+            foreach (var task in room.Slots)
+            {
+                var item = m_House.Slot(task.Slot.Id).Item;
+                var body = item.GetComponent<Rigidbody>();
+                settled &= !item.IsCarried && body.linearVelocity.magnitude < SettledSpeed;
+                var actual = new Placement(m_House.RoomAt(body.position), body.position.ToNumerics(), body.rotation.ToNumerics());
+                m_SlotStates.Add(new SlotState(task.Slot.Id, task.Slot.Target, task.Slot.Tolerance, actual, ItemCondition.Intact));
+            }
+            return RoomEvaluator.Evaluate(m_SlotStates, RoomRules.Default);
+        }
+
+        /// <summary>Host: a player got out of a memory cabinet alone; it costs pay at the end (GDD 6.3).</summary>
+        internal void CountSelfRelease() => SelfReleases++;
+
+        /// <summary>Host: a solo player was caught — the ghost calms down one stage (D-011).</summary>
+        internal void CalmOneStage()
+        {
+            if (m_Anger == null)
+                return;
+            m_Anger.CalmOneStage();
+            m_AngerStage.Value = m_Anger.Stage;
         }
 
         /// <summary>
@@ -289,7 +314,7 @@ namespace SpiritMovers.Job
                 return;
             var stars = StarRating.Calculate(m_Anger.HighestStage, itemsBroken: 0);
             var payout = PayoutCalculator.Calculate(ending, m_Difficulty.BasePay, m_Progress.AcceptedRooms.Count,
-                m_Progress.RoomsRequired, stars, hintsUsed: 0, selfReleases: 0, NetworkManager.ConnectedClientsIds.Count, PayoutRules.Default);
+                m_Progress.RoomsRequired, stars, hintsUsed: 0, SelfReleases, NetworkManager.ConnectedClientsIds.Count, PayoutRules.Default);
             m_Result.Value = new JobResult
             {
                 IsSet = true,

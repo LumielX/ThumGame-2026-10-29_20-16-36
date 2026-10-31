@@ -1,4 +1,5 @@
 using SpiritMovers.Core.Player;
+using SpiritMovers.Ghost;
 using SpiritMovers.Player;
 using SpiritMovers.Text;
 using TMPro;
@@ -22,12 +23,17 @@ namespace SpiritMovers.Interaction
 
         private readonly CarryConfig m_Config = CarryConfig.Default;
         private PlayerCarrier m_Carrier;
+        private PlayerCapture m_Capture;
         private LocalizedThaiText m_Prompt;
         private string m_PromptKey;
 
         public IInteractable Focus { get; private set; }
 
-        private void Awake() => m_Carrier = GetComponent<PlayerCarrier>();
+        private void Awake()
+        {
+            m_Carrier = GetComponent<PlayerCarrier>();
+            m_Capture = GetComponent<PlayerCapture>();
+        }
 
         public override void OnNetworkSpawn()
         {
@@ -39,6 +45,13 @@ namespace SpiritMovers.Interaction
         {
             if (!IsSpawned || !IsOwner)
                 return;
+
+            if (m_Capture != null && m_Capture.IsCaptured)
+            {
+                Focus = null;
+                ShowPrompt(null); // pressing interact knocks instead (PlayerCapture)
+                return;
+            }
 
             var motor = m_Carrier.Motor;
             var held = m_Carrier.Held;

@@ -34,6 +34,8 @@ namespace SpiritMovers.Editor
             ("bell.nod", "ผีเคาะ {0} ครั้ง", "The ghost knocked {0} times"),
             ("job.leave", "ปิดงาน", "Close the job"),
             ("job.leave.wait", "รอทุกคนมาที่รถก่อนปิดงาน", "Everyone must be at the van to close the job"),
+            ("cabinet.open", "เปิดตู้ช่วยเพื่อน", "Open the cabinet"),
+            ("cabinet.locked", "ตู้ล็อก — จัดของในห้องนี้ให้ถูกอีก 1 ชิ้น หรือส่องกล้อง", "Locked: put one more item right in this room, or use the camera"),
             ("job.sheet.title", "ใบสั่งงาน", "Work order"),
             ("job.accepted", "ผีรับแล้ว", "Accepted"),
             ("room.west", "ห้องนั่งเล่น", "Living room"),

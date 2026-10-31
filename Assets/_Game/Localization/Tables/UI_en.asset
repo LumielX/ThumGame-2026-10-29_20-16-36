@@ -126,6 +126,14 @@ MonoBehaviour:
     m_Localized: Everyone must be at the van to close the job
     m_Metadata:
       m_Items: []
+  - m_Id: 186724127633408
+    m_Localized: Open the cabinet
+    m_Metadata:
+      m_Items: []
+  - m_Id: 186724190547968
+    m_Localized: 'Locked: put one more item right in this room, or use the camera'
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

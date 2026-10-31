@@ -42,7 +42,7 @@ namespace SpiritMovers.Editor
 
         private struct Prefabs
         {
-            public GameObject Player, LightBox, HeavyCrate, JobDirector, GhostBell, Van, Ghost;
+            public GameObject Player, LightBox, HeavyCrate, JobDirector, GhostBell, Van, Ghost, Cabinet;
             public NetworkPrefabsList List;
         }
 
@@ -59,8 +59,9 @@ namespace SpiritMovers.Editor
             result.GhostBell = CreateBellPrefab();
             result.Van = CreateVanPrefab();
             result.Ghost = CreateGhostPrefab();
+            result.Cabinet = CreateCabinetPrefab();
             result.List = CreatePrefabList(result.Player, result.LightBox, result.HeavyCrate, result.JobDirector, result.GhostBell,
-                result.Van, result.Ghost);
+                result.Van, result.Ghost, result.Cabinet);
             return result;
         }
 
@@ -187,6 +188,9 @@ namespace SpiritMovers.Editor
             var ghost = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.Ghost);
             ghost.name = "Ghost";
             ghost.transform.position = new Vector3(-5f, 0f, 8f);
+            // Memory cabinets (GDD 6.3) against the outer walls, doors facing into the room; the loft is too small for one.
+            Cabinet(prefabs.Cabinet, "west", new Vector3(-9.3f, 0f, 6f), 90f);
+            Cabinet(prefabs.Cabinet, "east", new Vector3(9.3f, 0f, 6f), -90f);
             var sun = Object.FindAnyObjectByType<Light>();
             if (sun != null)
                 sun.gameObject.AddComponent<GhostLights>();
@@ -332,6 +336,47 @@ namespace SpiritMovers.Editor
             return prefab;
         }
 
+        /// <summary>
+        /// Placeholder memory cabinet: a box seen from outside (its faces are culled from inside, so the captive sees out),
+        /// an invisible door collider to aim at, and a lamp that blinks when the captive knocks.
+        /// </summary>
+        private static GameObject CreateCabinetPrefab()
+        {
+            var go = new GameObject("MemoryCabinet");
+            go.AddComponent<NetworkObject>();
+            var cabinet = go.AddComponent<MemoryCabinet>();
+            var body = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            body.name = "Body";
+            Object.DestroyImmediate(body.GetComponent<Collider>());
+            body.transform.SetParent(go.transform, false);
+            body.transform.localPosition = new Vector3(0f, 1f, 0f);
+            body.transform.localScale = new Vector3(1f, 2f, 1f);
+            body.GetComponent<MeshRenderer>().sharedMaterial = LitMaterial(PrefabDir + "/Cabinet.mat", new Color(0.35f, 0.25f, 0.4f));
+            var door = new GameObject("Door").AddComponent<BoxCollider>();
+            door.transform.SetParent(go.transform, false);
+            door.center = new Vector3(0f, 1f, 0.55f);
+            door.size = new Vector3(1f, 2f, 0.1f);
+            var light = new GameObject("KnockLight").AddComponent<Light>();
+            light.transform.SetParent(go.transform, false);
+            light.transform.localPosition = new Vector3(0f, 2.3f, 0.7f);
+            light.color = new Color(1f, 0.7f, 0.28f);
+            light.range = 4f;
+            cabinet.Configure("", light);
+            var prefab = PrefabUtility.SaveAsPrefabAsset(go, PrefabDir + "/MemoryCabinet.prefab");
+            Object.DestroyImmediate(go);
+            return prefab;
+        }
+
+        private static void Cabinet(GameObject prefab, string roomId, Vector3 position, float yaw)
+        {
+            var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            instance.name = $"Cabinet_{roomId}";
+            instance.transform.SetPositionAndRotation(position, Quaternion.Euler(0f, yaw, 0f));
+            var cabinet = instance.GetComponent<MemoryCabinet>();
+            cabinet.Configure(roomId, instance.GetComponentInChildren<Light>());
+            EditorUtility.SetDirty(cabinet);
+        }
+
         private static GameObject CreateJobDirectorPrefab()
         {
             var go = new GameObject("JobDirector");
@@ -467,6 +512,7 @@ namespace SpiritMovers.Editor
             serialized.ApplyModifiedPropertiesWithoutUndo();
             root.AddComponent<PlayerCarrier>();
             root.AddComponent<PlayerEmote>();
+            root.AddComponent<PlayerCapture>();
             var interactor = new SerializedObject(root.AddComponent<PlayerInteractor>());
             interactor.FindProperty("m_PromptFont").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontPath);
             interactor.FindProperty("m_PromptGlyphMap").objectReferenceValue = AssetDatabase.LoadAssetAtPath<ThaiGlyphMap>(GlyphMapPath);

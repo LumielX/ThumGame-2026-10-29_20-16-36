@@ -41,6 +41,8 @@ namespace SpiritMovers.Player
         public IPlayerInputSource Input { get; set; }
         /// <summary>False while a UI field (chat, menu) owns the keyboard: the player stands still.</summary>
         public bool InputEnabled { get; set; } = true;
+        /// <summary>Owner: shut in a memory cabinet — can look around but not walk, jump or crouch.</summary>
+        public bool MovementLocked { get; set; }
         /// <summary>Set by the carrying code; slows the player for heavy items.</summary>
         public CarryLoad Load { get; set; }
         public Stamina Stamina { get; } = new();
@@ -131,6 +133,13 @@ namespace SpiritMovers.Player
 
             var input = InputEnabled && Input != null ? Input.Read() : default;
             CurrentInput = input;
+            if (MovementLocked)
+            {
+                input.Move = Vector2.zero;
+                input.Sprint = false;
+                input.Crouch = false;
+                input.JumpPressed = false;
+            }
             ApplyLook(input.Look);
             Move(input, Time.deltaTime);
         }
