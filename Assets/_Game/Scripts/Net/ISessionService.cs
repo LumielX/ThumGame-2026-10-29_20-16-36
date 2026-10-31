@@ -15,5 +15,8 @@ namespace SpiritMovers.Net
         Task JoinAsync(string code, GameVersion version);
 
         Task LeaveAsync();
+
+        /// <summary>Host: open or close the room to new players (closed while the team is on a job, GDD 9).</summary>
+        Task SetJoinableAsync(bool joinable);
     }
 }

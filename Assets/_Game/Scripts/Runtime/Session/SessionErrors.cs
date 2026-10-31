@@ -13,7 +13,7 @@ namespace SpiritMovers.Session
         public const string InJob = "error.in_job";
         public const string Full = "error.full";
 
-        public static string KeyFor(Exception e) => e is VersionMismatchException ? Version : Join;
+        public static string KeyFor(Exception e) => e is VersionMismatchException ? Version : UgsSessionService.FailureKey(e) ?? Join;
 
         /// <summary>Values for the message's {0}, {1}: both versions for a mismatch, nothing otherwise.</summary>
         public static object[] ArgsFor(Exception e) =>

@@ -21,6 +21,13 @@ namespace SpiritMovers
             }
 
             Version = version;
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+            // Version-mismatch test runs pretend to be another build (Tools/m4a-flow-test.ps1 -VersionMismatch).
+            var args = System.Environment.GetCommandLineArgs();
+            var at = System.Array.IndexOf(args, "-dev-version");
+            if (at >= 0 && at + 1 < args.Length && GameVersion.TryParse(args[at + 1], out var pretend))
+                Version = pretend;
+#endif
             Debug.Log($"[Boot] {Application.productName} v{Version} ({Application.platform})");
         }
 

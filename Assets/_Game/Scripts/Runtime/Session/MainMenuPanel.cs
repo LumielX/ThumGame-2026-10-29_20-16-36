@@ -42,8 +42,9 @@ namespace SpiritMovers.Session
 
             if (GameSession.PendingMessageKey != null)
             {
-                ShowStatus(GameSession.PendingMessageKey, GameSession.PendingPay);
+                ShowStatus(GameSession.PendingMessageKey, GameSession.PendingArgs ?? new object[] { GameSession.PendingPay });
                 GameSession.PendingMessageKey = null;
+                GameSession.PendingArgs = null;
                 GameSession.PendingPay = 0;
             }
         }

@@ -13,7 +13,7 @@ param([ValidateSet('job', 'ghost')][string]$Scenario = 'job', [int]$Runs = 10, [
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $exe = Get-ChildItem (Join-Path $root 'Builds') -Filter 'SpiritMovers.exe' -Recurse |
-    Where-Object { $_.DirectoryName -like '*M3-TestHouse-*' } | Select-Object -First 1
+    Where-Object { $_.DirectoryName -like '*M3-TestHouse-*' } | Sort-Object LastWriteTime -Descending | Select-Object -First 1
 if (-not $exe) { throw 'Build the test house first (TestRoomSetup.BuildTestHouse, without -nographics).' }
 $logs = Join-Path $root 'Logs\m3c'
 New-Item -ItemType Directory -Force -Path $logs | Out-Null
@@ -32,7 +32,7 @@ for ($run = 0; $run -lt $Runs; $run++) {
     $seed = $FirstSeed + $run
     $tag = "$Scenario-s$seed-p$players"
     $code = Join-Path $logs "code-$tag.txt"
-    Remove-Item $code -ErrorAction SilentlyContinue
+    Remove-Item $code, (Join-Path $logs "*-$tag.log") -ErrorAction SilentlyContinue
     $common = @('-batchmode', '-nographics', '-dev-codefile', $code, '-dev-scenario', $Scenario, '-dev-seed', "$seed",
         '-dev-players', "$players", '-dev-latency', "$LatencyMs")
     $procs = @()
@@ -51,13 +51,13 @@ for ($run = 0; $run -lt $Runs; $run++) {
     foreach ($p in $procs) { $p.WaitForExit(($Seconds + 60) * 1000) | Out-Null }
     foreach ($p in $procs) { if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force } }
 
-    $summaries = $logFiles | ForEach-Object { Get-Summary $_ }
-    $ok = ($summaries | Where-Object { $_ -eq $null }).Count -eq 0
+    $summaries = @($logFiles | ForEach-Object { Get-Summary $_ })
+    $ok = @($summaries | Where-Object { $_ -eq $null }).Count -eq 0
     if ($ok) {
-        $ok = ($summaries | Where-Object { $_.ok -ne 'true' }).Count -eq 0
+        $ok = @($summaries | Where-Object { $_.ok -ne 'true' }).Count -eq 0
         $keys = if ($Scenario -eq 'ghost') { 'ending', 'teamTotal', 'captured', 'released', 'film', 'watched' } else { 'ending', 'accepted', 'teamTotal', 'stars', 'carried' }
         foreach ($key in $keys) {
-            if (($summaries | ForEach-Object { $_[$key] } | Select-Object -Unique).Count -ne 1) { $ok = $false }
+            if (@($summaries | ForEach-Object { $_[$key] } | Select-Object -Unique).Count -ne 1) { $ok = $false }
         }
     }
     $first = $summaries | Where-Object { $_ } | Select-Object -First 1

@@ -67,10 +67,24 @@ namespace SpiritMovers.Tests
         [UnityTest]
         public IEnumerator Gate_RefusesJoinDuringJob()
         {
-            Assert.AreEqual(JoinRefusal.JobInProgress, LobbyGate.Decide(SessionPhase.Job, 1));
-            Assert.AreEqual(JoinRefusal.None, LobbyGate.Decide(SessionPhase.Lobby, 1));
-            Assert.AreEqual(JoinRefusal.Full, LobbyGate.Decide(SessionPhase.Lobby, SessionRules.MaxPlayers));
+            Assert.AreEqual(JoinRefusal.JobInProgress, LobbyGate.Decide(SessionPhase.Job, 1, true));
+            Assert.AreEqual(JoinRefusal.None, LobbyGate.Decide(SessionPhase.Lobby, 1, true));
+            Assert.AreEqual(JoinRefusal.Full, LobbyGate.Decide(SessionPhase.Lobby, SessionRules.MaxPlayers, true));
             Assert.AreEqual(SessionErrors.InJob, SessionErrors.KeyFor(JoinRefusal.JobInProgress));
+            yield break;
+        }
+
+        [UnityTest]
+        public IEnumerator Gate_RefusesOtherVersionsBeforeTheySync()
+        {
+            // TECHNICAL_DESIGN 7: the version also travels in the connection-approval payload, so a mismatched player is
+            // refused before the host's scene is synced to it (final-pass finding: it landed in a dead van).
+            var host = SpiritMovers.Core.GameVersion.Parse("0.0.1");
+            Assert.IsTrue(LobbyGate.VersionMatches(System.Text.Encoding.UTF8.GetBytes("0.0.1"), host));
+            Assert.IsFalse(LobbyGate.VersionMatches(System.Text.Encoding.UTF8.GetBytes("0.0.0"), host));
+            Assert.IsFalse(LobbyGate.VersionMatches(System.Text.Encoding.UTF8.GetBytes("nonsense"), host));
+            Assert.IsFalse(LobbyGate.VersionMatches(null, host));
+            Assert.AreEqual(JoinRefusal.VersionMismatch, LobbyGate.Decide(SessionPhase.Lobby, 1, versionMatches: false));
             yield break;
         }
 

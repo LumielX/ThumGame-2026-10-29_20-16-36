@@ -17,7 +17,13 @@ namespace SpiritMovers.Editor
         private const string BuildRoot = "Builds";
 
         [MenuItem("Spirit Movers/Build/Windows 64-bit")]
-        public static void BuildWindows()
+        public static void BuildWindows() => Build(development: false);
+
+        /// <summary>Development build (dev bots, -dev-* switches) into Builds/SpiritMovers-v{version}-Windows-Dev.</summary>
+        [MenuItem("Spirit Movers/Build/Windows 64-bit (Development)")]
+        public static void BuildWindowsDev() => Build(development: true);
+
+        private static void Build(bool development)
         {
             var version = GameVersion.Parse(PlayerSettings.bundleVersion);
             var scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
@@ -27,13 +33,16 @@ namespace SpiritMovers.Editor
                 return;
             }
 
-            var outputDir = Path.Combine(BuildRoot, $"SpiritMovers-v{version}-Windows");
+            var outputDir = Path.Combine(BuildRoot, $"SpiritMovers-v{version}-Windows{(development ? "-Dev" : "")}");
+            // Save first and build into an empty folder: a stale folder once left a corrupted level0 (M3C finding).
+            AssetDatabase.SaveAssets();
+            FileUtil.DeleteFileOrDirectory(outputDir);
             var options = new BuildPlayerOptions
             {
                 scenes = scenes,
                 locationPathName = Path.Combine(outputDir, "SpiritMovers.exe"),
                 target = BuildTarget.StandaloneWindows64,
-                options = BuildOptions.None,
+                options = development ? BuildOptions.Development : BuildOptions.None,
             };
 
             var summary = BuildPipeline.BuildPlayer(options).summary;

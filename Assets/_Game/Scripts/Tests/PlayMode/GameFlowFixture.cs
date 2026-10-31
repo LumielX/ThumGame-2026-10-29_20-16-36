@@ -28,6 +28,7 @@ namespace SpiritMovers.Tests
         {
             GameSession.PendingMessageKey = null;
             GameSession.PendingPay = 0;
+            GameSession.PendingArgs = null;
 #if UNITY_EDITOR
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/_Game/Scenes/Boot.unity",
                 new LoadSceneParameters(LoadSceneMode.Single));
@@ -46,6 +47,7 @@ namespace SpiritMovers.Tests
             }
             GameSession.PendingMessageKey = null;
             GameSession.PendingPay = 0;
+            GameSession.PendingArgs = null;
             yield return null;
             yield return null;
         }

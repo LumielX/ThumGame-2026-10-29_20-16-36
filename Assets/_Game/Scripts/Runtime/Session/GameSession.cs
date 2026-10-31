@@ -28,12 +28,16 @@ namespace SpiritMovers.Session
         private NetworkManager m_Network;
         private bool m_Loading;
         private bool m_Leaving;
+        private bool m_Joining;
+        private string m_Refusal;
 
         public static GameSession Instance { get; private set; }
 
         /// <summary>A message (localization key) and pay the main menu shows once when the player comes back to it.</summary>
         public static string PendingMessageKey { get; set; }
         public static int PendingPay { get; set; }
+        /// <summary>Format values for the pending message when it is not about pay (e.g. both game versions).</summary>
+        public static object[] PendingArgs { get; set; }
 
         /// <summary>Tests replace the online service so no internet is needed.</summary>
         public ISessionService ServiceOverride { get; set; }
@@ -106,10 +110,17 @@ namespace SpiritMovers.Session
             if (m_Leaving || m_Network.IsServer || clientId != m_Network.LocalClientId)
                 return;
             var reason = m_Network.DisconnectReason;
+            if (m_Joining)
+            {
+                // Still inside the join call (slow connections): it will fail, and Fail shows the host's reason.
+                if (!string.IsNullOrEmpty(reason) && reason.StartsWith("error."))
+                    NoteRefusal(reason);
+                return;
+            }
             if (!string.IsNullOrEmpty(reason) && reason.StartsWith("error."))
             {
                 Debug.Log($"[Net] refused by the host: {reason}");
-                PendingMessageKey = reason;
+                (PendingMessageKey, PendingArgs) = ParseRefusal(reason);
                 PendingPay = 0;
             }
             else
@@ -120,6 +131,23 @@ namespace SpiritMovers.Session
                 Debug.Log($"[Net] the host left during {phase}; pay {PendingPay}");
             }
             _ = LeaveAsync();
+        }
+
+        internal void FailForTest(Exception e) => Fail(e);
+
+        /// <summary>The host refused us while the join call was still running; Fail shows this reason.</summary>
+        internal void NoteRefusal(string reason) => m_Refusal = reason;
+
+        /// <summary>
+        /// A refusal reason from the host as (localization key, format values): "error.in_job" or
+        /// "error.version:HOSTVERSION" (shown with this build's version first).
+        /// </summary>
+        private static (string Key, object[] Args) ParseRefusal(string reason)
+        {
+            var colon = reason.IndexOf(':');
+            if (colon < 0)
+                return (reason, Array.Empty<object>());
+            return (reason.Substring(0, colon), new object[] { Bootstrap.Version.ToString(), reason.Substring(colon + 1) });
         }
 
         internal static string MessageForHostLeft(SessionPhase phase) => phase switch
@@ -175,6 +203,9 @@ namespace SpiritMovers.Session
                 Failed?.Invoke(SessionErrors.Code, Array.Empty<object>());
                 return;
             }
+            m_Joining = true;
+            m_Refusal = null;
+            SetVersionPayload();
             try
             {
                 await Service.InitializeAsync(Profile);
@@ -186,11 +217,16 @@ namespace SpiritMovers.Session
             {
                 Fail(e);
             }
+            finally
+            {
+                m_Joining = false;
+            }
         }
 
         /// <summary>Play alone: a host on this machine only (no internet, no join code), then the same van and jobs.</summary>
         public void StartSolo()
         {
+            SetVersionPayload();
             m_Network.GetComponent<UnityTransport>().SetConnectionData("127.0.0.1", SoloPort, "127.0.0.1");
             if (!m_Network.StartHost())
             {
@@ -226,6 +262,10 @@ namespace SpiritMovers.Session
             SceneManager.LoadScene(MainMenuScene);
         }
 
+        /// <summary>Our game version goes with the connection request; the host's LobbyGate checks it (TECHNICAL_DESIGN 7).</summary>
+        private void SetVersionPayload() =>
+            m_Network.NetworkConfig.ConnectionData = System.Text.Encoding.UTF8.GetBytes(Bootstrap.Version.ToString());
+
         /// <summary>Host: the lobby countdown ended and the job scene is about to load.</summary>
         public void MarkLoading() => m_Loading = true;
 
@@ -235,6 +275,22 @@ namespace SpiritMovers.Session
         {
             if (scene.name != JobScene)
                 m_Loading = false;
+            // Host of an online room: closed to newcomers while on a job, open again in the van (GDD 9).
+            if (m_Network.IsServer && !IsSolo && JoinCode != null && (scene.name == JobScene || scene.name == LobbyScene))
+                SetJoinable(scene.name == LobbyScene);
+        }
+
+        private async void SetJoinable(bool joinable)
+        {
+            try
+            {
+                await Service.SetJoinableAsync(joinable);
+            }
+            catch (Exception e)
+            {
+                // Not fatal: LobbyGate still refuses newcomers during a job.
+                Debug.LogWarning($"[Net] could not {(joinable ? "open" : "lock")} the session: {e.Message}");
+            }
         }
 
         private void Fail(Exception e)
@@ -242,7 +298,25 @@ namespace SpiritMovers.Session
             Debug.LogWarning($"[Net] session failed: {e.GetType().Name}: {e.Message}");
             if (m_Network.IsListening)
                 m_Network.Shutdown();
-            Failed?.Invoke(SessionErrors.KeyFor(e), SessionErrors.ArgsFor(e));
+            // A refusal by the host says more than the SDK's generic join error (final-pass finding, 150 ms run).
+            var reason = m_Refusal ?? m_Network.DisconnectReason;
+            m_Refusal = null;
+            var (key, args) = !string.IsNullOrEmpty(reason) && reason.StartsWith("error.")
+                ? ParseRefusal(reason)
+                : (SessionErrors.KeyFor(e), SessionErrors.ArgsFor(e));
+            if (SceneManager.GetActiveScene().name == MainMenuScene)
+            {
+                Failed?.Invoke(key, args);
+                return;
+            }
+            // The host's scene had already synced (dead van): back to the menu with the message.
+            PendingMessageKey = key;
+            PendingArgs = args;
+            PendingPay = 0;
+            IsSolo = false;
+            JoinCode = null;
+            m_Loading = false;
+            SceneManager.LoadScene(MainMenuScene);
         }
 
         /// <summary>Several game instances on one machine sign in as different players (dev runs only).</summary>

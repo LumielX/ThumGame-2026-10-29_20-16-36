@@ -88,6 +88,37 @@ namespace SpiritMovers.Net
             Debug.Log($"[Net] Joined session {Session.Id} host v{hostVersion} players={Session.PlayerCount}/{Session.MaxPlayers}");
         }
 
+        /// <summary>
+        /// Host: lock the session while the team is on a job so new players are refused by the service itself — the
+        /// host's own refusal (LobbyGate) can lose the race with the SDK on slow connections (M4A final pass).
+        /// </summary>
+        public async Task SetJoinableAsync(bool joinable)
+        {
+            if (Session == null || !Session.IsHost)
+                return;
+            var host = Session.AsHost();
+            if (host.IsLocked == !joinable)
+                return;
+            host.IsLocked = !joinable;
+            await host.SavePropertiesAsync();
+            Debug.Log($"[Net] session {(joinable ? "open" : "locked")} to new players");
+        }
+
+        /// <summary>The localization key for a join the service refused (locked, full, unknown code), or null.</summary>
+        public static string FailureKey(Exception e)
+        {
+            if (e is not SessionException session)
+                return null;
+            if (session.Error == SessionError.SessionNotFound)
+                return "error.code";
+            var message = session.Message ?? "";
+            if (message.IndexOf("locked", StringComparison.OrdinalIgnoreCase) >= 0)
+                return "error.in_job";
+            if (message.IndexOf("full", StringComparison.OrdinalIgnoreCase) >= 0)
+                return "error.full";
+            return null;
+        }
+
         public async Task LeaveAsync()
         {
             if (Session == null)

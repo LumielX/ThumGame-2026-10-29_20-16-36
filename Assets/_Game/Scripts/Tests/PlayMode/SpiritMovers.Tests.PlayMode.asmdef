@@ -11,7 +11,8 @@
         "UnityEditor.TestRunner",
         "Unity.Localization",
         "Unity.ResourceManager",
-        "SpiritMovers.Net"
+        "SpiritMovers.Net",
+        "Unity.Services.Multiplayer"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
