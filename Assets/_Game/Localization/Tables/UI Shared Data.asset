@@ -159,6 +159,46 @@ MonoBehaviour:
     m_Key: error.full
     m_Metadata:
       m_Items: []
+  - m_Id: 223218221477888
+    m_Key: menu.host
+    m_Metadata:
+      m_Items: []
+  - m_Id: 223218276003840
+    m_Key: menu.join
+    m_Metadata:
+      m_Items: []
+  - m_Id: 223218276003841
+    m_Key: menu.code_hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 223218276003842
+    m_Key: menu.solo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 223218276003843
+    m_Key: menu.settings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 223218276003844
+    m_Key: menu.quit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 223218276003845
+    m_Key: menu.connecting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 223218276003846
+    m_Key: session.host_left_lobby
+    m_Metadata:
+      m_Items: []
+  - m_Id: 223218276003847
+    m_Key: session.host_left_job
+    m_Metadata:
+      m_Items: []
+  - m_Id: 223218276003848
+    m_Key: session.host_left_results
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

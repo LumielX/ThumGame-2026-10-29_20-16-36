@@ -33,8 +33,8 @@ namespace SpiritMovers.Editor
         private const string ActionsPath = "Assets/_Game/Settings/Input/SpiritMovers.inputactions";
         private const string LightBoxPath = PrefabDir + "/LightBox.prefab";
         private const string HeavyCratePath = PrefabDir + "/HeavyCrate.prefab";
-        private const string FontPath = "Assets/_Game/Fonts/Mali/Mali-Regular SDF.asset";
-        private const string GlyphMapPath = "Assets/_Game/Fonts/Mali/Mali-Regular ThaiGlyphMap.asset";
+        internal const string FontPath = "Assets/_Game/Fonts/Mali/Mali-Regular SDF.asset";
+        internal const string GlyphMapPath = "Assets/_Game/Fonts/Mali/Mali-Regular ThaiGlyphMap.asset";
         private const float WallHeight = 3f;
         private const string UrpLitMaterialPath = "Packages/com.unity.render-pipelines.universal/Runtime/Materials/Lit.mat";
 

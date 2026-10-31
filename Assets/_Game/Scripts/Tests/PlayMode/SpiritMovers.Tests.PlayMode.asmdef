@@ -10,7 +10,8 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Unity.Localization",
-        "Unity.ResourceManager"
+        "Unity.ResourceManager",
+        "SpiritMovers.Net"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

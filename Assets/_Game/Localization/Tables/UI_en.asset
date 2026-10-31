@@ -163,6 +163,47 @@ MonoBehaviour:
     m_Localized: That room is full
     m_Metadata:
       m_Items: []
+  - m_Id: 223218221477888
+    m_Localized: Host a room
+    m_Metadata:
+      m_Items: []
+  - m_Id: 223218276003840
+    m_Localized: Join
+    m_Metadata:
+      m_Items: []
+  - m_Id: 223218276003841
+    m_Localized: Room code
+    m_Metadata:
+      m_Items: []
+  - m_Id: 223218276003842
+    m_Localized: Play solo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 223218276003843
+    m_Localized: Settings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 223218276003844
+    m_Localized: Quit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 223218276003845
+    m_Localized: "Connecting\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 223218276003846
+    m_Localized: The host left
+    m_Metadata:
+      m_Items: []
+  - m_Id: 223218276003847
+    m_Localized: "The host left during the job \u2014 you keep the pay for accepted
+      rooms: {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 223218276003848
+    m_Localized: "The host left \u2014 your pay for this job: {0}"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

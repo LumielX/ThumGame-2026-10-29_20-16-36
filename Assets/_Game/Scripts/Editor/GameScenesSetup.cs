@@ -1,4 +1,6 @@
 using SpiritMovers.Session;
+using SpiritMovers.Text;
+using TMPro;
 using Unity.Multiplayer.Tools.NetworkSimulator.Runtime;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
@@ -75,6 +77,10 @@ namespace SpiritMovers.Editor
             var events = new GameObject("EventSystem");
             events.AddComponent<EventSystem>();
             events.AddComponent<InputSystemUIInputModule>();
+            var menu = new SerializedObject(new GameObject("MainMenu").AddComponent<MainMenuPanel>());
+            menu.FindProperty("m_Font").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(TestRoomSetup.FontPath);
+            menu.FindProperty("m_GlyphMap").objectReferenceValue = AssetDatabase.LoadAssetAtPath<ThaiGlyphMap>(TestRoomSetup.GlyphMapPath);
+            menu.ApplyModifiedPropertiesWithoutUndo();
             EditorSceneManager.SaveScene(scene, MainMenuPath);
         }
 
