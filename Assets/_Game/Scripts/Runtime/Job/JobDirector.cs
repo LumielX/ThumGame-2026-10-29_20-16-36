@@ -78,6 +78,9 @@ namespace SpiritMovers.Job
     public sealed class JobDirector : NetworkBehaviour
     {
         [SerializeField] private HouseAuthoring m_House;
+        [Tooltip("Spirit camera prefab; BeginJob puts the team's cameras at the tool spot (GDD 8.3).")]
+        [SerializeField] private GameObject m_CameraPrefab;
+        [SerializeField] private Transform m_ToolSpot;
 
         private readonly NetworkVariable<JobSpec> m_Spec = new();
         private readonly NetworkVariable<JobPhase> m_Phase = new(JobPhase.Briefing);
@@ -266,6 +269,27 @@ namespace SpiritMovers.Job
             return RoomEvaluator.Evaluate(m_SlotStates, RoomRules.Default);
         }
 
+        /// <summary>Host: the team's spirit cameras go to the tool spot by the van (1 for 1–3 players, 2 for 4–6).</summary>
+        private void SpawnTools(int players)
+        {
+            if (m_CameraPrefab == null || m_ToolSpot == null)
+                return;
+            for (var i = 0; i < ToolConfig.SpiritCameras(players); i++)
+            {
+                var camera = Instantiate(m_CameraPrefab, m_ToolSpot.position + m_ToolSpot.right * (0.4f * i), m_ToolSpot.rotation);
+                camera.GetComponent<NetworkObject>().Spawn();
+            }
+        }
+
+        /// <summary>Host: someone looked through the spirit camera — it annoys the ghost (GDD 5.2).</summary>
+        internal void CameraUsed()
+        {
+            if (m_Anger == null)
+                return;
+            m_Anger.Apply(AngerEvent.CameraUsed);
+            m_AngerStage.Value = m_Anger.Stage;
+        }
+
         /// <summary>Host: a player got out of a memory cabinet alone; it costs pay at the end (GDD 6.3).</summary>
         internal void CountSelfRelease() => SelfReleases++;
 
@@ -418,6 +442,7 @@ namespace SpiritMovers.Job
             foreach (var task in Plan.Rooms.SelectMany(r => r.Slots))
                 Teleport(m_House.Slot(task.Slot.Id).Item, task.StartPlacement.Position.ToUnity(), task.StartPlacement.Rotation.ToUnity());
 
+            SpawnTools(players);
             m_Progress.Begin();
             m_Spec.Value = new JobSpec
             {

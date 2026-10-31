@@ -42,7 +42,7 @@ namespace SpiritMovers.Editor
 
         private struct Prefabs
         {
-            public GameObject Player, LightBox, HeavyCrate, JobDirector, GhostBell, Van, Ghost, Cabinet;
+            public GameObject Player, LightBox, HeavyCrate, JobDirector, GhostBell, Van, Ghost, Cabinet, SpiritCamera;
             public NetworkPrefabsList List;
         }
 
@@ -60,8 +60,10 @@ namespace SpiritMovers.Editor
             result.Van = CreateVanPrefab();
             result.Ghost = CreateGhostPrefab();
             result.Cabinet = CreateCabinetPrefab();
+            result.SpiritCamera = CreateCarryablePrefab(PrefabDir + "/SpiritCamera.prefab", "SpiritCamera",
+                new Vector3(0.25f, 0.18f, 0.15f), 1f, new Color(0.15f, 0.15f, 0.17f), typeof(SpiritCamera));
             result.List = CreatePrefabList(result.Player, result.LightBox, result.HeavyCrate, result.JobDirector, result.GhostBell,
-                result.Van, result.Ghost, result.Cabinet);
+                result.Van, result.Ghost, result.Cabinet, result.SpiritCamera);
             return result;
         }
 
@@ -195,9 +197,15 @@ namespace SpiritMovers.Editor
             if (sun != null)
                 sun.gameObject.AddComponent<GhostLights>();
 
+            // The team toolbox by the van: BeginJob puts the spirit cameras here.
+            var toolSpot = new GameObject("ToolSpot").transform;
+            toolSpot.position = new Vector3(-7.5f, 0.3f, -6.3f);
+
             var director = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.JobDirector);
             var so = new SerializedObject(director.GetComponent<JobDirector>());
             so.FindProperty("m_House").objectReferenceValue = house;
+            so.FindProperty("m_CameraPrefab").objectReferenceValue = prefabs.SpiritCamera;
+            so.FindProperty("m_ToolSpot").objectReferenceValue = toolSpot;
             so.ApplyModifiedPropertiesWithoutUndo();
 
             EditorSceneManager.SaveScene(scene, HouseScenePath);
@@ -377,12 +385,27 @@ namespace SpiritMovers.Editor
             EditorUtility.SetDirty(cabinet);
         }
 
+        /// <summary>The spirit camera overlay material, created once (never re-created: see the magenta-build finding).</summary>
+        private static Material SpiritMemoryMaterial()
+        {
+            const string path = PrefabDir + "/SpiritMemory.mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material != null)
+                return material;
+            material = new Material(AssetDatabase.LoadAssetAtPath<Shader>("Assets/_Game/Shaders/SpiritMemory.shader"));
+            AssetDatabase.CreateAsset(material, path);
+            return material;
+        }
+
         private static GameObject CreateJobDirectorPrefab()
         {
             var go = new GameObject("JobDirector");
             go.AddComponent<NetworkObject>();
             go.AddComponent<JobDirector>();
             go.AddComponent<NoiseHub>();
+            var overlay = new SerializedObject(go.AddComponent<MemoryOverlay>());
+            overlay.FindProperty("m_Material").objectReferenceValue = SpiritMemoryMaterial();
+            overlay.ApplyModifiedPropertiesWithoutUndo();
             var prefab = PrefabUtility.SaveAsPrefabAsset(go, PrefabDir + "/JobDirector.prefab");
             Object.DestroyImmediate(go);
             return prefab;
@@ -467,7 +490,8 @@ namespace SpiritMovers.Editor
             instance.transform.position = position;
         }
 
-        private static GameObject CreateCarryablePrefab(string path, string name, Vector3 size, float mass, Color color)
+        private static GameObject CreateCarryablePrefab(string path, string name, Vector3 size, float mass, Color color,
+            System.Type extra = null)
         {
             var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
             go.name = name;
@@ -485,6 +509,8 @@ namespace SpiritMovers.Editor
             go.AddComponent<NetworkTransform>().AuthorityMode = NetworkTransform.AuthorityModes.Owner;
             go.AddComponent<NetworkRigidbody>();
             go.AddComponent<Carryable>();
+            if (extra != null)
+                go.AddComponent(extra);
             var prefab = PrefabUtility.SaveAsPrefabAsset(go, path);
             Object.DestroyImmediate(go);
             return prefab;

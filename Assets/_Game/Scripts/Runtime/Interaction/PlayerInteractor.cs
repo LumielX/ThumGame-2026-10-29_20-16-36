@@ -65,12 +65,15 @@ namespace SpiritMovers.Interaction
                 else
                     Focus?.Interact(m_Carrier);
             }
+            if (held != null && input.UsePressed && held.TryGetComponent<IUsable>(out var tool))
+                tool.Use(m_Carrier);
             if (held != null && input.ThrowPressed && CarryRules.CanThrow(held.Mass, held.CarrierCount, m_Config))
                 held.RequestThrowRpc(motor.Head.forward);
             if (held != null && input.RotateSteps != 0f)
                 held.RequestRotateRpc(input.RotateSteps);
 
-            ShowPrompt(held != null ? "interact.drop" : Focus?.PromptKey);
+            ShowPrompt(held == null ? Focus?.PromptKey
+                : held.TryGetComponent<IUsable>(out var usable) ? usable.UsePromptKey : "interact.drop");
         }
 
         private IInteractable FindFocus(Transform head)

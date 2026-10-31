@@ -11,4 +11,14 @@ namespace SpiritMovers.Interaction
         /// <summary>Called on the interacting player's own machine; the host validates through an RPC.</summary>
         void Interact(PlayerCarrier by);
     }
+
+    /// <summary>A held tool with an action of its own (right mouse button), e.g. the spirit camera.</summary>
+    public interface IUsable
+    {
+        /// <summary>Localization key of the hint shown while holding it.</summary>
+        string UsePromptKey { get; }
+
+        /// <summary>Called on the holder's own machine; the host validates through an RPC.</summary>
+        void Use(PlayerCarrier by);
+    }
 }
