@@ -55,6 +55,6 @@
    - M2 เสร็จ — สรุปเดิม:
    - ทำแล้ว 2026-10-31 (D-038 ทำ M2 ที่เหลือระหว่างรอ): Audio Tap เสียงวิทยุ (Participant Tap + ฟิลเตอร์, Tested) · Localization 1.5.13 + Locale th/en + `LocalizedThaiText` (Tested ผ่าน `-language=`) · Tests 33/33 · ตัดคำไทยด้วยพจนานุกรม → เลื่อนไป M4
    - ทำแล้ว 2026-10-30: Vivox 16.12.1 (Free Tier 5,000 PCU) · ดึงค่า Vivox ด้วย `VivoxCredentialPull` (ไม่เก็บ Secret Key) · ต้นแบบ Voice ใกล้ได้ยิน/วิทยุ/แชตไทย **Tested** (ตัดเสียงที่ 25 ม. จริง) · แก้ `ThaiFontSupport.Register` พังใน Player · ช่องพิมพ์ไทย Shape ระหว่างพิมพ์ (`EnableThaiShaping`) · Tests 31/31
-   - เสร็จก่อนหน้าใน M2: Commit แรก (D-032) · ลบแพ็กเกจ (D-031) · โครง `_Game`/asmdef/Build/Test CLI · ต้นแบบ Network ผ่าน Relay (`Tested`) · เลือกวิธียกของ B (D-034) · แก้ภาษาไทย (D-035) · Push (D-036, D-037, D-039, D-041, D-042, D-043 — ถึง `07bdab9`)
+   - เสร็จก่อนหน้าใน M2: Commit แรก (D-032) · ลบแพ็กเกจ (D-031) · โครง `_Game`/asmdef/Build/Test CLI · ต้นแบบ Network ผ่าน Relay (`Tested`) · เลือกวิธียกของ B (D-034) · แก้ภาษาไทย (D-035) · Push (D-036, D-037, D-039, D-041, D-042, D-043, D-044 — ถึงบันทึก D-044)
 - หมายเหตุสิทธิ์: งานที่ไม่ใช่ Markdown ช่วง Discovery ต้องขออนุญาตก่อน (ตัวอย่าง D-016 สำหรับ Test Render)
 - หมายเหตุวิธีทำงาน: ใช้แนวทาง grilling (เสนอคำตอบแนะนำทุกคำถาม) แต่ถามทีละประเด็นตาม MASTER_PROMPT 3.2 ไม่ยิงทั้งชุด
