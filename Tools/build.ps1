@@ -8,7 +8,8 @@ if (Test-UnityProjectOpen) { throw 'The project is open in the Unity Editor. Clo
 
 $log = Join-Path $LogDir 'build.log'
 Write-Host "Building... (log: $log)"
-& $UnityExe -batchmode -quit -nographics -projectPath $ProjectRoot `
+# No -nographics: without a graphics device, materials created by scripts render magenta in the player (M3B finding).
+& $UnityExe -batchmode -quit -projectPath $ProjectRoot `
     -executeMethod SpiritMovers.Editor.BuildScript.BuildWindows -logFile $log | Out-Null
 $code = $LASTEXITCODE
 

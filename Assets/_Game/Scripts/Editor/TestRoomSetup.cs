@@ -1,4 +1,5 @@
 using System.IO;
+using SpiritMovers.Core;
 using SpiritMovers.Dev;
 using SpiritMovers.Interaction;
 using SpiritMovers.Player;
@@ -8,6 +9,7 @@ using Unity.Netcode;
 using Unity.Netcode.Components;
 using Unity.Netcode.Transports.UTP;
 using UnityEditor;
+using UnityEditor.Build.Reporting;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -31,6 +33,7 @@ namespace SpiritMovers.Editor
         private const string FontPath = "Assets/_Game/Fonts/Mali/Mali-Regular SDF.asset";
         private const string GlyphMapPath = "Assets/_Game/Fonts/Mali/Mali-Regular ThaiGlyphMap.asset";
         private const float WallHeight = 3f;
+        private const string UrpLitMaterialPath = "Packages/com.unity.render-pipelines.universal/Runtime/Materials/Lit.mat";
 
         [MenuItem("Spirit Movers/Test Room/Create Scene")]
         public static void CreateScene()
@@ -67,6 +70,24 @@ namespace SpiritMovers.Editor
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             Debug.Log($"[TestRoom] Created {ScenePath}");
+        }
+
+        /// <summary>Development player of the test room for the two-instance tests (Tools/m3b-carry-test.ps1).</summary>
+        [MenuItem("Spirit Movers/Test Room/Create Scene and Build")]
+        public static void BuildTestRoom()
+        {
+            CreateScene();
+            var version = GameVersion.Parse(PlayerSettings.bundleVersion);
+            var summary = BuildPipeline.BuildPlayer(new BuildPlayerOptions
+            {
+                scenes = new[] { ScenePath },
+                locationPathName = Path.Combine("Builds", $"M3-TestRoom-v{version}", "SpiritMovers.exe"),
+                target = BuildTarget.StandaloneWindows64,
+                options = BuildOptions.Development,
+            }).summary;
+            Debug.Log($"[TestRoom] build result={summary.result} output={summary.outputPath} errors={summary.totalErrors}");
+            if (summary.result != BuildResult.Succeeded && Application.isBatchMode)
+                EditorApplication.Exit(1);
         }
 
         private static void BuildRoom()
@@ -112,8 +133,12 @@ namespace SpiritMovers.Editor
             var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
             go.name = name;
             go.transform.localScale = size;
-            var material = new Material(go.GetComponent<Renderer>().sharedMaterial) { color = color };
-            AssetDatabase.CreateAsset(material, path.Replace(".prefab", ".mat"));
+            // A copy of URP's own Lit material: one built from Shader.Find in batch mode rendered magenta in the player.
+            var material = new Material(AssetDatabase.LoadAssetAtPath<Material>(UrpLitMaterialPath));
+            material.SetColor("_BaseColor", color);
+            var materialPath = path.Replace(".prefab", ".mat");
+            AssetDatabase.DeleteAsset(materialPath);
+            AssetDatabase.CreateAsset(material, materialPath);
             go.GetComponent<Renderer>().sharedMaterial = material;
             var body = go.AddComponent<Rigidbody>();
             body.mass = mass;
