@@ -8,10 +8,10 @@
 | Milestone | เป้าหมายหลัก | Gate | สถานะ |
 |---|---|---|---|
 | M0 Discovery | แนวเกม ชื่อ ระบบ ส่วนประกอบ ขอบเขต | G1–G4 | ✅ เสร็จ (2026-10-30) |
-| M1 Design | GDD, Art Bible, Technical Design, แผนนี้ | G5 | In Progress (รออนุมัติ) |
-| M2 Technical Foundation | จัดโปรเจกต์ + พิสูจน์ Network/Voice/ภาษาไทย | G6 | Planned |
-| M3 Playable Prototype | ห้องเดียวเล่นได้ออนไลน์ครบ Loop | — | Planned |
-| M4 Multiplayer Foundation | Lobby/Session/หลุด/Host ออก + Playtest ออนไลน์จริงครั้งแรก | — | Planned |
+| M1 Design | GDD, Art Bible, Technical Design, แผนนี้ | G5 | ✅ เสร็จ (D-029) |
+| M2 Technical Foundation | จัดโปรเจกต์ + พิสูจน์ Network/Voice/ภาษาไทย | G6 | ✅ เสร็จ — G6 ผ่านแบบมีเงื่อนไข (D-040, 2026-10-31) |
+| M3 Playable Prototype | ห้องเดียวเล่นได้ออนไลน์ครบ Loop | — | In Progress |
+| M4 Multiplayer Foundation | Lobby/Session/หลุด/Host ออก (Playtest ออนไลน์กับเพื่อนย้ายไปก่อน G7/G8 — D-040) | — | Planned |
 | M5 Vertical Slice | บ้าน 1 หลังที่ภาพ เสียง UI ใกล้เป้าหมาย | G7 | Planned |
 | M6 Content Production | เนื้อหาครบขอบเขต v0.1 | — | Planned |
 | M7 Alpha | ระบบครบ เล่นต้นจนจบ | — | Planned |
