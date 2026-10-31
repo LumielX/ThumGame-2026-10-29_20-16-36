@@ -15,6 +15,10 @@
 - Localization 1.5.13: Locale ไทย/อังกฤษ, ตาราง `UI`, `LocalizedThaiText`
 - กติกาเกมใน Core (`Core/Job/`): ตรวจของวางถูกและประเมินห้อง, ความโกรธผี 5 ขั้น, สุ่มงานจาก Seed, ค่าจ้างและดาวรีวิว, สถานะงาน
 - `Tools/test.ps1 -Filter` รันเฉพาะชุด Test
+- ห้องทดสอบ M3 (`M3_TestRoom`): ตัวละครบุคคลที่หนึ่ง เดิน/วิ่ง/ย่อ/กระโดด · ยก/วาง/หมุน/โยนของผ่านเครือข่าย · ของหนักช่วยกันยก · PlayMode Tests + สคริปต์ทดสอบ 2 เครื่องผ่าน Relay
+
+### Fixed
+- Build ไม่ใช้ `-nographics` อีก (Material ที่สร้างด้วยสคริปต์เป็นสีม่วงแดงใน Build)
 
 ### Removed
 - แพ็กเกจที่ไม่ใช้จาก Template: AI Assistant, Inference Engine, pipeline (experimental), Collab Proxy, Visual Scripting

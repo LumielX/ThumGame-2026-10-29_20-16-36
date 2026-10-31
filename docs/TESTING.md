@@ -8,10 +8,12 @@
 | คำสั่ง | ทำอะไร | ผลลัพธ์ |
 |---|---|---|
 | `powershell -ExecutionPolicy Bypass -File Tools\test.ps1` | EditMode Tests (`-Filter ชื่อชุด` รันเฉพาะชุด) | `Logs/test-EditMode.xml`, `Logs/test-EditMode.log` |
-| `powershell -ExecutionPolicy Bypass -File Tools\test.ps1 -Platform PlayMode` | PlayMode Tests (เมื่อมี) | `Logs/test-PlayMode.*` |
+| `powershell -ExecutionPolicy Bypass -File Tools\test.ps1 -Platform PlayMode` | PlayMode Tests — โหลดฉาก `M3_TestRoom` เป็น Host ในเครื่อง (ไม่ใช้ UGS) | `Logs/test-PlayMode.*` |
+| `powershell -ExecutionPolicy Bypass -File Tools\m3b-carry-test.ps1` | Host + Client Headless ผ่าน Relay จริง 3 สถานการณ์ (`carry`, `shared`, `disconnect`) — Build ก่อนด้วย `-executeMethod SpiritMovers.Editor.TestRoomSetup.BuildTestRoom` | PASS/FAIL ต่อสถานการณ์, Log ใน `Logs/m3b/` |
 | `powershell -ExecutionPolicy Bypass -File Tools\build.ps1` | Build Windows + Zip | `Builds/SpiritMovers-v<ver>-Windows(.zip)`, `Logs/build.log` |
 
 - ใช้ Editor ตัวอื่น: ตั้ง `UNITY_EXE` เป็น Path ของ `Unity.exe`
+- **Build ห้ามใช้ `-nographics`** — Material ที่สคริปต์สร้างจะเป็นสีม่วงแดงใน Build (พบใน M3B) · Test และการรัน Player แบบ Headless ใช้ได้ตามปกติ
 - ทุกครั้งหลัง Compile/Test/Build ต้องอ่าน Log (MASTER_PROMPT 3.4)
 - Smoke test ของ Build: เปิด `SpiritMovers.exe -batchmode -nographics -logFile <path>` แล้วตรวจบรรทัด `[Boot] Spirit Movers v<ver>`
 
@@ -27,7 +29,11 @@
 | `AngerModelTests` (EditMode) | ความโกรธ 5 ขั้น · ตัวคูณ · ไหว้ห้องละครั้ง · ความเงียบ · ไม่เปลี่ยนหลังไล่ออก | ผ่าน (2026-10-31) |
 | `JobGeneratorTests` (EditMode) | สุ่มงานจาก Seed แบบ Deterministic · จำนวนห้อง/ของตามระดับและจำนวนคน · ประเภทปัญหา · บ้านช่องไม่พอ | ผ่าน (2026-10-31) |
 | `PayoutCalculatorTests` (EditMode) | ค่าจ้าง 3 แบบจบ · โบนัสดาว · หัก Hint ไม่ติดลบ · แบ่งคน | ผ่าน (2026-10-31) |
-| `JobProgressTests` (EditMode) | สถานะงาน Briefing → Exploring → Farewell → Ended · คำสั่งซ้ำ/ผิดลำดับถูกเพิกเฉย | ผ่าน — รวม 88/88 (2026-10-31, หลังแก้ตามรีวิว) |
+| `JobProgressTests` (EditMode) | สถานะงาน Briefing → Exploring → Farewell → Ended · คำสั่งซ้ำ/ผิดลำดับถูกเพิกเฉย | ผ่าน (2026-10-31, หลังแก้ตามรีวิว) |
+| `MovementRulesTests`, `CarryRulesTests` (EditMode) | ความเร็ว/Stamina/ของหนัก/เสียงฝีเท้า · จุดถือไม่ขึ้นกับ Pitch · จำกัดความเร็วตามมือ · ตรวจของหลุดมือ | ผ่าน — EditMode รวม 108/108 (2026-10-31) |
+| `PlayerMotorTests` (PlayMode) | เดิน/วิ่ง/ย่อ/Stamina หมด/กระโดด/ปิด Input/ขึ้นบันได | ผ่าน (2026-10-31) |
+| `CarryTests`, `CarryAuthorityTests` (PlayMode) | ยก/วาง/หมุน/โยน · ของหนักช้าและโยนไม่ได้ · เอื้อมไม่ถึง · แย่งของ · ปิด Input ขณะถือ · Host บังคับปล่อย · คนถือหลุด | ผ่าน — PlayMode รวม 19/19 (2026-10-31) |
+| `Tools/m3b-carry-test.ps1` (2 Instance ผ่าน Relay) | ยกคนเดียว (ตำแหน่งตรงกันทั้งสองเครื่อง 0.006 ม.) · ยก 2 คน · ปิดเกมขณะถือ | PASS 3/3 (2026-10-31) |
 | ต้นแบบ Network (`Tools/proto-netsync-matrix.ps1`) | Host+Client ผ่าน Relay, วิธียกของ A/B × Latency 0/100/200 ms | ผ่าน — ผลใน `docs/M2_REPORT.md` |
 
 ### ต้นแบบ Voice ในเครื่องเดียว (Claude รันเองได้)
