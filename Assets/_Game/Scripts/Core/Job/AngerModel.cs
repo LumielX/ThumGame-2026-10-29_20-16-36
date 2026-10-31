@@ -119,6 +119,14 @@ namespace SpiritMovers.Core.Job
             return true;
         }
 
+        /// <summary>Solo players caught by the ghost calm it by one stage (D-011): just below the current stage's threshold.</summary>
+        public void CalmOneStage()
+        {
+            if (Stage == 0 || IsEvicted)
+                return;
+            SetValue(m_Config.StageThresholds[Stage - 1] - 1f);
+        }
+
         private void Increase(float amount) => SetValue(Value + amount * m_RateMultiplier);
 
         private void SetValue(float value)

@@ -242,7 +242,7 @@ namespace SpiritMovers.Job
                 return;
             var stars = StarRating.Calculate(m_Anger.HighestStage, itemsBroken: 0);
             var payout = PayoutCalculator.Calculate(ending, m_Difficulty.BasePay, m_Progress.AcceptedRooms.Count,
-                m_Progress.RoomsRequired, stars, hintsUsed: 0, NetworkManager.ConnectedClientsIds.Count, PayoutRules.Default);
+                m_Progress.RoomsRequired, stars, hintsUsed: 0, selfReleases: 0, NetworkManager.ConnectedClientsIds.Count, PayoutRules.Default);
             m_Result.Value = new JobResult
             {
                 IsSet = true,

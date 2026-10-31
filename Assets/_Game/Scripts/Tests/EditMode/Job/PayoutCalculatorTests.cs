@@ -5,8 +5,17 @@ namespace SpiritMovers.Tests
 {
     public class PayoutCalculatorTests
     {
-        private static Payout Pay(JobEnding ending, int accepted, int required, int stars = 0, int hints = 0, int players = 2) =>
-            PayoutCalculator.Calculate(ending, 300, accepted, required, stars, hints, players, PayoutRules.Default);
+        private static Payout Pay(JobEnding ending, int accepted, int required, int stars = 0, int hints = 0, int players = 2,
+            int selfReleases = 0) =>
+            PayoutCalculator.Calculate(ending, 300, accepted, required, stars, hints, selfReleases, players, PayoutRules.Default);
+
+        [Test]
+        public void Calculate_SelfReleasesCostPay()
+        {
+            Assert.AreEqual(360, Pay(JobEnding.FullSuccess, 3, 3, stars: 3, selfReleases: 2).TeamTotal);
+            Assert.AreEqual(0, Pay(JobEnding.FullSuccess, 3, 3, stars: 3, selfReleases: 99).TeamTotal);
+            Assert.AreEqual(390, Pay(JobEnding.FullSuccess, 3, 3, stars: 3, selfReleases: -4).TeamTotal);
+        }
 
         [Test]
         public void FullSuccess_ThreeStars_PaysBasePlusThirtyPercent()

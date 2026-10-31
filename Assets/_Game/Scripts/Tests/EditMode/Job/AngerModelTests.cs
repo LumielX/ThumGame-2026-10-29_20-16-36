@@ -16,6 +16,22 @@ namespace SpiritMovers.Tests
         };
 
         [Test]
+        public void CalmOneStage_DropsOneStage()
+        {
+            var model = new AngerModel(Stepped(), 1f);
+            model.Tick(80f, false);
+            Assume.That(model.Stage, Is.EqualTo(3));
+            model.CalmOneStage();
+            Assert.AreEqual(2, model.Stage);
+
+            var calm = new AngerModel(Stepped(), 1f);
+            calm.Tick(10f, false);
+            calm.CalmOneStage();
+            Assert.AreEqual(0, calm.Stage);
+            Assert.AreEqual(10f, calm.Value, Delta);
+        }
+
+        [Test]
         public void NewModel_IsCalmStageZero()
         {
             var model = new AngerModel(AngerConfig.Default, 1f);
