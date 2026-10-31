@@ -1,6 +1,6 @@
 # TESTING — วิธีทดสอบ Spirit Movers
 
-> อัปเดต: 2026-10-31 (M3C) · สถานะงานตาม MASTER_PROMPT 14: ทดสอบในเครื่องเดียวได้สูงสุด `Tested` · `Verified` ต้องมาจากผู้เล่นจริงบนเครื่องจริง/ผ่านอินเทอร์เน็ต (ระบุใครและเมื่อไร)
+> อัปเดต: 2026-10-31 (M3D) · สถานะงานตาม MASTER_PROMPT 14: ทดสอบในเครื่องเดียวได้สูงสุด `Tested` · `Verified` ต้องมาจากผู้เล่นจริงบนเครื่องจริง/ผ่านอินเทอร์เน็ต (ระบุใครและเมื่อไร)
 
 ## 1. ทดสอบอัตโนมัติ (Claude รันเองได้)
 ปิด Unity Editor ก่อน (Batch Mode ใช้โปรเจกต์ที่เปิดอยู่ไม่ได้)
@@ -10,7 +10,7 @@
 | `powershell -ExecutionPolicy Bypass -File Tools\test.ps1` | EditMode Tests (`-Filter ชื่อชุด` รันเฉพาะชุด) | `Logs/test-EditMode.xml`, `Logs/test-EditMode.log` |
 | `powershell -ExecutionPolicy Bypass -File Tools\test.ps1 -Platform PlayMode` | PlayMode Tests — โหลดฉาก `M3_TestRoom` เป็น Host ในเครื่อง (ไม่ใช้ UGS) | `Logs/test-PlayMode.*` |
 | `powershell -ExecutionPolicy Bypass -File Tools\m3b-carry-test.ps1` | Host + Client Headless ผ่าน Relay จริง 6 สถานการณ์ (`carry`, `shared`, `split`, `remote`, `disconnect`, `crash`) · `-LatencyMs 150` จำลองความหน่วง — Build ก่อนด้วย `-executeMethod SpiritMovers.Editor.TestRoomSetup.BuildTestRoom` | PASS/FAIL ต่อสถานการณ์, Log ใน `Logs/m3b/` |
-| `powershell -ExecutionPolicy Bypass -File Tools\m3c-job-test.ps1` | Host + Client Headless ผ่าน Relay เล่นจบงาน (Seed 1..10 ค่าเริ่มต้น) · `-Clients 3` = 4 คน · `-FirstSeed N`, `-Seconds N` · ผ่านเมื่อทุกเครื่อง `ok=true` และ ending/accepted/teamTotal/stars ตรงกัน — Build ก่อนด้วย `-executeMethod SpiritMovers.Editor.TestRoomSetup.BuildTestHouse` | PASS/FAIL ต่อรอบ, Log ใน `Logs/m3c/` |
+| `powershell -ExecutionPolicy Bypass -File Tools\m3c-job-test.ps1` | Host + Client Headless ผ่าน Relay เล่นจบงาน (Seed 1..10 ค่าเริ่มต้น) · `-Clients 3` = 4 คน · `-FirstSeed N`, `-Seconds N`, `-LatencyMs N` · ผ่านเมื่อทุกเครื่อง `ok=true` และ ending/accepted/teamTotal/stars ตรงกัน · **`-Scenario ghost`** (ใช้ `-Seconds 75`): Client คนแรกส่องกล้อง → ผีล่าแล้วลากเข้าตู้ → Host จัดของ 1 ชิ้นแล้วเปิดตู้ → ทุกคนไปรถ ปิดงาน · ผ่านเมื่อ captured/released/film/ending ตรงกันทุกเครื่อง และภาพซ้อนเห็นเฉพาะคนส่อง — Build ก่อนด้วย `-executeMethod SpiritMovers.Editor.TestRoomSetup.BuildTestHouse` | PASS/FAIL ต่อรอบ, Log ใน `Logs/m3c/` |
 | `powershell -ExecutionPolicy Bypass -File Tools\build.ps1` | Build Windows + Zip | `Builds/SpiritMovers-v<ver>-Windows(.zip)`, `Logs/build.log` |
 
 - ใช้ Editor ตัวอื่น: ตั้ง `UNITY_EXE` เป็น Path ของ `Unity.exe`
@@ -32,12 +32,15 @@
 | `JobGeneratorTests` (EditMode) | สุ่มงานจาก Seed แบบ Deterministic · จำนวนห้อง/ของตามระดับและจำนวนคน · ประเภทปัญหา · บ้านช่องไม่พอ | ผ่าน (2026-10-31) |
 | `PayoutCalculatorTests` (EditMode) | ค่าจ้าง 3 แบบจบ · โบนัสดาว · หัก Hint ไม่ติดลบ · แบ่งคน | ผ่าน (2026-10-31) |
 | `JobProgressTests` (EditMode) | สถานะงาน Briefing → Exploring → Farewell → Ended · คำสั่งซ้ำ/ผิดลำดับถูกเพิกเฉย · กลับก่อนตั้งแต่ Briefing · ปิดงานตอนผีอำลาไม่มีผล | ผ่าน (2026-10-31) |
-| `MovementRulesTests`, `CarryRulesTests` (EditMode) | ความเร็ว/Stamina/ของหนัก/เสียงฝีเท้า · จุดถือไม่ขึ้นกับ Pitch · จำกัดความเร็วตามมือ · ตรวจของหลุดมือ | ผ่าน — EditMode รวม 123/123 (2026-10-31) |
+| `MovementRulesTests`, `CarryRulesTests` (EditMode) | ความเร็ว/Stamina/ของหนัก/เสียงฝีเท้า · จุดถือไม่ขึ้นกับ Pitch · จำกัดความเร็วตามมือ · ตรวจของหลุดมือ | ผ่าน — EditMode รวม 141/141 (2026-10-31) |
 | `PlayerMotorTests` (PlayMode) | เดิน/วิ่ง/ย่อ/Stamina หมด/กระโดด/ปิด Input/ขึ้นบันได | ผ่าน (2026-10-31) |
 | `CarryTests`, `CarryAuthorityTests` (PlayMode) | ยก/วาง/หมุน/โยน · ของหนักช้าและโยนไม่ได้ · เอื้อมไม่ถึง · แย่งของ · ปิด Input ขณะถือ · Host บังคับปล่อย · คนถือหลุด · Host ใช้ทิศที่ผู้ยกหันจริง | ผ่าน (2026-10-31) |
 | `JobStartTests`, `RoomAcceptanceTests`, `BellTests`, `JobEndingTests` (PlayMode, ฉาก `M3_TestHouse`) | เริ่มงานจาก Seed (ครั้งเดียวต่อ Session, ปล่อยของที่ถืออยู่) · Client ตรวจแผนตรงกับ Host ทั้งบ้านและกติกา · ผีรับห้อง/สีกลับ · กริ่งห้องละครั้ง · จบงาน 3 แบบ + ค่าจ้าง · ปิดงานที่รถต้องอยู่ครบ/ไม่ใช่ตอนผีอำลา · ใบสั่งงาน/สรุปงานภาษาไทย | ผ่าน — PlayMode รวม 54/54 (2026-10-31, หลังแก้ตามรีวิว) |
-| `Tools/m3b-carry-test.ps1` (2 Instance ผ่าน Relay) | ยกคนเดียว (ตำแหน่งตรงกัน 0.006 ม.) · ยก 2 คนแล้วส่งต่อให้คนเดียว · ยก 2 คนแล้วเดินแยก (ปล่อยเอง) · Client หมุน+โยน · ปิดเกม/เกมแครชขณะถือ (Host ยกต่อได้) | PASS 6/6 ที่ 0 ms และ 150 ms ต่อทาง · รันซ้ำหลังแก้ Build และแก้ทิศหันตอนยก M3C PASS 6/6 ที่ 0 ms (2026-10-31) |
-| `Tools/m3c-job-test.ps1` (หลาย Instance ผ่าน Relay) | Host + 1 Client เล่นจบงาน Seed 1–10 · Host + 3 Client Seed 11 · Client คนแรกยกของ 1 ชิ้นด้วยมือจริงไปวางที่เดิม (Ownership ไป-กลับ) ทุกเครื่องเห็นวางถูก · ทุกเครื่องได้ FullSuccess, รับ 3/3 ห้อง, 390, 3 ดาว ตรงกัน (ไม่ Desync) · ภาพ `docs/screenshots/m3/job-sheet-th.png`, `job-results-th.png` | PASS 10/10 + 1/1 (2026-10-31, หลังแก้ตามรีวิว) |
+| `Tools/m3b-carry-test.ps1` (2 Instance ผ่าน Relay) | ยกคนเดียว (ตำแหน่งตรงกัน 0.006 ม.) · ยก 2 คนแล้วส่งต่อให้คนเดียว · ยก 2 คนแล้วเดินแยก (ปล่อยเอง) · Client หมุน+โยน · ปิดเกม/เกมแครชขณะถือ (Host ยกต่อได้) | PASS 6/6 ที่ 0 ms และ 150 ms ต่อทาง · รันซ้ำหลังแก้ Build และแก้ทิศหันตอนยก M3C PASS 6/6 ที่ 0 ms · หลัง M3D PASS 6/6 (2026-10-31) |
+| `Tools/m3c-job-test.ps1` (หลาย Instance ผ่าน Relay) | Host + 1 Client เล่นจบงาน Seed 1–10 · Host + 3 Client Seed 11 · Client คนแรกยกของ 1 ชิ้นด้วยมือจริงไปวางที่เดิม (Ownership ไป-กลับ) ทุกเครื่องเห็นวางถูก · ทุกเครื่องได้ FullSuccess, รับ 3/3 ห้อง, 390, 3 ดาว ตรงกัน (ไม่ Desync) · ภาพ `docs/screenshots/m3/job-sheet-th.png`, `job-results-th.png` | PASS 10/10 + 1/1 (2026-10-31, หลังแก้ตามรีวิว) · รันซ้ำหลังใส่ผี M3D PASS 10/10 + 1/1 |
+| `GhostRulesTests`, `NoiseTests`, `CabinetRulesTests` (EditMode) | ผีถูกมอง (กรวยสายตา/ระยะ/สิ่งบัง) · เลือกเป้าข้ามคนในตู้/คนที่เพิ่งออก · เลือกของแกล้งไม่แตะของที่ถือ/ห้องที่รับแล้ว · เสียงดังไม่เกิน 1 ครั้ง/5 วินาที · เปิดตู้ได้เมื่อของถูกเพิ่ม 1 ชิ้นหรือกล้อง · จำนวนกล้องตามผู้เล่น | ผ่าน (2026-10-31) |
+| `PlayerSyncTests`, `NoiseHubTests`, `GhostTests`, `CabinetTests`, `SpiritCameraTests` (PlayMode, บ้าน) | ท่าย่อ/มุมก้มซิงก์ · ไหว้ผีห้องละครั้ง · ฝีเท้า/ของกระแทก/ความเงียบ · ผีถูกมองแล้วหยุด, มองผ่านกำแพงไม่นับ, ล่าขึ้นชั้นลอยได้, แกล้ง/ป่วน, สีตามขั้น · ถูกจับ/ของหลุดมือ/ตู้ล็อก/เพื่อนเปิด/หลุดเองหักเงิน/เล่นคนเดียว/คุ้มกัน/จบงาน/หลุดออกจากเกม · กล้อง: ฟิล์ม, ภาพซ้อนเฉพาะช่องที่ยังไม่ถูกในระยะ, หายใน 3 วินาที, ฟิล์มหมด/ไม่ได้ถือ, ส่องใส่ตู้, Shader | ผ่าน — PlayMode รวม 90/90 (2026-10-31) |
+| `Tools/m3c-job-test.ps1 -Scenario ghost` (หลาย Instance ผ่าน Relay) | Seed 1–5 (2 คน) · Seed 11 (4 คน, กล้อง 2 ตัว) · Seed 21–22 จำลอง 150 ms ต่อทาง · ทุกเครื่องเห็นถูกจับและออกจากตู้ (เพื่อนช่วย) ตรงกัน ฟิล์มเหลือ 5 · ภาพซ้อนมีเฉพาะเครื่องที่ส่อง (2–4 ชิ้น) เครื่องอื่น 0 · ภาพ `docs/screenshots/m3/spirit-camera.png` (เทียบ `spirit-camera-before.png`), `ghost-hunt.png` จาก Build จริง ไม่มีสีม่วงแดง | PASS 5/5 + 1/1 + 2/2 (2026-10-31) |
 | ต้นแบบ Network (`Tools/proto-netsync-matrix.ps1`) | Host+Client ผ่าน Relay, วิธียกของ A/B × Latency 0/100/200 ms | ผ่าน — ผลใน `docs/M2_REPORT.md` |
 
 ### ต้นแบบ Voice ในเครื่องเดียว (Claude รันเองได้)

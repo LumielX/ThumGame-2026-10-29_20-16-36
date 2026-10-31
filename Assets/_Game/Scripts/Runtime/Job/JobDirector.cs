@@ -511,6 +511,20 @@ namespace SpiritMovers.Job
         public void DevPutBackRpc(FixedString32Bytes slotId) => PlaceAtTarget(slotId.ToString());
 #endif
 
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+        /// <summary>Dev builds only, host: move the ghost's anger to a stage (Tools/m3c-job-test.ps1 -Scenario ghost).</summary>
+        public void DevSetAngerStage(int stage)
+        {
+            if (!IsServer || m_Anger == null)
+                return;
+            while (m_Anger.Stage > stage)
+                m_Anger.CalmOneStage();
+            while (m_Anger.Stage < stage && !m_Anger.IsEvicted)
+                m_Anger.Apply(AngerEvent.ItemBroken);
+            m_AngerStage.Value = m_Anger.Stage;
+        }
+#endif
+
         /// <summary>Server (tests, dev bots): put a slot's item exactly where the ghost remembers it.</summary>
         internal void PlaceAtTarget(string slotId)
         {

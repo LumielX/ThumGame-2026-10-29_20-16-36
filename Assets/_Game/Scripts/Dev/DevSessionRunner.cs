@@ -17,7 +17,8 @@ namespace SpiritMovers.Dev
     /// Relay session by code. Not part of the shipped game flow (the Lobby comes in M4).
     /// Headless automation (command line):
     ///   -dev-role host|client  -dev-profile NAME  -dev-codefile PATH  -dev-seconds S
-    ///   -dev-scenario NAME (see <see cref="DevBot"/>; "job" = <see cref="DevJobBot"/> with -dev-seed N -dev-players N
+    ///   -dev-scenario NAME (see <see cref="DevBot"/>; "job" = <see cref="DevJobBot"/> with -dev-seed N -dev-players N;
+    ///   "ghost" = <see cref="DevGhostBot"/> with -dev-seed N -dev-players N -dev-peek-shot PNG -dev-hunt-shot PNG
     ///   -dev-sheet-shot PNG)  -dev-screenshot PNG  -dev-latency MS (simulated, each way)
     /// </summary>
     public sealed class DevSessionRunner : MonoBehaviour
@@ -33,6 +34,7 @@ namespace SpiritMovers.Dev
         private string m_Role;
         private DevBot m_Bot;
         private DevJobBot m_JobBot;
+        private DevGhostBot m_GhostBot;
         private bool m_Finished;
 
         public string SessionCode { get; private set; }
@@ -112,6 +114,13 @@ namespace SpiritMovers.Dev
                 int.TryParse(Arg("-dev-players"), out var players);
                 m_JobBot = DevJobBot.Attach(gameObject, m_Role == "host", seed, Mathf.Max(1, players), Arg("-dev-sheet-shot"));
             }
+            else if (scenario == "ghost")
+            {
+                int.TryParse(Arg("-dev-seed"), out var seed);
+                int.TryParse(Arg("-dev-players"), out var players);
+                m_GhostBot = DevGhostBot.Attach(gameObject, m_Role == "host", seed, Mathf.Max(2, players), Arg("-dev-peek-shot"),
+                    Arg("-dev-hunt-shot"));
+            }
             else if (scenario != null)
             {
                 m_Bot = DevBot.Attach(gameObject, scenario, m_Role == "host");
@@ -145,6 +154,11 @@ namespace SpiritMovers.Dev
             if (m_JobBot != null)
             {
                 Debug.Log(m_JobBot.Summary(m_Role));
+                return;
+            }
+            if (m_GhostBot != null)
+            {
+                Debug.Log(m_GhostBot.Summary(m_Role));
                 return;
             }
             if (m_Bot == null || m_Bot.Item == null)
