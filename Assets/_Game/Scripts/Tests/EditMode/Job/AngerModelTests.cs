@@ -59,13 +59,18 @@ namespace SpiritMovers.Tests
         [Test]
         public void Apply_AfterEviction_IsIgnored()
         {
-            var model = new AngerModel(AngerConfig.Default, 1f);
+            // Max above the last threshold, so a missing guard on increases would show up.
+            var model = new AngerModel(new AngerConfig { Max = 120f }, 1f);
             for (var i = 0; i < 13; i++)
                 model.Apply(AngerEvent.ItemBroken);
+            Assert.IsTrue(model.IsEvicted);
+            var evictedAt = model.Value;
+            model.Apply(AngerEvent.ItemBroken);
+            model.Tick(10f, false);
             model.OnRoomAccepted();
             Assert.IsFalse(model.Wai("a"));
             model.Tick(60f, true);
-            Assert.AreEqual(100f, model.Value, Delta);
+            Assert.AreEqual(evictedAt, model.Value, Delta);
             Assert.AreEqual(4, model.Stage);
         }
 

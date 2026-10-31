@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
 
 namespace SpiritMovers.Core.Job
 {
@@ -61,5 +63,46 @@ namespace SpiritMovers.Core.Job
             ScatterPoints = scatterPoints;
             HidingSpots = hidingSpots;
         }
+
+        /// <summary>
+        /// 64-bit FNV-1a of everything that shapes a job plan, in order. Peers compare it so a client whose
+        /// house data differs from the host's is caught instead of silently playing a different job.
+        /// </summary>
+        public string ContentHash()
+        {
+            var text = new StringBuilder();
+            text.Append(Id).Append('\n');
+            foreach (var room in Rooms)
+            {
+                text.Append("R|").Append(room.Id).Append('\n');
+                foreach (var slot in room.Slots)
+                {
+                    text.Append("S|").Append(slot.Id).Append('|').Append(slot.ItemId).Append('|');
+                    AppendPlacement(text, slot.Target);
+                    text.Append(Number(slot.Tolerance.PositionMeters)).Append('|').Append(Number(slot.Tolerance.AngleDegrees)).Append('|');
+                    foreach (var problem in slot.Supports)
+                        text.Append((int)problem).Append(',');
+                    text.Append('\n');
+                }
+            }
+            foreach (var point in ScatterPoints)
+                AppendPlacement(text.Append("P|"), point).Append('\n');
+            foreach (var spot in HidingSpots)
+                AppendPlacement(text.Append("H|"), spot).Append('\n');
+
+            const ulong offset = 14695981039346656037UL, prime = 1099511628211UL;
+            var hash = offset;
+            foreach (var b in Encoding.UTF8.GetBytes(text.ToString()))
+                hash = (hash ^ b) * prime;
+            return hash.ToString("x16", CultureInfo.InvariantCulture);
+        }
+
+        private static StringBuilder AppendPlacement(StringBuilder text, Placement p) =>
+            text.Append(p.RoomId).Append('|')
+                .Append(Number(p.Position.X)).Append(',').Append(Number(p.Position.Y)).Append(',').Append(Number(p.Position.Z)).Append('|')
+                .Append(Number(p.Rotation.X)).Append(',').Append(Number(p.Rotation.Y)).Append(',')
+                .Append(Number(p.Rotation.Z)).Append(',').Append(Number(p.Rotation.W)).Append('|');
+
+        private static string Number(float value) => value.ToString("F3", CultureInfo.InvariantCulture);
     }
 }

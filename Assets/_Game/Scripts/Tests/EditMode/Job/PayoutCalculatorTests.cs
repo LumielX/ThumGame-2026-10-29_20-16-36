@@ -58,6 +58,15 @@ namespace SpiritMovers.Tests
         }
 
         [Test]
+        public void Calculate_ClampsHintsAndStars()
+        {
+            Assert.AreEqual(Pay(JobEnding.FullSuccess, 3, 3, stars: 1).TeamTotal, Pay(JobEnding.FullSuccess, 3, 3, stars: 1, hints: -5).TeamTotal);
+            var capped = Pay(JobEnding.FullSuccess, 3, 3, stars: 7);
+            Assert.AreEqual(Pay(JobEnding.FullSuccess, 3, 3, stars: 3).TeamTotal, capped.TeamTotal);
+            Assert.AreEqual(3, capped.Stars);
+        }
+
+        [Test]
         public void StarRating_FollowsRules()
         {
             Assert.AreEqual(3, StarRating.Calculate(2, 0));

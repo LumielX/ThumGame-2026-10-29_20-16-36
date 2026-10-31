@@ -40,9 +40,12 @@ namespace SpiritMovers.Core.Job
         public string DifficultyId { get; }
         public int PlayerCount { get; }
         public IReadOnlyList<RoomTask> Rooms { get; }
+        /// <summary><see cref="HouseLayout.ContentHash"/> of the layout this plan was made from; peers compare it.</summary>
+        public string LayoutHash { get; }
 
-        public JobPlan(int seed, string houseId, string difficultyId, int playerCount, IReadOnlyList<RoomTask> rooms)
+        public JobPlan(int seed, string houseId, string difficultyId, int playerCount, IReadOnlyList<RoomTask> rooms, string layoutHash = "")
         {
+            LayoutHash = layoutHash;
             Seed = seed;
             HouseId = houseId;
             DifficultyId = difficultyId;
@@ -74,7 +77,7 @@ namespace SpiritMovers.Core.Job
             foreach (var room in rooms.Where(picked.Contains)) // keep the house's room order
                 tasks.Add(new RoomTask(room.Id, PickSlots(room, difficulty, playerCount, random, spots)));
 
-            return new JobPlan(seed, house.Id, difficulty.Id, playerCount, tasks);
+            return new JobPlan(seed, house.Id, difficulty.Id, playerCount, tasks, house.ContentHash());
         }
 
         private static bool IsUsable(SlotDefinition slot, JobDifficulty difficulty) => slot.Supports.Any(difficulty.Problems.Contains);
@@ -119,15 +122,17 @@ namespace SpiritMovers.Core.Job
 
             public Placement Take(SlotDefinition slot, ProblemType problem)
             {
-                if (problem == ProblemType.Hidden && m_House.HidingSpots.Count > 0)
-                    return Draw(m_Hiding, m_House.HidingSpots, _ => true);
-
+                // Never start an item where it already counts as correct (e.g. its home is the cupboard it hides in).
                 bool Away(Placement p) => !PlacementMath.IsCorrect(slot.Target, p, slot.Tolerance);
+                if (problem == ProblemType.Hidden && m_House.HidingSpots.Any(Away))
+                    return Draw(m_Hiding, m_House.HidingSpots, Away);
                 if (m_House.ScatterPoints.Any(Away))
                     return Draw(m_Scatter, m_House.ScatterPoints, Away);
 
+                // No usable spot: push it just beyond its own tolerance.
                 var target = slot.Target;
-                return new Placement(target.RoomId, target.Position + Vector3.UnitX, target.Rotation);
+                var push = MathF.Max(1f, slot.Tolerance.PositionMeters + 0.5f);
+                return new Placement(target.RoomId, target.Position + Vector3.UnitX * push, target.Rotation);
             }
 
             private Placement Draw(List<Placement> remaining, IReadOnlyList<Placement> all, Func<Placement, bool> allowed)

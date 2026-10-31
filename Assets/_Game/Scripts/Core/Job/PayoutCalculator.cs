@@ -64,7 +64,8 @@ namespace SpiritMovers.Core.Job
 
             if (ending == JobEnding.Evicted)
                 pay *= (decimal)rules.EvictedFactor;
-            var awardedStars = ending == JobEnding.FullSuccess ? stars : 0;
+            var awardedStars = ending == JobEnding.FullSuccess ? Math.Clamp(stars, 0, 3) : 0;
+            hintsUsed = Math.Max(0, hintsUsed);
             pay += basePay * (decimal)rules.StarBonusPerStar * awardedStars;
             pay -= basePay * (decimal)rules.HintCost * hintsUsed;
 

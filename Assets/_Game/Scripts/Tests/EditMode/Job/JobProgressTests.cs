@@ -84,6 +84,15 @@ namespace SpiritMovers.Tests
         }
 
         [Test]
+        public void LeaveEarly_FromBriefing_EndsWithLeftEarly()
+        {
+            var job = NewJob();
+            job.LeaveEarly();
+            Assert.AreEqual(JobPhase.Ended, job.Phase);
+            Assert.AreEqual(JobEnding.LeftEarly, job.Ending);
+        }
+
+        [Test]
         public void Evict_EndsWithEvicted()
         {
             var job = NewJob();

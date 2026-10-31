@@ -56,6 +56,14 @@ namespace SpiritMovers.Tests
         }
 
         [Test]
+        public void IsCorrect_ZeroQuaternionCountsAsIdentity()
+        {
+            // A slot authored with a default (0,0,0,0) rotation must still be satisfiable.
+            var target = new Placement("living", Target.Position, new Quaternion(0f, 0f, 0f, 0f));
+            Assert.IsTrue(PlacementMath.IsCorrect(target, Target, Tolerance.Default));
+        }
+
+        [Test]
         public void Evaluate_ThreeCorrect_IsAcceptedWithCountThree()
         {
             var result = RoomEvaluator.Evaluate(new[] { Slot("a", Correct), Slot("b", Correct), Slot("c", Correct) }, RoomRules.Default);

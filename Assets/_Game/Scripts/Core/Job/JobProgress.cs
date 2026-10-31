@@ -56,7 +56,12 @@ namespace SpiritMovers.Core.Job
                 End(JobEnding.FullSuccess);
         }
 
-        public void LeaveEarly() => EndIfPlaying(JobEnding.LeftEarly);
+        /// <summary>The team closes the job at the van; allowed from the briefing too (pays nothing then).</summary>
+        public void LeaveEarly()
+        {
+            if (Phase != JobPhase.Ended)
+                End(JobEnding.LeftEarly);
+        }
 
         public void Evict() => EndIfPlaying(JobEnding.Evicted);
 

@@ -38,6 +38,27 @@ namespace SpiritMovers.Core.Job
 
         /// <summary>A fresh copy, so tuning one job never changes another.</summary>
         public static AngerConfig Default => new();
+
+        /// <summary>Problems in hand-edited tuning data; empty when usable (M3A carry-over 4).</summary>
+        public IReadOnlyList<string> Validate()
+        {
+            var problems = new List<string>();
+            if (StageThresholds == null || StageThresholds.Length != 4)
+            {
+                problems.Add("need four stage thresholds");
+            }
+            else
+            {
+                for (var i = 1; i < StageThresholds.Length; i++)
+                    if (StageThresholds[i] <= StageThresholds[i - 1])
+                        problems.Add($"thresholds not ascending at {i}");
+                if (Max < StageThresholds[StageThresholds.Length - 1])
+                    problems.Add($"Max {Max} is below the eviction threshold: eviction unreachable");
+            }
+            if (PerSecond < 0f || RoomAccepted < 0f || Wai < 0f || SilencePerSecond < 0f)
+                problems.Add("negative rate");
+            return problems;
+        }
     }
 
     /// <summary>

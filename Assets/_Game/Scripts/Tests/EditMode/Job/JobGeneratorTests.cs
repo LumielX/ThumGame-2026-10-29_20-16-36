@@ -187,6 +187,24 @@ namespace SpiritMovers.Tests
         }
 
         [Test]
+        public void Generate_HiddenNeverStartsAlreadyCorrect()
+        {
+            // One hiding spot is exactly slot s0's remembered place (e.g. its home is the cupboard).
+            var target = new Placement("r0", Vector3.Zero, Quaternion.Identity);
+            var slots = new[]
+            {
+                new SlotDefinition("s0", "i0", target, Tolerance.Default, new[] { ProblemType.Hidden }),
+                new SlotDefinition("s1", "i1", new Placement("r0", new Vector3(3f, 0f, 0f), Quaternion.Identity), Tolerance.Default, new[] { ProblemType.Hidden }),
+            };
+            var house = new HouseLayout("h", new[] { new RoomLayout("r0", slots) },
+                new[] { new Placement("r0", new Vector3(8f, 0f, 8f), Quaternion.Identity) },
+                new[] { target, new Placement("r0", new Vector3(-6f, 0f, 0f), Quaternion.Identity) });
+            foreach (var plan in Plans(JobDifficulty.Normal, 2, house))
+                foreach (var task in plan.Rooms.SelectMany(r => r.Slots))
+                    Assert.IsFalse(PlacementMath.IsCorrect(task.Slot.Target, task.StartPlacement, task.Slot.Tolerance), $"seed {plan.Seed} {task.Slot.Id}");
+        }
+
+        [Test]
         public void PlayerCountScaling_ClampsOutOfRange()
         {
             Assert.AreEqual(PlayerCountScaling.ItemOffset(1), PlayerCountScaling.ItemOffset(0));

@@ -14,6 +14,19 @@ namespace SpiritMovers.Core.Job
         public IReadOnlyList<ProblemType> Problems { get; set; }
         public int BasePay { get; set; }
 
+        /// <summary>Problems in hand-edited tuning data; empty when usable (M3A carry-over 4).</summary>
+        public IReadOnlyList<string> Validate()
+        {
+            var problems = new List<string>();
+            if (string.IsNullOrEmpty(Id)) problems.Add("Id is empty");
+            if (MinRooms < 1 || MinRooms > MaxRooms) problems.Add($"rooms {MinRooms}..{MaxRooms}");
+            if (MinItemsPerRoom < 1 || MinItemsPerRoom > MaxItemsPerRoom) problems.Add($"items {MinItemsPerRoom}..{MaxItemsPerRoom}");
+            if (AngerMultiplier <= 0f) problems.Add($"anger multiplier {AngerMultiplier}");
+            if (Problems == null || Problems.Count == 0) problems.Add("no problem types");
+            if (BasePay < 0) problems.Add($"base pay {BasePay}");
+            return problems;
+        }
+
         public static JobDifficulty Normal => new()
         {
             Id = "normal",

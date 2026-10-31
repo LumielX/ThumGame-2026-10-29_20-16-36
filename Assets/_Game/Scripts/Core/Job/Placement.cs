@@ -33,9 +33,13 @@ namespace SpiritMovers.Core.Job
         /// <summary>Smallest angle between two orientations; q and -q count as the same orientation.</summary>
         public static float AngleDegrees(Quaternion a, Quaternion b)
         {
-            var dot = MathF.Abs(Quaternion.Dot(Quaternion.Normalize(a), Quaternion.Normalize(b)));
+            var dot = MathF.Abs(Quaternion.Dot(Safe(a), Safe(b)));
             return 2f * MathF.Acos(MathF.Min(1f, dot)) * 180f / MathF.PI;
         }
+
+        /// <summary>A zero quaternion (unset rotation) means "no rotation" instead of NaN.</summary>
+        private static Quaternion Safe(Quaternion q) =>
+            q.LengthSquared() < 1e-12f ? Quaternion.Identity : Quaternion.Normalize(q);
 
         public static bool IsCorrect(Placement target, Placement actual, Tolerance tolerance) =>
             target.RoomId == actual.RoomId &&
