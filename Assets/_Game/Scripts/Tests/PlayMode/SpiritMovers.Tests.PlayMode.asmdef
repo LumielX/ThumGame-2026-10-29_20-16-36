@@ -1,0 +1,26 @@
+{
+    "name": "SpiritMovers.Tests.PlayMode",
+    "rootNamespace": "SpiritMovers.Tests",
+    "references": [
+        "SpiritMovers.Core",
+        "SpiritMovers.Runtime",
+        "SpiritMovers.Dev",
+        "Unity.Netcode.Runtime",
+        "Unity.InputSystem",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,20 @@
+{
+    "name": "SpiritMovers.Dev",
+    "rootNamespace": "SpiritMovers.Dev",
+    "references": [
+        "SpiritMovers.Core",
+        "SpiritMovers.Runtime",
+        "SpiritMovers.Net",
+        "Unity.Netcode.Runtime",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

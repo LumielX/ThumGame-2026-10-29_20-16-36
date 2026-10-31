@@ -4,7 +4,9 @@
     "references": [
         "SpiritMovers.Core",
         "Unity.TextMeshPro",
-        "Unity.Localization"
+        "Unity.Localization",
+        "Unity.Netcode.Runtime",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

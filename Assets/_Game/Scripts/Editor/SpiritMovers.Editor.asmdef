@@ -6,7 +6,10 @@
         "SpiritMovers.Runtime",
         "Unity.Localization",
         "Unity.Localization.Editor",
-        "Unity.Addressables.Editor"
+        "Unity.Addressables.Editor",
+        "SpiritMovers.Dev",
+        "Unity.Netcode.Runtime",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [
         "Editor"
