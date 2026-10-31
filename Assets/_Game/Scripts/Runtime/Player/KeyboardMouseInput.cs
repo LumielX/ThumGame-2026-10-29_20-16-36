@@ -15,6 +15,8 @@ namespace SpiritMovers.Player
         private readonly InputAction m_Throw;
         private readonly InputAction m_Rotate;
         private readonly InputAction m_JobSheet;
+        private readonly InputAction m_Wai;
+        private readonly InputAction m_Use;
 
         public KeyboardMouseInput(InputActionAsset actions)
         {
@@ -28,6 +30,8 @@ namespace SpiritMovers.Player
             m_Throw = map.FindAction("Throw", true);
             m_Rotate = map.FindAction("RotateItem", true);
             m_JobSheet = map.FindAction("JobSheet", true);
+            m_Wai = map.FindAction("Wai", true);
+            m_Use = map.FindAction("Use", true);
             map.Enable();
         }
 
@@ -46,6 +50,8 @@ namespace SpiritMovers.Player
                 // Scroll units differ between devices; one notch = one step.
                 RotateSteps = Mathf.Abs(scroll) > 0.01f ? Mathf.Sign(scroll) : 0f,
                 JobSheetHeld = m_JobSheet.IsPressed(),
+                WaiPressed = m_Wai.WasPressedThisFrame(),
+                UsePressed = m_Use.WasPressedThisFrame(),
             };
         }
     }

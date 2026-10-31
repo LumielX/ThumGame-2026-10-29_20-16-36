@@ -432,6 +432,7 @@ namespace SpiritMovers.Editor
             serialized.FindProperty("m_Actions").objectReferenceValue = AssetDatabase.LoadAssetAtPath<InputActionAsset>(ActionsPath);
             serialized.ApplyModifiedPropertiesWithoutUndo();
             root.AddComponent<PlayerCarrier>();
+            root.AddComponent<PlayerEmote>();
             var interactor = new SerializedObject(root.AddComponent<PlayerInteractor>());
             interactor.FindProperty("m_PromptFont").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontPath);
             interactor.FindProperty("m_PromptGlyphMap").objectReferenceValue = AssetDatabase.LoadAssetAtPath<ThaiGlyphMap>(GlyphMapPath);

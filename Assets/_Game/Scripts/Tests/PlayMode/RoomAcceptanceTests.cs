@@ -20,6 +20,19 @@ namespace SpiritMovers.Tests
                 yield return null;
         }
 
+        [UnityTest]
+        public IEnumerator Room_NeedsToStaySettled()
+        {
+            // M3C carry-over 2: one still snapshot is not enough (an item may be tipping slowly).
+            Director.BeginJob(3, JobDifficulty.Normal);
+            foreach (var task in FirstRoom.Slots)
+                Director.PlaceAtTarget(task.Slot.Id);
+            Director.EvaluateNow(FirstRoom.RoomId);
+            CollectionAssert.DoesNotContain(Director.AcceptedRooms, FirstRoom.RoomId, "accepted on the first still look");
+            yield return WaitAccepted(FirstRoom.RoomId, 1.5f);
+            CollectionAssert.Contains(Director.AcceptedRooms, FirstRoom.RoomId);
+        }
+
         private IEnumerator WaitAccepted(string roomId, float timeout)
         {
             var end = Time.time + timeout;

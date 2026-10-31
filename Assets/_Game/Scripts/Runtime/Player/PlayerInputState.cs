@@ -16,6 +16,10 @@ namespace SpiritMovers.Player
         public float RotateSteps;
         /// <summary>Holding up the work order (Tab).</summary>
         public bool JobSheetHeld;
+        /// <summary>The "wai" emote (G).</summary>
+        public bool WaiPressed;
+        /// <summary>Use the held tool (right mouse button).</summary>
+        public bool UsePressed;
     }
 
     public interface IPlayerInputSource
@@ -36,6 +40,8 @@ namespace SpiritMovers.Player
             Next.InteractPressed = false;
             Next.ThrowPressed = false;
             Next.RotateSteps = 0f;
+            Next.WaiPressed = false;
+            Next.UsePressed = false;
             return state;
         }
     }

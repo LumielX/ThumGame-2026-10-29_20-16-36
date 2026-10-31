@@ -167,8 +167,9 @@ namespace SpiritMovers.Tests
         {
             var box = GameObject.Find("LightBox0").GetComponent<Carryable>();
             box.SetSingleCarrierForTest(99);
-            yield return null;
+            // Before any frame: the hold-error check would release client 99 anyway (M3C carry-over 4).
             Assert.AreEqual(NetworkManager.ServerClientId, box.OwnerClientId);
+            yield break;
         }
 
         [UnityTest]

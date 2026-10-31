@@ -85,10 +85,13 @@ namespace SpiritMovers.Job
 
         private const float EvaluateInterval = 0.5f;
         private const float SettledSpeed = 0.05f;
+        /// <summary>A room's items must stay still this long before the ghost accepts it (one still snapshot is not enough).</summary>
+        private const float SettledSeconds = 0.4f;
         private const float FarewellSeconds = 5f;
 
         private readonly List<string> m_AcceptedCache = new();
         private readonly List<SlotState> m_SlotStates = new();
+        private readonly Dictionary<string, float> m_SettledSince = new();
         private JobProgress m_Progress;
         private AngerModel m_Anger;
         private JobDifficulty m_Difficulty;
@@ -205,7 +208,12 @@ namespace SpiritMovers.Job
             }
 
             var result = RoomEvaluator.Evaluate(m_SlotStates, RoomRules.Default);
-            if (result.Accepted && settled && m_Progress.AcceptRoom(roomId))
+            if (!settled)
+                m_SettledSince.Remove(roomId);
+            else if (!m_SettledSince.ContainsKey(roomId))
+                m_SettledSince[roomId] = Time.time;
+            var stayedStill = settled && Time.time - m_SettledSince[roomId] >= SettledSeconds;
+            if (result.Accepted && stayedStill && m_Progress.AcceptRoom(roomId))
             {
                 m_Anger.OnRoomAccepted();
                 m_AngerStage.Value = m_Anger.Stage;
@@ -233,6 +241,16 @@ namespace SpiritMovers.Job
             }
             m_Progress.LeaveEarly();
             Finish();
+        }
+
+        /// <summary>Server: a player bows to the ghost in a room — calms it once per room, only while exploring (GDD 6.2, 8.1).</summary>
+        public bool Wai(string roomId)
+        {
+            if (!IsServer || m_Progress?.Phase != JobPhase.Exploring || string.IsNullOrEmpty(roomId) || !m_Anger.Wai(roomId))
+                return false;
+            m_AngerStage.Value = m_Anger.Stage;
+            Debug.Log($"[Job] wai in {roomId} anger={m_Anger.Value:F1}");
+            return true;
         }
 
         /// <summary>Server: pay out and publish the result (GDD 4.3, 12).</summary>

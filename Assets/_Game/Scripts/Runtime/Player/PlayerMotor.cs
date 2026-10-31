@@ -22,6 +22,10 @@ namespace SpiritMovers.Player
         [SerializeField] private InputActionAsset m_Actions;
 
         private readonly MovementConfig m_Config = MovementConfig.Default;
+        // Written by the owner so other machines (and the ghost on the host) see crouching and where the player looks.
+        private readonly NetworkVariable<bool> m_NetCrouch = new(writePerm: NetworkVariableWritePermission.Owner);
+        private readonly NetworkVariable<float> m_NetPitch = new(writePerm: NetworkVariableWritePermission.Owner);
+        private float m_Pitch;
         private CharacterController m_Controller;
         private Transform m_Head;
         private float m_VerticalVelocity;
@@ -44,8 +48,13 @@ namespace SpiritMovers.Player
         public Vector3 Feet => transform.position;
         /// <summary>Heading (yaw only).</summary>
         public Vector3 Forward => transform.forward;
-        public float Pitch { get; private set; }
+        /// <summary>Head pitch in degrees (down is positive); the synced value on other machines.</summary>
+        public float Pitch => IsSpawned && !IsOwner ? m_NetPitch.Value : m_Pitch;
         public bool IsGrounded => m_Controller.isGrounded;
+        /// <summary>Crouching, as every machine sees it.</summary>
+        public bool Crouching => m_NetCrouch.Value;
+        /// <summary>Where the eyes look (heading + pitch) — the ghost's "is anyone watching me" input.</summary>
+        public Vector3 Look => Quaternion.Euler(Pitch, transform.eulerAngles.y, 0f) * Vector3.forward;
 
         private void Awake()
         {
@@ -60,7 +69,13 @@ namespace SpiritMovers.Player
         public override void OnNetworkSpawn()
         {
             if (!IsOwner)
+            {
+                m_NetCrouch.OnValueChanged += (_, crouching) => ApplyCrouchShape(crouching);
+                m_NetPitch.OnValueChanged += (_, pitch) => m_Head.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+                ApplyCrouchShape(m_NetCrouch.Value);
+                m_Head.localRotation = Quaternion.Euler(m_NetPitch.Value, 0f, 0f);
                 return;
+            }
 
             Local = this;
             Input ??= Application.isBatchMode || m_Actions == null ? new ScriptedInput() : new KeyboardMouseInput(m_Actions);
@@ -102,8 +117,7 @@ namespace SpiritMovers.Player
             var flat = new Vector3(toPoint.x, 0f, toPoint.z);
             if (flat.sqrMagnitude > 0.0001f)
                 transform.rotation = Quaternion.LookRotation(flat);
-            Pitch = Mathf.Clamp(Mathf.Atan2(-toPoint.y, flat.magnitude) * Mathf.Rad2Deg, -85f, 85f);
-            m_Head.localRotation = Quaternion.Euler(Pitch, 0f, 0f);
+            SetPitch(Mathf.Atan2(-toPoint.y, flat.magnitude) * Mathf.Rad2Deg);
         }
 
         private void Update()
@@ -113,17 +127,24 @@ namespace SpiritMovers.Player
 
             var input = InputEnabled && Input != null ? Input.Read() : default;
             CurrentInput = input;
-            Look(input.Look);
+            ApplyLook(input.Look);
             Move(input, Time.deltaTime);
         }
 
-        private void Look(Vector2 delta)
+        private void ApplyLook(Vector2 delta)
         {
             if (delta == Vector2.zero)
                 return;
             transform.Rotate(0f, delta.x * LookSensitivity, 0f);
-            Pitch = Mathf.Clamp(Pitch - delta.y * LookSensitivity, -85f, 85f);
-            m_Head.localRotation = Quaternion.Euler(Pitch, 0f, 0f);
+            SetPitch(m_Pitch - delta.y * LookSensitivity);
+        }
+
+        private void SetPitch(float pitch)
+        {
+            m_Pitch = Mathf.Clamp(pitch, -85f, 85f);
+            m_Head.localRotation = Quaternion.Euler(m_Pitch, 0f, 0f);
+            if (IsSpawned && IsOwner && Mathf.Abs(m_NetPitch.Value - m_Pitch) > 0.5f)
+                m_NetPitch.Value = m_Pitch;
         }
 
         private void Move(PlayerInputState input, float dt)
@@ -149,6 +170,13 @@ namespace SpiritMovers.Player
         }
 
         private void SetCrouch(bool crouching)
+        {
+            if (m_NetCrouch.Value != crouching)
+                m_NetCrouch.Value = crouching;
+            ApplyCrouchShape(crouching);
+        }
+
+        private void ApplyCrouchShape(bool crouching)
         {
             var height = crouching ? CrouchHeight : StandHeight;
             if (Mathf.Approximately(m_Controller.height, height))

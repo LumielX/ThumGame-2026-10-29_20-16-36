@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 4625015656282217441}
   - component: {fileID: 7669334603416892051}
   - component: {fileID: 7068468092375165928}
+  - component: {fileID: 8507370654023715833}
   - component: {fileID: 5990368921321128585}
   m_Layer: 0
   m_Name: Player
@@ -162,6 +163,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ee8fc6b7c4b1a649993d6bf51dea485, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SpiritMovers.Runtime::SpiritMovers.Interaction.PlayerCarrier
+  ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &8507370654023715833
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2312789036647863127}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac9dc3921fca04841a94456e9ae2421d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpiritMovers.Runtime::SpiritMovers.Player.PlayerEmote
   ShowTopMostFoldoutHeaderGroup: 1
 --- !u!114 &5990368921321128585
 MonoBehaviour:
