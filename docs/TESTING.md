@@ -7,7 +7,7 @@
 
 | คำสั่ง | ทำอะไร | ผลลัพธ์ |
 |---|---|---|
-| `powershell -ExecutionPolicy Bypass -File Tools\test.ps1` | EditMode Tests | `Logs/test-EditMode.xml`, `Logs/test-EditMode.log` |
+| `powershell -ExecutionPolicy Bypass -File Tools\test.ps1` | EditMode Tests (`-Filter ชื่อชุด` รันเฉพาะชุด) | `Logs/test-EditMode.xml`, `Logs/test-EditMode.log` |
 | `powershell -ExecutionPolicy Bypass -File Tools\test.ps1 -Platform PlayMode` | PlayMode Tests (เมื่อมี) | `Logs/test-PlayMode.*` |
 | `powershell -ExecutionPolicy Bypass -File Tools\build.ps1` | Build Windows + Zip | `Builds/SpiritMovers-v<ver>-Windows(.zip)`, `Logs/build.log` |
 

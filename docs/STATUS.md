@@ -51,7 +51,7 @@
 - ตรวจ Unity CLI (`-batchmode`) และไฟล์ Template ที่จะลบ
 
 ## งานถัดไป
-1. **M3 Playable Prototype:** แบ่งเป็น 4 แผน (`docs/superpowers/plans/2026-10-31-m3-overview.md`) · **ถัดไป M3A Core Job Logic** (`2026-10-31-m3a-core-job-logic.md` — 5 งาน, Test ใหม่ 49 ชุด, ค่าสมดุลเริ่มต้นประเภท C อยู่ในตารางของแผน) — รอผู้ใช้ทบทวนแผนและเลือกวิธีลงมือ
+1. **M3 Playable Prototype:** แบ่งเป็น 4 แผน (`docs/superpowers/plans/2026-10-31-m3-overview.md`) · **M3A Core Job Logic เสร็จ** (2026-10-31, ผู้ใช้เลือกให้ Claude ทำเอง) — `Core/Job/`: Placement/RoomEvaluator, AngerModel, JobGenerator, PayoutCalculator, JobProgress · Tests 82/82 · ค่าสมดุลเริ่มต้นประเภท C อยู่ในตารางของแผน · **ถัดไป M3B Player & Interaction** (เขียนแผนก่อนเริ่ม)
    - M2 เสร็จ — สรุปเดิม:
    - ทำแล้ว 2026-10-31 (D-038 ทำ M2 ที่เหลือระหว่างรอ): Audio Tap เสียงวิทยุ (Participant Tap + ฟิลเตอร์, Tested) · Localization 1.5.13 + Locale th/en + `LocalizedThaiText` (Tested ผ่าน `-language=`) · Tests 33/33 · ตัดคำไทยด้วยพจนานุกรม → เลื่อนไป M4
    - ทำแล้ว 2026-10-30: Vivox 16.12.1 (Free Tier 5,000 PCU) · ดึงค่า Vivox ด้วย `VivoxCredentialPull` (ไม่เก็บ Secret Key) · ต้นแบบ Voice ใกล้ได้ยิน/วิทยุ/แชตไทย **Tested** (ตัดเสียงที่ 25 ม. จริง) · แก้ `ThaiFontSupport.Register` พังใน Player · ช่องพิมพ์ไทย Shape ระหว่างพิมพ์ (`EnableThaiShaping`) · Tests 31/31

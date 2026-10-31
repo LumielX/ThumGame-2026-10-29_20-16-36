@@ -13,6 +13,8 @@
 - ภาษาไทย: `ThaiShaper` (จัดวรรณยุกต์ด้วย Glyph สำรอง), `ThaiFontSupport`, ช่องพิมพ์ไทยแบบ Shape ระหว่างพิมพ์
 - Vivox 16.12.1: เสียงตามระยะ, วิทยุ (Audio Tap + ฟิลเตอร์), แชตข้อความ · เครื่องมือดึงค่า Vivox
 - Localization 1.5.13: Locale ไทย/อังกฤษ, ตาราง `UI`, `LocalizedThaiText`
+- กติกาเกมใน Core (`Core/Job/`): ตรวจของวางถูกและประเมินห้อง, ความโกรธผี 5 ขั้น, สุ่มงานจาก Seed, ค่าจ้างและดาวรีวิว, สถานะงาน
+- `Tools/test.ps1 -Filter` รันเฉพาะชุด Test
 
 ### Removed
 - แพ็กเกจที่ไม่ใช้จาก Template: AI Assistant, Inference Engine, pipeline (experimental), Collab Proxy, Visual Scripting
