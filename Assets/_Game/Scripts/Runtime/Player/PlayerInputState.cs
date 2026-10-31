@@ -20,6 +20,10 @@ namespace SpiritMovers.Player
         public bool WaiPressed;
         /// <summary>Use the held tool (right mouse button).</summary>
         public bool UsePressed;
+        /// <summary>Lobby: toggle ready (R).</summary>
+        public bool ReadyPressed;
+        /// <summary>Confirm / go now (Enter) — the host departs or leaves the results early.</summary>
+        public bool ConfirmPressed;
     }
 
     public interface IPlayerInputSource
@@ -42,6 +46,8 @@ namespace SpiritMovers.Player
             Next.RotateSteps = 0f;
             Next.WaiPressed = false;
             Next.UsePressed = false;
+            Next.ReadyPressed = false;
+            Next.ConfirmPressed = false;
             return state;
         }
     }

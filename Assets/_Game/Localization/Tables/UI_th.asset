@@ -214,6 +214,53 @@ MonoBehaviour:
       {0}"
     m_Metadata:
       m_Items: []
+  - m_Id: 224611346968576
+    m_Localized: "\u0E23\u0E16\u0E15\u0E39\u0E49 Spirit Movers"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300224
+    m_Localized: "\u0E23\u0E2B\u0E31\u0E2A\u0E2B\u0E49\u0E2D\u0E07: {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300225
+    m_Localized: "\u0E1C\u0E39\u0E49\u0E40\u0E25\u0E48\u0E19 {0} \u2014 {1}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300226
+    m_Localized: "\u0E1E\u0E23\u0E49\u0E2D\u0E21"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300227
+    m_Localized: "\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E1E\u0E23\u0E49\u0E2D\u0E21"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300228
+    m_Localized: "5\u20136 \u0E04\u0E19: \u0E42\u0E2B\u0E21\u0E14\u0E17\u0E14\u0E25\u0E2D\u0E07"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300229
+    m_Localized: "\u0E07\u0E32\u0E19: \u0E1A\u0E49\u0E32\u0E19\u0E44\u0E21\u0E49
+      (Greybox) \xB7 \u0E23\u0E30\u0E14\u0E31\u0E1A\u0E1B\u0E01\u0E15\u0E34"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300230
+    m_Localized: "\u0E23\u0E30\u0E14\u0E31\u0E1A\u0E22\u0E32\u0E01 \u2014 \u0E1B\u0E25\u0E14\u0E25\u0E47\u0E2D\u0E01\u0E14\u0E49\u0E27\u0E22\u0E22\u0E28"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300231
+    m_Localized: "\u0E01\u0E14 R \u0E40\u0E21\u0E37\u0E48\u0E2D\u0E1E\u0E23\u0E49\u0E2D\u0E21"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300232
+    m_Localized: "\u0E17\u0E38\u0E01\u0E04\u0E19\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E41\u0E25\u0E49\u0E27
+      \u2014 \u0E2B\u0E31\u0E27\u0E2B\u0E19\u0E49\u0E32\u0E01\u0E14 Enter \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E2D\u0E2D\u0E01\u0E40\u0E14\u0E34\u0E19\u0E17\u0E32\u0E07"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300233
+    m_Localized: "\u0E2D\u0E2D\u0E01\u0E40\u0E14\u0E34\u0E19\u0E17\u0E32\u0E07\u0E43\u0E19
+      {0}"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 5060770151185989182}
   - component: {fileID: 3584440923215524955}
   - component: {fileID: 6321247120469386948}
+  - component: {fileID: 2728410472005896729}
   m_Layer: 0
   m_Name: GameNetwork
   m_TagString: Untagged
@@ -88,7 +89,7 @@ MonoBehaviour:
       - {fileID: 11400000, guid: 5487f465062655f48b8e257bd78f4aaf, type: 2}
     TickRate: 30
     ClientConnectionBufferTimeout: 10
-    ConnectionApproval: 0
+    ConnectionApproval: 1
     ConnectionData: 
     EnableTimeResync: 0
     TimeResyncInterval: 30
@@ -123,7 +124,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Multiplayer.Tools.NetworkSimulator.Runtime::Unity.Multiplayer.Tools.NetworkSimulator.Runtime.NetworkSimulator
   m_PresetAsset: {fileID: 0}
   m_PresetReference:
-    rid: 849248105661464576
+    rid: 849248105764749312
   m_Scenario:
     rid: -2
   m_IsScenarioSettingsFolded: 0
@@ -133,7 +134,7 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 849248105661464576
+    - rid: 849248105764749312
       type: {class: NetworkSimulatorPreset, ns: Unity.Multiplayer.Tools.NetworkSimulator.Runtime, asm: Unity.Multiplayer.Tools.NetworkSimulator.Runtime}
       data:
         <Name>k__BackingField: 
@@ -154,3 +155,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0bc4a91aa676c1748b7ee13cce0b47d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SpiritMovers.Runtime::SpiritMovers.Session.GameSession
+--- !u!114 &2728410472005896729
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 612032786755669571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f5e4712fcda24847a3616298aa80e69, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpiritMovers.Runtime::SpiritMovers.Session.LobbyGate

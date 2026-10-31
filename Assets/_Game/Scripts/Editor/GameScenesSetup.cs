@@ -33,7 +33,7 @@ namespace SpiritMovers.Editor
             var network = CreateGameNetworkPrefab(prefabs);
             AddToBoot(network);
             CreateMainMenu();
-            CreateLobby();
+            CreateLobby(prefabs);
             CreateJob(prefabs);
             EditorBuildSettings.scenes = new[]
             {
@@ -52,10 +52,17 @@ namespace SpiritMovers.Editor
             var go = new GameObject("GameNetwork");
             var transport = go.AddComponent<UnityTransport>();
             var manager = go.AddComponent<NetworkManager>();
-            manager.NetworkConfig = new NetworkConfig { NetworkTransport = transport, PlayerPrefab = prefabs.Player, EnableSceneManagement = true };
+            manager.NetworkConfig = new NetworkConfig
+            {
+                NetworkTransport = transport,
+                PlayerPrefab = prefabs.Player,
+                EnableSceneManagement = true,
+                ConnectionApproval = true,
+            };
             manager.NetworkConfig.Prefabs.NetworkPrefabsLists.Add(prefabs.List);
             go.AddComponent<NetworkSimulator>(); // -dev-latency in test runs; no effect otherwise
             go.AddComponent<GameSession>();
+            go.AddComponent<LobbyGate>();
             var prefab = PrefabUtility.SaveAsPrefabAsset(go, GameNetworkPath);
             Object.DestroyImmediate(go);
             return prefab;
@@ -85,7 +92,7 @@ namespace SpiritMovers.Editor
         }
 
         /// <summary>The company van as a greybox room: floor, walls, six spawns and the job board.</summary>
-        private static void CreateLobby()
+        private static void CreateLobby(TestRoomSetup.Prefabs prefabs)
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
             var van = new GameObject("Van").transform;
@@ -99,14 +106,31 @@ namespace SpiritMovers.Editor
             for (var i = 0; i < 6; i++)
                 new GameObject($"PlayerSpawn{i}").transform.SetPositionAndRotation(
                     new Vector3(i % 2 == 0 ? -0.9f : 0.9f, 0f, -2.5f + i / 2 * 1.5f), Quaternion.identity);
-            EditorSceneManager.SaveScene(scene, LobbyPath);
+            PrefabUtility.InstantiatePrefab(prefabs.LobbyState, scene);
+            var panel = new SerializedObject(new GameObject("LobbyBoard").AddComponent<LobbyPanel>());
+            panel.FindProperty("m_Font").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(TestRoomSetup.FontPath);
+            panel.FindProperty("m_GlyphMap").objectReferenceValue = AssetDatabase.LoadAssetAtPath<ThaiGlyphMap>(TestRoomSetup.GlyphMapPath);
+            panel.ApplyModifiedPropertiesWithoutUndo();
+            SaveWithSceneIds(scene, LobbyPath);
         }
 
         private static void CreateJob(TestRoomSetup.Prefabs prefabs)
         {
             var scene = TestRoomSetup.NewGreyboxScene(prefabs, withNetwork: false);
             TestRoomSetup.BuildHouse(prefabs);
-            EditorSceneManager.SaveScene(scene, JobPath);
+            SaveWithSceneIds(scene, JobPath);
+        }
+
+        /// <summary>
+        /// Save, reopen and save again: a new scene has no asset GUID until its first save, so in-scene NetworkObjects
+        /// get duplicate GlobalObjectIdHash values (NGO refuses them); reopening recomputes them (OnValidate).
+        /// </summary>
+        private static void SaveWithSceneIds(UnityEngine.SceneManagement.Scene scene, string path)
+        {
+            EditorSceneManager.SaveScene(scene, path);
+            var reopened = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+            EditorSceneManager.MarkSceneDirty(reopened);
+            EditorSceneManager.SaveScene(reopened);
         }
 
         private static void Block(Transform parent, string name, Vector3 center, Vector3 size)

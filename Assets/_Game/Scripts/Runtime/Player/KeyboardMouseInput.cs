@@ -17,6 +17,8 @@ namespace SpiritMovers.Player
         private readonly InputAction m_JobSheet;
         private readonly InputAction m_Wai;
         private readonly InputAction m_Use;
+        private readonly InputAction m_Ready;
+        private readonly InputAction m_Confirm;
 
         public KeyboardMouseInput(InputActionAsset actions)
         {
@@ -32,6 +34,8 @@ namespace SpiritMovers.Player
             m_JobSheet = map.FindAction("JobSheet", true);
             m_Wai = map.FindAction("Wai", true);
             m_Use = map.FindAction("Use", true);
+            m_Ready = map.FindAction("Ready", true);
+            m_Confirm = map.FindAction("Confirm", true);
             map.Enable();
         }
 
@@ -52,6 +56,8 @@ namespace SpiritMovers.Player
                 JobSheetHeld = m_JobSheet.IsPressed(),
                 WaiPressed = m_Wai.WasPressedThisFrame(),
                 UsePressed = m_Use.WasPressedThisFrame(),
+                ReadyPressed = m_Ready.WasPressedThisFrame(),
+                ConfirmPressed = m_Confirm.WasPressedThisFrame(),
             };
         }
     }

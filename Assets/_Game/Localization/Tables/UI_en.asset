@@ -204,6 +204,50 @@ MonoBehaviour:
     m_Localized: "The host left \u2014 your pay for this job: {0}"
     m_Metadata:
       m_Items: []
+  - m_Id: 224611346968576
+    m_Localized: Spirit Movers van
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300224
+    m_Localized: 'Room code: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300225
+    m_Localized: "Player {0} \u2014 {1}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300226
+    m_Localized: ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300227
+    m_Localized: not ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300228
+    m_Localized: "5\u20136 players: experimental"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300229
+    m_Localized: "Job: wooden house (greybox) \xB7 normal"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300230
+    m_Localized: "Hard \u2014 unlocked by rank"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300231
+    m_Localized: Press R when ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300232
+    m_Localized: "Everyone is ready \u2014 the host presses Enter to set off"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300233
+    m_Localized: Setting off in {0}
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

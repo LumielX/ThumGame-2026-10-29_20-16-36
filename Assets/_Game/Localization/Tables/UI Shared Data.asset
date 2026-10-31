@@ -199,6 +199,50 @@ MonoBehaviour:
     m_Key: session.host_left_results
     m_Metadata:
       m_Items: []
+  - m_Id: 224611346968576
+    m_Key: lobby.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300224
+    m_Key: lobby.code
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300225
+    m_Key: lobby.member
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300226
+    m_Key: lobby.ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300227
+    m_Key: lobby.not_ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300228
+    m_Key: lobby.experimental
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300229
+    m_Key: lobby.job
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300230
+    m_Key: lobby.hard_locked
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300231
+    m_Key: lobby.hint_ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300232
+    m_Key: lobby.hint_start
+    m_Metadata:
+      m_Items: []
+  - m_Id: 224611397300233
+    m_Key: lobby.countdown
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

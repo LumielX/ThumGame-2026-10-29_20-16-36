@@ -42,7 +42,7 @@ namespace SpiritMovers.Editor
 
         internal struct Prefabs
         {
-            public GameObject Player, LightBox, HeavyCrate, JobDirector, GhostBell, Van, Ghost, Cabinet, SpiritCamera;
+            public GameObject Player, LightBox, HeavyCrate, JobDirector, GhostBell, Van, Ghost, Cabinet, SpiritCamera, LobbyState;
             public NetworkPrefabsList List;
         }
 
@@ -62,8 +62,9 @@ namespace SpiritMovers.Editor
             result.Cabinet = CreateCabinetPrefab();
             result.SpiritCamera = CreateCarryablePrefab(PrefabDir + "/SpiritCamera.prefab", "SpiritCamera",
                 new Vector3(0.25f, 0.18f, 0.15f), 1f, new Color(0.15f, 0.15f, 0.17f), typeof(SpiritCamera));
+            result.LobbyState = CreateLobbyStatePrefab();
             result.List = CreatePrefabList(result.Player, result.LightBox, result.HeavyCrate, result.JobDirector, result.GhostBell,
-                result.Van, result.Ghost, result.Cabinet, result.SpiritCamera);
+                result.Van, result.Ghost, result.Cabinet, result.SpiritCamera, result.LobbyState);
             return result;
         }
 
@@ -406,6 +407,17 @@ namespace SpiritMovers.Editor
             material = new Material(AssetDatabase.LoadAssetAtPath<Shader>("Assets/_Game/Shaders/SpiritMemory.shader"));
             AssetDatabase.CreateAsset(material, path);
             return material;
+        }
+
+        /// <summary>The van's networked state (an in-scene NetworkObject must be a registered prefab instance).</summary>
+        private static GameObject CreateLobbyStatePrefab()
+        {
+            var go = new GameObject("LobbyState");
+            go.AddComponent<NetworkObject>();
+            go.AddComponent<SpiritMovers.Session.LobbyState>();
+            var prefab = PrefabUtility.SaveAsPrefabAsset(go, PrefabDir + "/LobbyState.prefab");
+            Object.DestroyImmediate(go);
+            return prefab;
         }
 
         private static GameObject CreateJobDirectorPrefab()

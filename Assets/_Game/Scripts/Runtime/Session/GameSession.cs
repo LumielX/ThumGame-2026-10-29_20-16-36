@@ -73,6 +73,20 @@ namespace SpiritMovers.Session
             m_Network = GetComponent<NetworkManager>();
             DontDestroyOnLoad(gameObject);
             SceneManager.sceneLoaded += OnSceneLoaded;
+            m_Network.OnClientDisconnectCallback += OnDisconnected;
+        }
+
+        /// <summary>Client: the host refused us (job in progress, room full) — say why on the main menu.</summary>
+        private void OnDisconnected(ulong clientId)
+        {
+            if (m_Network.IsServer || clientId != m_Network.LocalClientId)
+                return;
+            var reason = m_Network.DisconnectReason;
+            if (string.IsNullOrEmpty(reason) || !reason.StartsWith("error."))
+                return;
+            Debug.Log($"[Net] refused by the host: {reason}");
+            PendingMessageKey = reason;
+            _ = LeaveAsync();
         }
 
         private void OnDestroy()
