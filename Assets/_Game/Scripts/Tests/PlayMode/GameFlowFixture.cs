@@ -67,6 +67,28 @@ namespace SpiritMovers.Tests
                 throw task.Exception!;
         }
 
+        protected static ScriptedInput LocalInput => (ScriptedInput)PlayerMotor.Local.Input;
+
+        protected static IEnumerator Press(System.Action<ScriptedInput> press)
+        {
+            press(LocalInput);
+            yield return null;
+            yield return null;
+            yield return null;
+        }
+
+        /// <summary>Solo into the van, get ready, set off, and wait until the job is running.</summary>
+        protected IEnumerator SoloIntoJob()
+        {
+            yield return SoloIntoLobby();
+            yield return Press(i => i.Next.ReadyPressed = true);
+            yield return Press(i => i.Next.ConfirmPressed = true);
+            yield return WaitFor(() => ActiveScene == GameSession.JobScene, 8f, "job scene");
+            yield return WaitFor(() => UnityEngine.Object.FindAnyObjectByType<SpiritMovers.Job.JobDirector>()?.Phase == SpiritMovers.Core.Job.JobPhase.Exploring,
+                8f, "job started");
+            yield return new WaitForFixedUpdate();
+        }
+
         /// <summary>Solo into the van and hand the local player a scripted input.</summary>
         protected IEnumerator SoloIntoLobby()
         {

@@ -2,6 +2,7 @@ using SpiritMovers.Core.Ghost;
 using SpiritMovers.Core.Player;
 using SpiritMovers.Ghost;
 using Unity.Netcode;
+using Unity.Netcode.Components;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -131,8 +132,12 @@ namespace SpiritMovers.Player
         /// <summary>Owner only: place the feet somewhere and face a heading (spawning, tests).</summary>
         public void Teleport(Vector3 feet, float yawDegrees)
         {
+            var rotation = Quaternion.Euler(0f, yawDegrees, 0f);
             m_Controller.enabled = false;
-            transform.SetPositionAndRotation(feet, Quaternion.Euler(0f, yawDegrees, 0f));
+            transform.SetPositionAndRotation(feet, rotation);
+            // Others see a jump, not a slide across the house (M3B carry-over 4, M3D minor 7).
+            if (IsSpawned && IsOwner && TryGetComponent<NetworkTransform>(out var networkTransform))
+                networkTransform.Teleport(feet, rotation, transform.localScale);
             m_Controller.enabled = true;
             m_VerticalVelocity = 0f;
         }

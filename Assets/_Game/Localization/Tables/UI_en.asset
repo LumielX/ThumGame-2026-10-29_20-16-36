@@ -248,6 +248,14 @@ MonoBehaviour:
     m_Localized: Setting off in {0}
     m_Metadata:
       m_Items: []
+  - m_Id: 226222467215360
+    m_Localized: "On the way to the client's house\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 226222525935616
+    m_Localized: 'Back to the van in {0} s (host: Enter to go now)'
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

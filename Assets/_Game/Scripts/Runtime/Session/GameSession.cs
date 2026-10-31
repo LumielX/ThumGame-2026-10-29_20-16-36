@@ -74,6 +74,25 @@ namespace SpiritMovers.Session
             DontDestroyOnLoad(gameObject);
             SceneManager.sceneLoaded += OnSceneLoaded;
             m_Network.OnClientDisconnectCallback += OnDisconnected;
+            m_Network.OnClientStarted += () => m_Network.SceneManager.OnSceneEvent += OnSceneEvent;
+        }
+
+        /// <summary>Host: every player has finished loading the job scene (NGO's load-complete event).</summary>
+        public bool JobSceneReady { get; private set; }
+
+        private void OnSceneEvent(SceneEvent sceneEvent)
+        {
+            if (sceneEvent.SceneName != JobScene)
+                return;
+            if (sceneEvent.SceneEventType == SceneEventType.Load && sceneEvent.ClientId == m_Network.LocalClientId)
+            {
+                m_Loading = true;
+                JobSceneReady = false;
+            }
+            else if (sceneEvent.SceneEventType == SceneEventType.LoadEventCompleted)
+            {
+                JobSceneReady = true;
+            }
         }
 
         /// <summary>Client: the host refused us (job in progress, room full) — say why on the main menu.</summary>

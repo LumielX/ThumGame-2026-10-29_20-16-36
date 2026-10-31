@@ -45,6 +45,8 @@ namespace SpiritMovers.Editor
             ("session.host_left_lobby", "หัวหน้าห้องออกแล้ว", "The host left"),
             ("session.host_left_job", "หัวหน้าห้องออกระหว่างงาน — ได้ค่าจ้างห้องที่ผีรับแล้ว {0}", "The host left during the job — you keep the pay for accepted rooms: {0}"),
             ("session.host_left_results", "หัวหน้าห้องออก — ค่าจ้างงานนี้ {0}", "The host left — your pay for this job: {0}"),
+            ("loading.house", "กำลังเดินทางไปบ้านลูกค้า…", "On the way to the client's house…"),
+            ("results.back_in", "กลับรถตู้ใน {0} วินาที (หัวหน้ากด Enter เพื่อไปเลย)", "Back to the van in {0} s (host: Enter to go now)"),
             ("lobby.title", "รถตู้ Spirit Movers", "Spirit Movers van"),
             ("lobby.code", "รหัสห้อง: {0}", "Room code: {0}"),
             ("lobby.member", "ผู้เล่น {0} — {1}", "Player {0} — {1}"),

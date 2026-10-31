@@ -261,6 +261,16 @@ MonoBehaviour:
       {0}"
     m_Metadata:
       m_Items: []
+  - m_Id: 226222467215360
+    m_Localized: "\u0E01\u0E33\u0E25\u0E31\u0E07\u0E40\u0E14\u0E34\u0E19\u0E17\u0E32\u0E07\u0E44\u0E1B\u0E1A\u0E49\u0E32\u0E19\u0E25\u0E39\u0E01\u0E04\u0E49\u0E32\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 226222525935616
+    m_Localized: "\u0E01\u0E25\u0E31\u0E1A\u0E23\u0E16\u0E15\u0E39\u0E49\u0E43\u0E19
+      {0} \u0E27\u0E34\u0E19\u0E32\u0E17\u0E35 (\u0E2B\u0E31\u0E27\u0E2B\u0E19\u0E49\u0E32\u0E01\u0E14
+      Enter \u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E44\u0E1B\u0E40\u0E25\u0E22)"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

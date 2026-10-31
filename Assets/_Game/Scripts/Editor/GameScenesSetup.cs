@@ -63,6 +63,7 @@ namespace SpiritMovers.Editor
             go.AddComponent<NetworkSimulator>(); // -dev-latency in test runs; no effect otherwise
             go.AddComponent<GameSession>();
             go.AddComponent<LobbyGate>();
+            SetFont(go.AddComponent<LoadingOverlay>());
             var prefab = PrefabUtility.SaveAsPrefabAsset(go, GameNetworkPath);
             Object.DestroyImmediate(go);
             return prefab;
@@ -118,7 +119,17 @@ namespace SpiritMovers.Editor
         {
             var scene = TestRoomSetup.NewGreyboxScene(prefabs, withNetwork: false);
             TestRoomSetup.BuildHouse(prefabs);
+            new GameObject("JobAutoStart").AddComponent<JobAutoStart>();
+            SetFont(new GameObject("ReturnToLobby").AddComponent<ReturnToLobby>());
             SaveWithSceneIds(scene, JobPath);
+        }
+
+        private static void SetFont(Component component)
+        {
+            var so = new SerializedObject(component);
+            so.FindProperty("m_Font").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(TestRoomSetup.FontPath);
+            so.FindProperty("m_GlyphMap").objectReferenceValue = AssetDatabase.LoadAssetAtPath<ThaiGlyphMap>(TestRoomSetup.GlyphMapPath);
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         /// <summary>
