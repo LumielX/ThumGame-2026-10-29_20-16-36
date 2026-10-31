@@ -50,6 +50,78 @@ MonoBehaviour:
     m_Localized: The ghost knocked {0} times
     m_Metadata:
       m_Items: []
+  - m_Id: 107972223856640
+    m_Localized: Close the job
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159808
+    m_Localized: Work order
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159809
+    m_Localized: Accepted
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159810
+    m_Localized: Living room
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159811
+    m_Localized: Kitchen
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159812
+    m_Localized: Loft bedroom
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159813
+    m_Localized: 'Ghost: calm'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159814
+    m_Localized: 'Ghost: annoyed'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159815
+    m_Localized: 'Ghost: angry'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159816
+    m_Localized: 'Ghost: raging'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159817
+    m_Localized: 'Ghost: evicting'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159818
+    m_Localized: Job report
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159819
+    m_Localized: Ghost at peace
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159820
+    m_Localized: Left early
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159821
+    m_Localized: Evicted
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159822
+    m_Localized: Rooms accepted {0}/{1}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159823
+    m_Localized: Pay each {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159824
+    m_Localized: '{0}-star review'
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

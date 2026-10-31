@@ -14,6 +14,8 @@ namespace SpiritMovers.Player
         public bool ThrowPressed;
         /// <summary>Scroll notches this frame; positive turns the held item clockwise.</summary>
         public float RotateSteps;
+        /// <summary>Holding up the work order (Tab).</summary>
+        public bool JobSheetHeld;
     }
 
     public interface IPlayerInputSource

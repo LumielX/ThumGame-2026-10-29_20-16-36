@@ -47,6 +47,78 @@ MonoBehaviour:
     m_Key: bell.nod
     m_Metadata:
       m_Items: []
+  - m_Id: 107972223856640
+    m_Key: job.leave
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159808
+    m_Key: job.sheet.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159809
+    m_Key: job.accepted
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159810
+    m_Key: room.west
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159811
+    m_Key: room.east
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159812
+    m_Key: room.loft
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159813
+    m_Key: ghost.mood.0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159814
+    m_Key: ghost.mood.1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159815
+    m_Key: ghost.mood.2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159816
+    m_Key: ghost.mood.3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159817
+    m_Key: ghost.mood.4
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159818
+    m_Key: results.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159819
+    m_Key: results.full
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159820
+    m_Key: results.early
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159821
+    m_Key: results.evicted
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159822
+    m_Key: results.rooms
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159823
+    m_Key: results.pay
+    m_Metadata:
+      m_Items: []
+  - m_Id: 107972295159824
+    m_Key: results.stars
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

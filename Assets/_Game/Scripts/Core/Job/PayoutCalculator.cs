@@ -55,12 +55,10 @@ namespace SpiritMovers.Core.Job
         public static Payout Calculate(JobEnding ending, int basePay, int roomsAccepted, int roomsRequired, int stars,
             int hintsUsed, int playerCount, PayoutRules rules)
         {
-            // decimal keeps shares like 2/3 of 300 exact (float gives 199.99…, which would floor to 199).
-            decimal pay = basePay;
-            decimal share = ending == JobEnding.FullSuccess ? 1m
-                : roomsRequired > 0 ? (decimal)Math.Clamp(roomsAccepted, 0, roomsRequired) / roomsRequired
+            // Multiply before dividing, in decimal: base × accepted / required stays exact (1/3 of 300 = 100, not 99.99…).
+            decimal pay = ending == JobEnding.FullSuccess ? basePay
+                : roomsRequired > 0 ? (decimal)basePay * Math.Clamp(roomsAccepted, 0, roomsRequired) / roomsRequired
                 : 0m;
-            pay *= share;
 
             if (ending == JobEnding.Evicted)
                 pay *= (decimal)rules.EvictedFactor;

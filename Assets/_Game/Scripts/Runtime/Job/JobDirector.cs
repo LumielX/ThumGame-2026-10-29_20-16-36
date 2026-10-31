@@ -33,6 +33,36 @@ namespace SpiritMovers.Job
             Seed == other.Seed && DifficultyId.Equals(other.DifficultyId) && PlayerCount == other.PlayerCount && LayoutHash.Equals(other.LayoutHash);
     }
 
+    /// <summary>How a job ended and what it paid; synced to every peer for the results screen.</summary>
+    public struct JobResult : INetworkSerializable, IEquatable<JobResult>
+    {
+        public bool IsSet;
+        public JobEnding Ending;
+        public int RoomsAccepted;
+        public int RoomsRequired;
+        public int TeamTotal;
+        public int PerPlayer;
+        public int Stars;
+
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        {
+            serializer.SerializeValue(ref IsSet);
+            serializer.SerializeValue(ref Ending);
+            serializer.SerializeValue(ref RoomsAccepted);
+            serializer.SerializeValue(ref RoomsRequired);
+            serializer.SerializeValue(ref TeamTotal);
+            serializer.SerializeValue(ref PerPlayer);
+            serializer.SerializeValue(ref Stars);
+        }
+
+        public bool Equals(JobResult other) =>
+            IsSet == other.IsSet && Ending == other.Ending && RoomsAccepted == other.RoomsAccepted &&
+            RoomsRequired == other.RoomsRequired && TeamTotal == other.TeamTotal && PerPlayer == other.PerPlayer && Stars == other.Stars;
+
+        public override string ToString() =>
+            $"ending={Ending} rooms={RoomsAccepted}/{RoomsRequired} teamTotal={TeamTotal} perPlayer={PerPlayer} stars={Stars}";
+    }
+
     /// <summary>
     /// Runs one job in the house (TECHNICAL_DESIGN 3–4). The host owns the rules (<see cref="JobProgress"/>,
     /// <see cref="AngerModel"/>) and unpacks the house; every peer rebuilds the same <see cref="JobPlan"/>
@@ -45,10 +75,12 @@ namespace SpiritMovers.Job
         private readonly NetworkVariable<JobSpec> m_Spec = new();
         private readonly NetworkVariable<JobPhase> m_Phase = new(JobPhase.Briefing);
         private readonly NetworkVariable<int> m_AngerStage = new();
+        private readonly NetworkVariable<JobResult> m_Result = new();
         private NetworkList<FixedString32Bytes> m_Accepted;
 
         private const float EvaluateInterval = 0.5f;
         private const float SettledSpeed = 0.05f;
+        private const float FarewellSeconds = 5f;
 
         private readonly List<string> m_AcceptedCache = new();
         private readonly List<SlotState> m_SlotStates = new();
@@ -56,6 +88,7 @@ namespace SpiritMovers.Job
         private AngerModel m_Anger;
         private JobDifficulty m_Difficulty;
         private float m_NextEvaluate;
+        private float m_FarewellEndsAt = -1f;
 
         public HouseAuthoring House => m_House;
         public JobPhase Phase => m_Phase.Value;
@@ -68,6 +101,8 @@ namespace SpiritMovers.Job
         public int AngerStage => m_AngerStage.Value;
         /// <summary>Host only: the anger value (0 elsewhere).</summary>
         public float AngerValue => m_Anger?.Value ?? 0f;
+        /// <summary>Set on every peer once the job has ended.</summary>
+        public JobResult Result => m_Result.Value;
 
         /// <summary>Every peer: a room was accepted (its colour starts coming back).</summary>
         public event Action<string> RoomAccepted;
@@ -107,11 +142,32 @@ namespace SpiritMovers.Job
 
         private void Update()
         {
-            if (!IsServer || m_Progress == null || m_Progress.Phase != JobPhase.Exploring)
+            if (!IsServer || m_Progress == null)
+                return;
+
+            if (m_Progress.Phase == JobPhase.Farewell)
+            {
+                // Placeholder for the farewell ceremony (the ghost thanks the team and fades out).
+                if (m_FarewellEndsAt < 0f)
+                    m_FarewellEndsAt = Time.time + FarewellSeconds;
+                else if (Time.time >= m_FarewellEndsAt)
+                {
+                    m_Progress.CompleteFarewell();
+                    Finish();
+                }
+                return;
+            }
+            if (m_Progress.Phase != JobPhase.Exploring)
                 return;
 
             m_Anger.Tick(Time.deltaTime, everyoneSilent: false);
             m_AngerStage.Value = m_Anger.Stage;
+            if (m_Anger.IsEvicted)
+            {
+                m_Progress.Evict();
+                Finish();
+                return;
+            }
 
             if (Time.time < m_NextEvaluate)
                 return;
@@ -153,6 +209,47 @@ namespace SpiritMovers.Job
                 Debug.Log($"[Job] room accepted {roomId} ({m_Progress.AcceptedRooms.Count}/{m_Progress.RoomsRequired})");
             }
             return result.CorrectCount;
+        }
+
+        /// <summary>
+        /// Server: the team closes the job at the van (GDD 4.3) — from the briefing too, which pays nothing.
+        /// Does nothing once the job has ended.
+        /// </summary>
+        public void LeaveEarly()
+        {
+            if (!IsServer || m_Result.Value.IsSet)
+                return;
+            if (m_Progress == null)
+            {
+                m_Result.Value = new JobResult { IsSet = true, Ending = JobEnding.LeftEarly };
+                m_Phase.Value = JobPhase.Ended;
+                Debug.Log($"[Job] end before start {m_Result.Value}");
+                return;
+            }
+            m_Progress.LeaveEarly();
+            Finish();
+        }
+
+        /// <summary>Server: pay out and publish the result (GDD 4.3, 12).</summary>
+        private void Finish()
+        {
+            if (m_Result.Value.IsSet || m_Progress.Ending is not { } ending)
+                return;
+            var stars = StarRating.Calculate(m_Anger.HighestStage, itemsBroken: 0);
+            var payout = PayoutCalculator.Calculate(ending, m_Difficulty.BasePay, m_Progress.AcceptedRooms.Count,
+                m_Progress.RoomsRequired, stars, hintsUsed: 0, NetworkManager.ConnectedClientsIds.Count, PayoutRules.Default);
+            m_Result.Value = new JobResult
+            {
+                IsSet = true,
+                Ending = ending,
+                RoomsAccepted = m_Progress.AcceptedRooms.Count,
+                RoomsRequired = m_Progress.RoomsRequired,
+                TeamTotal = payout.TeamTotal,
+                PerPlayer = payout.PerPlayer,
+                Stars = payout.Stars,
+            };
+            m_Phase.Value = JobPhase.Ended;
+            Debug.Log($"[Job] end {m_Result.Value}");
         }
 
         /// <summary>Server: the ghost answers a bell — score the room, count the ring against its patience.</summary>

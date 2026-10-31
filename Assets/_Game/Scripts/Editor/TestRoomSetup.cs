@@ -41,7 +41,7 @@ namespace SpiritMovers.Editor
 
         private struct Prefabs
         {
-            public GameObject Player, LightBox, HeavyCrate, JobDirector, GhostBell;
+            public GameObject Player, LightBox, HeavyCrate, JobDirector, GhostBell, Van;
             public NetworkPrefabsList List;
         }
 
@@ -56,7 +56,8 @@ namespace SpiritMovers.Editor
             };
             result.JobDirector = CreateJobDirectorPrefab();
             result.GhostBell = CreateBellPrefab();
-            result.List = CreatePrefabList(result.Player, result.LightBox, result.HeavyCrate, result.JobDirector, result.GhostBell);
+            result.Van = CreateVanPrefab();
+            result.List = CreatePrefabList(result.Player, result.LightBox, result.HeavyCrate, result.JobDirector, result.GhostBell, result.Van);
             return result;
         }
 
@@ -165,6 +166,20 @@ namespace SpiritMovers.Editor
             Bell(prefabs.GhostBell, "east", new Vector3(9.75f, 1.2f, 4f));
             Bell(prefabs.GhostBell, "loft", new Vector3(9.75f, 1.9f, -6f));
 
+            // The company van stands in the living room by the spawns until the M4 lobby exists.
+            var van = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.Van);
+            van.name = "Van";
+            van.transform.position = new Vector3(-9.2f, 0.6f, -5.5f);
+
+            var ui = new GameObject("JobUI");
+            foreach (var panel in new MonoBehaviour[] { ui.AddComponent<JobSheetPanel>(), ui.AddComponent<ResultsPanel>() })
+            {
+                var panelSo = new SerializedObject(panel);
+                panelSo.FindProperty("m_Font").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontPath);
+                panelSo.FindProperty("m_GlyphMap").objectReferenceValue = AssetDatabase.LoadAssetAtPath<ThaiGlyphMap>(GlyphMapPath);
+                panelSo.ApplyModifiedPropertiesWithoutUndo();
+            }
+
             var director = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.JobDirector);
             var so = new SerializedObject(director.GetComponent<JobDirector>());
             so.FindProperty("m_House").objectReferenceValue = house;
@@ -224,6 +239,18 @@ namespace SpiritMovers.Editor
             light.intensity = 3f;
             go.AddComponent<GhostBell>().Configure("", light);
             var prefab = PrefabUtility.SaveAsPrefabAsset(go, PrefabDir + "/GhostBell.prefab");
+            Object.DestroyImmediate(go);
+            return prefab;
+        }
+
+        private static GameObject CreateVanPrefab()
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            go.name = "Van";
+            go.transform.localScale = new Vector3(0.6f, 1.2f, 1.6f);
+            go.AddComponent<NetworkObject>();
+            go.AddComponent<VanExit>();
+            var prefab = PrefabUtility.SaveAsPrefabAsset(go, PrefabDir + "/Van.prefab");
             Object.DestroyImmediate(go);
             return prefab;
         }

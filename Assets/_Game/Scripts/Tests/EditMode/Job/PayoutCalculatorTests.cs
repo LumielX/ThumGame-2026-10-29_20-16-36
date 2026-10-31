@@ -26,6 +26,14 @@ namespace SpiritMovers.Tests
         }
 
         [Test]
+        public void LeftEarly_OneOfThreeRooms_PaysExactThird()
+        {
+            // 1/3 as a decimal rounds down; multiplying before dividing keeps it exact (found in M3C).
+            Assert.AreEqual(100, Pay(JobEnding.LeftEarly, 1, 3).TeamTotal);
+            Assert.AreEqual(50, Pay(JobEnding.Evicted, 1, 3).TeamTotal);
+        }
+
+        [Test]
         public void Evicted_PaysHalfOfProportion()
         {
             Assert.AreEqual(100, Pay(JobEnding.Evicted, 2, 3).TeamTotal);
