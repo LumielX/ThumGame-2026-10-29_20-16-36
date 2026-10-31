@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SpiritMovers.Core.Ghost;
 using SpiritMovers.Core.Job;
+using SpiritMovers.Ghost;
 using SpiritMovers.Interaction;
 using SpiritMovers.Player;
 using Unity.Collections;
@@ -97,6 +99,8 @@ namespace SpiritMovers.Job
         private JobDifficulty m_Difficulty;
         private float m_NextEvaluate;
         private float m_FarewellEndsAt = -1f;
+        private NoiseHub m_Noise;
+        private LoudNoiseGate m_LoudGate;
 
         public HouseAuthoring House => m_House;
         public JobPhase Phase => m_Phase.Value;
@@ -125,7 +129,15 @@ namespace SpiritMovers.Job
                 OnRoomAccepted(room.ToString(), instant: true);
 
             if (IsServer)
+            {
+                m_Noise = GetComponent<NoiseHub>();
+                if (m_Noise != null)
+                {
+                    m_LoudGate = new LoudNoiseGate(m_Noise.Config);
+                    m_Noise.Heard += OnNoiseHeard;
+                }
                 return;
+            }
             m_Spec.OnValueChanged += (_, spec) => ApplyHostPlan(spec);
             if (m_Spec.Value.IsSet)
                 ApplyHostPlan(m_Spec.Value);
@@ -168,7 +180,7 @@ namespace SpiritMovers.Job
             if (m_Progress.Phase != JobPhase.Exploring)
                 return;
 
-            m_Anger.Tick(Time.deltaTime, everyoneSilent: false);
+            m_Anger.Tick(Time.deltaTime, EveryoneSilent());
             m_AngerStage.Value = m_Anger.Stage;
             if (m_Anger.IsEvicted)
             {
@@ -183,6 +195,23 @@ namespace SpiritMovers.Job
             foreach (var room in Plan.Rooms)
                 if (!m_Progress.AcceptedRooms.Contains(room.RoomId))
                     EvaluateNow(room.RoomId);
+        }
+
+        /// <summary>
+        /// Silent = no noise above the silence level since just over one footstep interval (steps come in every
+        /// interval while someone walks, so a walking player keeps the house "not silent").
+        /// </summary>
+        private bool EveryoneSilent() =>
+            m_Noise == null || Time.time - m_Noise.LastNoiseTime > m_Noise.Config.FootstepInterval * 1.5f;
+
+        /// <summary>Server: loud noises annoy the ghost, at most once per cooldown (GDD 6.2).</summary>
+        private void OnNoiseHeard(NoiseEvent e)
+        {
+            if (m_Progress?.Phase != JobPhase.Exploring || !m_LoudGate.TryAccept(e, Time.time))
+                return;
+            m_Anger.Apply(AngerEvent.LoudNoise);
+            m_AngerStage.Value = m_Anger.Stage;
+            Debug.Log($"[Job] loud {e.Source} {e.Loudness:F2} anger={m_Anger.Value:F1}");
         }
 
         /// <summary>

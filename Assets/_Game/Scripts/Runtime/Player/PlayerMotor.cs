@@ -1,4 +1,6 @@
+using SpiritMovers.Core.Ghost;
 using SpiritMovers.Core.Player;
+using SpiritMovers.Ghost;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -26,6 +28,8 @@ namespace SpiritMovers.Player
         private readonly NetworkVariable<bool> m_NetCrouch = new(writePerm: NetworkVariableWritePermission.Owner);
         private readonly NetworkVariable<float> m_NetPitch = new(writePerm: NetworkVariableWritePermission.Owner);
         private float m_Pitch;
+        private readonly NoiseConfig m_Noise = new();
+        private float m_NextFootstepAt;
         private CharacterController m_Controller;
         private Transform m_Head;
         private float m_VerticalVelocity;
@@ -167,6 +171,24 @@ namespace SpiritMovers.Player
             }
             m_VerticalVelocity += m_Config.Gravity * dt;
             m_Controller.Move((planar + Vector3.up * m_VerticalVelocity) * dt);
+            ReportFootsteps();
+        }
+
+        /// <summary>Owner: tell the host how loud our steps are while we walk (the ghost may hear them).</summary>
+        private void ReportFootsteps()
+        {
+            if (LastMove.Noise <= 0f || !m_Controller.isGrounded || Time.time < m_NextFootstepAt)
+                return;
+            m_NextFootstepAt = Time.time + m_Noise.FootstepInterval;
+            ReportFootstepRpc(LastMove.Noise);
+        }
+
+        /// <summary>Host: the step happened where the host sees this player, not where the client claims.</summary>
+        [Rpc(SendTo.Server)]
+        private void ReportFootstepRpc(float loudness)
+        {
+            if (NoiseHub.Current != null)
+                NoiseHub.Current.Report(new NoiseEvent(Feet.ToNumerics(), loudness, NoiseSource.Footstep));
         }
 
         private void SetCrouch(bool crouching)

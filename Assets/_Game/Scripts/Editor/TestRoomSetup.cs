@@ -1,6 +1,7 @@
 using System.IO;
 using SpiritMovers.Core;
 using SpiritMovers.Dev;
+using SpiritMovers.Ghost;
 using SpiritMovers.Interaction;
 using SpiritMovers.Job;
 using SpiritMovers.Player;
@@ -304,6 +305,7 @@ namespace SpiritMovers.Editor
             var go = new GameObject("JobDirector");
             go.AddComponent<NetworkObject>();
             go.AddComponent<JobDirector>();
+            go.AddComponent<NoiseHub>();
             var prefab = PrefabUtility.SaveAsPrefabAsset(go, PrefabDir + "/JobDirector.prefab");
             Object.DestroyImmediate(go);
             return prefab;

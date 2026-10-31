@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SpiritMovers.Core.Ghost;
 using SpiritMovers.Core.Player;
+using SpiritMovers.Ghost;
 using SpiritMovers.Player;
 using Unity.Netcode;
 using UnityEngine;
@@ -206,6 +208,17 @@ namespace SpiritMovers.Interaction
                 NetworkObject.RemoveOwnership();
             else
                 NetworkObject.ChangeOwnership(owner);
+        }
+
+        /// <summary>Host: a hard knock (dropped, thrown, bumped) is a noise the ghost may hear.</summary>
+        private void OnCollisionEnter(Collision collision)
+        {
+            var hub = NoiseHub.Current;
+            if (!IsSpawned || !IsServer || hub == null)
+                return;
+            var loudness = hub.Config.ImpactLoudness(collision.relativeVelocity.magnitude);
+            if (loudness > 0f)
+                hub.Report(new NoiseEvent(m_Body.position.ToNumerics(), loudness, NoiseSource.ItemImpact));
         }
 
         private void FixedUpdate()
