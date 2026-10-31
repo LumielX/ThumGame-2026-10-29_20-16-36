@@ -102,6 +102,53 @@ namespace SpiritMovers.Tests
         }
 
         [UnityTest]
+        public IEnumerator TryAddCarrier_ThroughWall_IsRejected()
+        {
+            // Box east of the divider wall, player 2 m away on the west side, looking at it through the wall.
+            var box = GameObject.Find("LightBox0").GetComponent<Carryable>();
+            MoveItem(box, new Vector3(1.0f, 0.2f, -4f));
+            Motor.Teleport(new Vector3(-1.0f, 0f, -4f), 90f);
+            yield return Wait(0.3f);
+            Motor.LookAt(box.transform.position);
+            yield return null;
+            Assert.IsFalse(box.TryAddCarrier(NetworkManager.ServerClientId));
+        }
+
+        [UnityTest]
+        public IEnumerator TryAddCarrier_BehindPlayer_IsRejected()
+        {
+            var box = GameObject.Find("LightBox0").GetComponent<Carryable>();
+            var target = box.transform.position;
+            Motor.Teleport(new Vector3(target.x, 0f, target.z + 1.2f), 0f); // facing +z, box behind
+            yield return Wait(0.3f);
+            Assert.IsFalse(box.TryAddCarrier(NetworkManager.ServerClientId));
+        }
+
+        [UnityTest]
+        public IEnumerator RepickBeforeThrowApplied_DoesNotFlingLater()
+        {
+            Carryable box = null;
+            yield return PickUp("LightBox0", b => box = b);
+            box.Throw(NetworkManager.ServerClientId, Motor.Forward);
+            Assert.IsTrue(box.TryAddCarrier(NetworkManager.ServerClientId), "re-pick in the same frame");
+            yield return Wait(0.5f);
+            box.ReleaseCarrier(NetworkManager.ServerClientId);
+            yield return new WaitForFixedUpdate();
+            yield return new WaitForFixedUpdate();
+            var velocity = box.GetComponent<Rigidbody>().linearVelocity;
+            Assert.Less(new Vector2(velocity.x, velocity.z).magnitude, 2f);
+        }
+
+        [UnityTest]
+        public IEnumerator OwnershipToUnknownClient_FallsBackToServer()
+        {
+            var box = GameObject.Find("LightBox0").GetComponent<Carryable>();
+            box.SetSingleCarrierForTest(99);
+            yield return null;
+            Assert.AreEqual(NetworkManager.ServerClientId, box.OwnerClientId);
+        }
+
+        [UnityTest]
         public IEnumerator DisconnectCallback_ReleasesThatClientOnly()
         {
             Carryable box = null;

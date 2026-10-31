@@ -18,7 +18,10 @@ namespace SpiritMovers.Interaction
     public sealed class Carryable : NetworkBehaviour, IInteractable
     {
         private readonly CarryConfig m_Config = CarryConfig.Default;
+        private const float MaxPickUpAngle = 60f;
+
         private readonly NetworkVariable<float> m_YawOffset = new();
+        private readonly List<System.Numerics.Vector3> m_HoldPointBuffer = new();
         private NetworkList<ulong> m_Carriers;
         private Rigidbody m_Body;
         private Vector3? m_PendingThrow;
@@ -71,7 +74,12 @@ namespace SpiritMovers.Interaction
         public bool CanInteract(PlayerCarrier by) =>
             by.Held == null && !IsCarriedBy(by.OwnerClientId) && m_Carriers.Count < CarryRules.MaxCarriersFor(Mass, m_Config);
 
-        public void Interact(PlayerCarrier by) => RequestPickUpRpc();
+        /// <summary>Only the interacting player's own machine sends the request (the RPC carries their id).</summary>
+        public void Interact(PlayerCarrier by)
+        {
+            if (by.IsOwner)
+                RequestPickUpRpc();
+        }
 
         [Rpc(SendTo.Server)]
         public void RequestPickUpRpc(RpcParams rpcParams = default) => TryAddCarrier(rpcParams.Receive.SenderClientId);
@@ -96,9 +104,10 @@ namespace SpiritMovers.Interaction
                 return false;
             if (!PlayerCarrier.TryGet(clientId, out var carrier) || carrier.Held != null)
                 return false;
-            var chest = carrier.Motor.Feet + Vector3.up;
-            if (Vector3.Distance(chest, m_Body.position) > m_Config.ReachMeters + 0.5f)
+            if (!InReach(carrier.Motor))
                 return false;
+
+            m_PendingThrow = null; // a throw not yet applied must not fling the item after this new carry ends
 
             if (m_Carriers.Count == 0)
                 m_YawOffset.Value = Mathf.DeltaAngle(carrier.Motor.transform.eulerAngles.y, transform.eulerAngles.y);
@@ -106,6 +115,34 @@ namespace SpiritMovers.Interaction
             m_HoldWatches[clientId] = new HoldErrorWatch(m_Config);
             UpdateOwnership();
             return true;
+        }
+
+        /// <summary>Test hook: make <paramref name="clientId"/> the only carrier without the usual checks.</summary>
+        internal void SetSingleCarrierForTest(ulong clientId)
+        {
+            m_Carriers.Clear();
+            m_Carriers.Add(clientId);
+            UpdateOwnership();
+        }
+
+        /// <summary>
+        /// Host check (TECHNICAL_DESIGN 6): within reach of the chest, roughly in front (heading only: head
+        /// pitch is not synced) and visible from the eyes, so no picking up through walls or behind the back.
+        /// </summary>
+        private bool InReach(PlayerMotor motor)
+        {
+            var item = m_Body.position;
+            if (Vector3.Distance(motor.Feet + Vector3.up, item) > m_Config.ReachMeters + 0.5f)
+                return false;
+
+            var toItem = item - motor.Feet;
+            toItem.y = 0f;
+            if (toItem.sqrMagnitude > 0.01f && Vector3.Angle(motor.Forward, toItem) > MaxPickUpAngle)
+                return false;
+
+            // Rays starting inside the player's own capsule ignore it; anything else hit first is in the way.
+            return !Physics.Linecast(motor.Head.position, item, out var hit, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)
+                   || hit.collider.GetComponentInParent<Carryable>() == this;
         }
 
         /// <summary>Server: stop <paramref name="clientId"/> carrying this item; it stays in the world.</summary>
@@ -192,7 +229,8 @@ namespace SpiritMovers.Interaction
         /// <summary>Where the item should be: the carrier's hold point, or the average of all carriers'.</summary>
         private bool TryGetHoldPoint(out Vector3 hold, out float yaw)
         {
-            var points = new List<System.Numerics.Vector3>();
+            var points = m_HoldPointBuffer;
+            points.Clear();
             yaw = 0f;
             for (var i = 0; i < m_Carriers.Count; i++)
             {

@@ -6,6 +6,8 @@ param([int]$Seconds = 40, [int]$LatencyMs = 0,
     [string[]]$Scenarios = @('carry', 'shared', 'split', 'remote', 'disconnect', 'crash'))
 
 $ErrorActionPreference = 'Stop'
+# -File passes "a,b" as one string; accept comma lists either way.
+$Scenarios = $Scenarios | ForEach-Object { $_ -split ',' } | Where-Object { $_ }
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $exe = Get-ChildItem (Join-Path $root 'Builds') -Filter 'SpiritMovers.exe' -Recurse |
     Where-Object { $_.DirectoryName -like '*M3-TestRoom-*' } | Select-Object -First 1
