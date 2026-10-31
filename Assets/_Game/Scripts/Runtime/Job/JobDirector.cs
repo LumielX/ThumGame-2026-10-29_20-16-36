@@ -18,6 +18,8 @@ namespace SpiritMovers.Job
         public FixedString32Bytes DifficultyId;
         public int PlayerCount;
         public FixedString32Bytes LayoutHash;
+        /// <summary><see cref="JobPlan.ContentHash"/> of the host's plan.</summary>
+        public FixedString32Bytes PlanHash;
 
         public bool IsSet => DifficultyId.Length > 0;
 
@@ -27,10 +29,12 @@ namespace SpiritMovers.Job
             serializer.SerializeValue(ref DifficultyId);
             serializer.SerializeValue(ref PlayerCount);
             serializer.SerializeValue(ref LayoutHash);
+            serializer.SerializeValue(ref PlanHash);
         }
 
         public bool Equals(JobSpec other) =>
-            Seed == other.Seed && DifficultyId.Equals(other.DifficultyId) && PlayerCount == other.PlayerCount && LayoutHash.Equals(other.LayoutHash);
+            Seed == other.Seed && DifficultyId.Equals(other.DifficultyId) && PlayerCount == other.PlayerCount &&
+            LayoutHash.Equals(other.LayoutHash) && PlanHash.Equals(other.PlanHash);
     }
 
     /// <summary>How a job ended and what it paid; synced to every peer for the results screen.</summary>
@@ -66,7 +70,8 @@ namespace SpiritMovers.Job
     /// <summary>
     /// Runs one job in the house (TECHNICAL_DESIGN 3–4). The host owns the rules (<see cref="JobProgress"/>,
     /// <see cref="AngerModel"/>) and unpacks the house; every peer rebuilds the same <see cref="JobPlan"/>
-    /// from the synced <see cref="JobSpec"/> and checks its layout hash against the host's.
+    /// from the synced <see cref="JobSpec"/> and checks its plan against the host's; a client whose plan differs is
+    /// disconnected rather than left playing a different job.
     /// </summary>
     public sealed class JobDirector : NetworkBehaviour
     {
@@ -93,7 +98,7 @@ namespace SpiritMovers.Job
         public HouseAuthoring House => m_House;
         public JobPhase Phase => m_Phase.Value;
         public JobPlan Plan { get; private set; }
-        /// <summary>False when this peer's house data gives a different plan than the host's.</summary>
+        /// <summary>False when this peer cannot build the host's plan (different house data or rules); Plan is then null.</summary>
         public bool PlanMatchesHost { get; private set; } = true;
         /// <summary>Rooms the ghost has accepted, in order; every peer.</summary>
         public IReadOnlyList<string> AcceptedRooms => m_AcceptedCache;
@@ -271,11 +276,19 @@ namespace SpiritMovers.Job
             m_AngerStage.Value = m_Anger.Stage;
         }
 
-        /// <summary>Server: make the plan for this seed, unpack the house and start exploring.</summary>
+        /// <summary>
+        /// Server: make the plan for this seed, unpack the house and start exploring. One job per session: ignored
+        /// once a job has started or ended (a new job needs a fresh house).
+        /// </summary>
         public void BeginJob(int seed, JobDifficulty difficulty)
         {
             if (!IsServer)
                 throw new InvalidOperationException("Only the host starts a job.");
+            if (m_Progress != null || m_Result.Value.IsSet)
+            {
+                Debug.LogWarning($"[Job] begin seed={seed} ignored: a job already ran in this session");
+                return;
+            }
             var problems = difficulty.Validate();
             if (problems.Count > 0)
                 throw new ArgumentException($"Difficulty '{difficulty.Id}': {string.Join("; ", problems)}");
@@ -296,23 +309,59 @@ namespace SpiritMovers.Job
                 DifficultyId = difficulty.Id,
                 PlayerCount = players,
                 LayoutHash = Plan.LayoutHash,
+                PlanHash = Plan.ContentHash(),
             };
             m_Phase.Value = m_Progress.Phase;
             Debug.Log($"[Job] begin seed={seed} difficulty={difficulty.Id} players={players} rooms={string.Join(",", Plan.Rooms.Select(r => r.RoomId))} hash={Plan.LayoutHash}");
         }
 
-        /// <summary>Test hook: rebuild the plan as a client would for a host seed and layout hash.</summary>
-        internal void ApplyHostPlan(int seed, string hostLayoutHash) =>
-            ApplyHostPlan(new JobSpec { Seed = seed, DifficultyId = "normal", PlayerCount = 1, LayoutHash = hostLayoutHash });
+        /// <summary>Test hook: rebuild the plan as a client would for a host spec (one player).</summary>
+        internal void ApplyHostPlan(int seed, string difficultyId, string layoutHash, string planHash) =>
+            ApplyHostPlan(new JobSpec { Seed = seed, DifficultyId = difficultyId, PlayerCount = 1, LayoutHash = layoutHash, PlanHash = planHash });
 
         private void ApplyHostPlan(JobSpec spec)
         {
             if (!spec.IsSet)
                 return;
-            Plan = JobGenerator.Generate(spec.Seed, m_House.BuildLayout(), DifficultyById(spec.DifficultyId.ToString()), spec.PlayerCount);
-            PlanMatchesHost = Plan.LayoutHash == spec.LayoutHash.ToString();
-            if (!PlanMatchesHost)
-                Debug.LogError($"[Job] plan mismatch: host layout {spec.LayoutHash} but this build has {Plan.LayoutHash} — the house data differs");
+            var problem = BuildHostPlan(spec, out var plan);
+            PlanMatchesHost = problem == null;
+            Plan = PlanMatchesHost ? plan : null;
+            if (PlanMatchesHost)
+                return;
+            Debug.LogError($"[Job] plan mismatch: {problem}");
+            if (IsSpawned && !IsServer)
+                ReportPlanMismatchRpc(problem);
+        }
+
+        /// <summary>Rebuilds the host's plan; returns why it differs, or null when it matches.</summary>
+        private string BuildHostPlan(JobSpec spec, out JobPlan plan)
+        {
+            plan = null;
+            var difficulty = DifficultyById(spec.DifficultyId.ToString());
+            if (difficulty == null)
+                return $"host difficulty '{spec.DifficultyId}' is unknown to this build";
+            try
+            {
+                plan = JobGenerator.Generate(spec.Seed, m_House.BuildLayout(), difficulty, spec.PlayerCount);
+            }
+            catch (Exception e)
+            {
+                return $"this build cannot make the host's job ({e.Message})";
+            }
+            if (plan.LayoutHash != spec.LayoutHash.ToString())
+                return $"host layout {spec.LayoutHash} but this build has {plan.LayoutHash} — the house data differs";
+            if (plan.ContentHash() != spec.PlanHash.ToString())
+                return $"host plan {spec.PlanHash} but this build made {plan.ContentHash()} — the job rules differ";
+            return null;
+        }
+
+        /// <summary>Server: a client could not rebuild the job; it would play a different house, so it is sent away.</summary>
+        [Rpc(SendTo.Server)]
+        private void ReportPlanMismatchRpc(FixedString512Bytes problem, RpcParams rpcParams = default)
+        {
+            var client = rpcParams.Receive.SenderClientId;
+            Debug.LogError($"[Job] client {client} has a different plan ({problem}); disconnecting it");
+            NetworkManager.DisconnectClient(client, "Job data differs from the host's - update the game.");
         }
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
@@ -328,10 +377,14 @@ namespace SpiritMovers.Job
             Teleport(marker.Item, marker.transform.position, marker.transform.rotation);
         }
 
-        private static JobDifficulty DifficultyById(string id) => id == JobDifficulty.Hard.Id ? JobDifficulty.Hard : JobDifficulty.Normal;
+        private static JobDifficulty DifficultyById(string id) =>
+            id == JobDifficulty.Normal.Id ? JobDifficulty.Normal : id == JobDifficulty.Hard.Id ? JobDifficulty.Hard : null;
 
+        /// <summary>Server: move an item without it sliding across the house; anyone carrying it lets go first.</summary>
         private static void Teleport(Carryable item, Vector3 position, Quaternion rotation)
         {
+            // A carried item belongs to its carrier, and only the owner may teleport it.
+            item.ReleaseAll();
             var body = item.GetComponent<Rigidbody>();
             body.linearVelocity = Vector3.zero;
             body.angularVelocity = Vector3.zero;

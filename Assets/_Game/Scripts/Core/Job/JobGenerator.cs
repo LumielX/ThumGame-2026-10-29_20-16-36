@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Text;
 
 namespace SpiritMovers.Core.Job
 {
@@ -51,6 +52,26 @@ namespace SpiritMovers.Core.Job
             DifficultyId = difficultyId;
             PlayerCount = playerCount;
             Rooms = rooms;
+        }
+
+        /// <summary>
+        /// Hash of everything a peer derives from the seed (rooms, slots, problems, start placements) plus the inputs
+        /// and layout hash. Equal on host and client only if both built the same job; catches rule differences that
+        /// <see cref="LayoutHash"/> cannot.
+        /// </summary>
+        public string ContentHash()
+        {
+            var text = new StringBuilder();
+            text.Append(Seed).Append('|').Append(HouseId).Append('|').Append(DifficultyId).Append('|')
+                .Append(PlayerCount).Append('|').Append(LayoutHash).Append('\n');
+            foreach (var room in Rooms)
+            {
+                text.Append("R|").Append(room.RoomId).Append('\n');
+                foreach (var task in room.Slots)
+                    HouseLayout.AppendPlacement(text.Append("S|").Append(task.Slot.Id).Append('|').Append((int)task.Problem).Append('|'),
+                        task.StartPlacement).Append('\n');
+            }
+            return HouseLayout.Fnv1a(text.ToString());
         }
     }
 

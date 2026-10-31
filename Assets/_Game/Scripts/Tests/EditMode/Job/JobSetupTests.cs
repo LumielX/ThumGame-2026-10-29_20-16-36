@@ -63,6 +63,22 @@ namespace SpiritMovers.Tests
         }
 
         [Test]
+        public void PlanHash_SameInputs_SameHash()
+        {
+            Assert.AreEqual(JobGenerator.Generate(3, House(), JobDifficulty.Normal, 2).ContentHash(),
+                JobGenerator.Generate(3, House(), JobDifficulty.Normal, 2).ContentHash());
+        }
+
+        [Test]
+        public void PlanHash_ChangesWhenPlanChanges()
+        {
+            var normal = JobGenerator.Generate(3, House(), JobDifficulty.Normal, 2).ContentHash();
+            Assert.AreNotEqual(normal, JobGenerator.Generate(4, House(), JobDifficulty.Normal, 2).ContentHash(), "seed");
+            Assert.AreNotEqual(normal, JobGenerator.Generate(3, House(), JobDifficulty.Normal, 3).ContentHash(), "players");
+            Assert.AreNotEqual(normal, JobGenerator.Generate(3, House(slotX: 0.5f), JobDifficulty.Normal, 2).ContentHash(), "layout");
+        }
+
+        [Test]
         public void Generate_SetsLayoutHash()
         {
             var house = House();

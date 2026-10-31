@@ -1,5 +1,6 @@
 # M3C multi-instance job test (M3 acceptance): a headless host and N clients join over Unity Relay, the host
-# starts a Normal job with a seed, every bot puts its share of items back and rings the bells, and each peer
+# starts a Normal job with a seed, the first client carries one item into place by hand, every bot puts its share
+# of the other items back and the host rings the bells, and each peer
 # prints a [M3C] SUMMARY line. A run passes when every peer reports ok=true and all peers agree on the ending,
 # accepted rooms, pay and stars (no desync). Exits 1 if any run fails.
 # Usage: powershell -ExecutionPolicy Bypass -File Tools\m3c-job-test.ps1 [-Runs 10] [-Clients 1] [-Seconds 55]
@@ -49,12 +50,12 @@ for ($run = 0; $run -lt $Runs; $run++) {
     $ok = ($summaries | Where-Object { $_ -eq $null }).Count -eq 0
     if ($ok) {
         $ok = ($summaries | Where-Object { $_.ok -ne 'true' }).Count -eq 0
-        foreach ($key in 'ending', 'accepted', 'teamTotal', 'stars') {
+        foreach ($key in 'ending', 'accepted', 'teamTotal', 'stars', 'carried') {
             if (($summaries | ForEach-Object { $_[$key] } | Select-Object -Unique).Count -ne 1) { $ok = $false }
         }
     }
     $first = $summaries | Where-Object { $_ } | Select-Object -First 1
-    $detail = if ($first) { "ending=$($first.ending) accepted=$($first.accepted) teamTotal=$($first.teamTotal) stars=$($first.stars) angerStage=$($first.angerStage)" } else { 'NO SUMMARY' }
+    $detail = if ($first) { "ending=$($first.ending) accepted=$($first.accepted) teamTotal=$($first.teamTotal) stars=$($first.stars) angerStage=$($first.angerStage) carried=$($first.carried)" } else { 'NO SUMMARY' }
     Write-Host ("seed {0,2} players {1}: {2}  {3}" -f $seed, $players, $(if ($ok) { 'PASS' } else { 'FAIL' }), $detail)
     if (-not $ok) {
         $failed++

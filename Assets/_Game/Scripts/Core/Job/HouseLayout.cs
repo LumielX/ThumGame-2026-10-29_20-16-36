@@ -90,14 +90,20 @@ namespace SpiritMovers.Core.Job
             foreach (var spot in HidingSpots)
                 AppendPlacement(text.Append("H|"), spot).Append('\n');
 
+            return Fnv1a(text.ToString());
+        }
+
+        /// <summary>64-bit FNV-1a of the UTF-8 text as 16 hex digits; the same on every machine.</summary>
+        internal static string Fnv1a(string text)
+        {
             const ulong offset = 14695981039346656037UL, prime = 1099511628211UL;
             var hash = offset;
-            foreach (var b in Encoding.UTF8.GetBytes(text.ToString()))
+            foreach (var b in Encoding.UTF8.GetBytes(text))
                 hash = (hash ^ b) * prime;
             return hash.ToString("x16", CultureInfo.InvariantCulture);
         }
 
-        private static StringBuilder AppendPlacement(StringBuilder text, Placement p) =>
+        internal static StringBuilder AppendPlacement(StringBuilder text, Placement p) =>
             text.Append(p.RoomId).Append('|')
                 .Append(Number(p.Position.X)).Append(',').Append(Number(p.Position.Y)).Append(',').Append(Number(p.Position.Z)).Append('|')
                 .Append(Number(p.Rotation.X)).Append(',').Append(Number(p.Rotation.Y)).Append(',')

@@ -122,6 +122,10 @@ MonoBehaviour:
     m_Localized: '{0}-star review'
     m_Metadata:
       m_Items: []
+  - m_Id: 124041927880704
+    m_Localized: Everyone must be at the van to close the job
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

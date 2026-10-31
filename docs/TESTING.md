@@ -31,13 +31,13 @@
 | `AngerModelTests` (EditMode) | ความโกรธ 5 ขั้น · ตัวคูณ · ไหว้ห้องละครั้ง · ความเงียบ · ไม่เปลี่ยนหลังไล่ออก | ผ่าน (2026-10-31) |
 | `JobGeneratorTests` (EditMode) | สุ่มงานจาก Seed แบบ Deterministic · จำนวนห้อง/ของตามระดับและจำนวนคน · ประเภทปัญหา · บ้านช่องไม่พอ | ผ่าน (2026-10-31) |
 | `PayoutCalculatorTests` (EditMode) | ค่าจ้าง 3 แบบจบ · โบนัสดาว · หัก Hint ไม่ติดลบ · แบ่งคน | ผ่าน (2026-10-31) |
-| `JobProgressTests` (EditMode) | สถานะงาน Briefing → Exploring → Farewell → Ended · คำสั่งซ้ำ/ผิดลำดับถูกเพิกเฉย · กลับก่อนตั้งแต่ Briefing | ผ่าน (2026-10-31) |
-| `MovementRulesTests`, `CarryRulesTests` (EditMode) | ความเร็ว/Stamina/ของหนัก/เสียงฝีเท้า · จุดถือไม่ขึ้นกับ Pitch · จำกัดความเร็วตามมือ · ตรวจของหลุดมือ | ผ่าน — EditMode รวม 120/120 (2026-10-31) |
+| `JobProgressTests` (EditMode) | สถานะงาน Briefing → Exploring → Farewell → Ended · คำสั่งซ้ำ/ผิดลำดับถูกเพิกเฉย · กลับก่อนตั้งแต่ Briefing · ปิดงานตอนผีอำลาไม่มีผล | ผ่าน (2026-10-31) |
+| `MovementRulesTests`, `CarryRulesTests` (EditMode) | ความเร็ว/Stamina/ของหนัก/เสียงฝีเท้า · จุดถือไม่ขึ้นกับ Pitch · จำกัดความเร็วตามมือ · ตรวจของหลุดมือ | ผ่าน — EditMode รวม 123/123 (2026-10-31) |
 | `PlayerMotorTests` (PlayMode) | เดิน/วิ่ง/ย่อ/Stamina หมด/กระโดด/ปิด Input/ขึ้นบันได | ผ่าน (2026-10-31) |
-| `CarryTests`, `CarryAuthorityTests` (PlayMode) | ยก/วาง/หมุน/โยน · ของหนักช้าและโยนไม่ได้ · เอื้อมไม่ถึง · แย่งของ · ปิด Input ขณะถือ · Host บังคับปล่อย · คนถือหลุด | ผ่าน (2026-10-31) |
-| `JobStartTests`, `RoomAcceptanceTests`, `BellTests`, `JobEndingTests` (PlayMode, ฉาก `M3_TestHouse`) | เริ่มงานจาก Seed · Client สร้างแผนตรงกับ Host · ผีรับห้อง/สีกลับ · กริ่งห้องละครั้ง · จบงาน 3 แบบ + ค่าจ้าง · ใบสั่งงาน/สรุปงานภาษาไทย | ผ่าน — PlayMode รวม 44/44 (2026-10-31) |
-| `Tools/m3b-carry-test.ps1` (2 Instance ผ่าน Relay) | ยกคนเดียว (ตำแหน่งตรงกัน 0.006 ม.) · ยก 2 คนแล้วส่งต่อให้คนเดียว · ยก 2 คนแล้วเดินแยก (ปล่อยเอง) · Client หมุน+โยน · ปิดเกม/เกมแครชขณะถือ (Host ยกต่อได้) | PASS 6/6 ที่ 0 ms และ 150 ms ต่อทาง · รันซ้ำหลังแก้ Build M3C PASS 6/6 ที่ 0 ms (2026-10-31) |
-| `Tools/m3c-job-test.ps1` (หลาย Instance ผ่าน Relay) | Host + 1 Client เล่นจบงาน Seed 1–10 · Host + 3 Client Seed 11 · ทุกเครื่องได้ FullSuccess, รับ 3/3 ห้อง, 390, 3 ดาว ตรงกัน (ไม่ Desync) · ภาพ `docs/screenshots/m3/job-sheet-th.png`, `job-results-th.png` | PASS 10/10 + 1/1 (2026-10-31) |
+| `CarryTests`, `CarryAuthorityTests` (PlayMode) | ยก/วาง/หมุน/โยน · ของหนักช้าและโยนไม่ได้ · เอื้อมไม่ถึง · แย่งของ · ปิด Input ขณะถือ · Host บังคับปล่อย · คนถือหลุด · Host ใช้ทิศที่ผู้ยกหันจริง | ผ่าน (2026-10-31) |
+| `JobStartTests`, `RoomAcceptanceTests`, `BellTests`, `JobEndingTests` (PlayMode, ฉาก `M3_TestHouse`) | เริ่มงานจาก Seed (ครั้งเดียวต่อ Session, ปล่อยของที่ถืออยู่) · Client ตรวจแผนตรงกับ Host ทั้งบ้านและกติกา · ผีรับห้อง/สีกลับ · กริ่งห้องละครั้ง · จบงาน 3 แบบ + ค่าจ้าง · ปิดงานที่รถต้องอยู่ครบ/ไม่ใช่ตอนผีอำลา · ใบสั่งงาน/สรุปงานภาษาไทย | ผ่าน — PlayMode รวม 54/54 (2026-10-31, หลังแก้ตามรีวิว) |
+| `Tools/m3b-carry-test.ps1` (2 Instance ผ่าน Relay) | ยกคนเดียว (ตำแหน่งตรงกัน 0.006 ม.) · ยก 2 คนแล้วส่งต่อให้คนเดียว · ยก 2 คนแล้วเดินแยก (ปล่อยเอง) · Client หมุน+โยน · ปิดเกม/เกมแครชขณะถือ (Host ยกต่อได้) | PASS 6/6 ที่ 0 ms และ 150 ms ต่อทาง · รันซ้ำหลังแก้ Build และแก้ทิศหันตอนยก M3C PASS 6/6 ที่ 0 ms (2026-10-31) |
+| `Tools/m3c-job-test.ps1` (หลาย Instance ผ่าน Relay) | Host + 1 Client เล่นจบงาน Seed 1–10 · Host + 3 Client Seed 11 · Client คนแรกยกของ 1 ชิ้นด้วยมือจริงไปวางที่เดิม (Ownership ไป-กลับ) ทุกเครื่องเห็นวางถูก · ทุกเครื่องได้ FullSuccess, รับ 3/3 ห้อง, 390, 3 ดาว ตรงกัน (ไม่ Desync) · ภาพ `docs/screenshots/m3/job-sheet-th.png`, `job-results-th.png` | PASS 10/10 + 1/1 (2026-10-31, หลังแก้ตามรีวิว) |
 | ต้นแบบ Network (`Tools/proto-netsync-matrix.ps1`) | Host+Client ผ่าน Relay, วิธียกของ A/B × Latency 0/100/200 ms | ผ่าน — ผลใน `docs/M2_REPORT.md` |
 
 ### ต้นแบบ Voice ในเครื่องเดียว (Claude รันเองได้)

@@ -56,10 +56,13 @@ namespace SpiritMovers.Core.Job
                 End(JobEnding.FullSuccess);
         }
 
-        /// <summary>The team closes the job at the van; allowed from the briefing too (pays nothing then).</summary>
+        /// <summary>
+        /// The team closes the job at the van; allowed from the briefing too (pays nothing then). Ignored once every
+        /// room is accepted: the farewell always ends as a full success.
+        /// </summary>
         public void LeaveEarly()
         {
-            if (Phase != JobPhase.Ended)
+            if (Phase == JobPhase.Briefing || Phase == JobPhase.Exploring)
                 End(JobEnding.LeftEarly);
         }
 

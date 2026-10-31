@@ -125,6 +125,29 @@ namespace SpiritMovers.Tests
         }
 
         [UnityTest]
+        public IEnumerator TryAddCarrier_ReportedHeadingTowardItem_IsAccepted()
+        {
+            // The host's copy of a remote player's heading lags; a player who just turned to the box reports it.
+            var box = GameObject.Find("LightBox0").GetComponent<Carryable>();
+            var target = box.transform.position;
+            Motor.Teleport(new Vector3(target.x, 0f, target.z + 1.2f), 0f); // host view: facing +z, box behind
+            yield return Wait(0.3f);
+            Assert.IsTrue(box.TryAddCarrier(NetworkManager.ServerClientId, Vector3.back));
+            Assert.AreEqual(0f, Mathf.DeltaAngle(180f, box.transform.eulerAngles.y - box.YawOffset), 1f,
+                "carried yaw follows the reported heading");
+        }
+
+        [UnityTest]
+        public IEnumerator TryAddCarrier_ReportedHeadingAway_IsRejected()
+        {
+            var box = GameObject.Find("LightBox0").GetComponent<Carryable>();
+            var target = box.transform.position;
+            Motor.Teleport(new Vector3(target.x, 0f, target.z + 1.2f), 180f); // facing the box
+            yield return Wait(0.3f);
+            Assert.IsFalse(box.TryAddCarrier(NetworkManager.ServerClientId, Vector3.forward));
+        }
+
+        [UnityTest]
         public IEnumerator RepickBeforeThrowApplied_DoesNotFlingLater()
         {
             Carryable box = null;

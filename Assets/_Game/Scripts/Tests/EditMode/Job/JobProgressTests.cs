@@ -93,6 +93,19 @@ namespace SpiritMovers.Tests
         }
 
         [Test]
+        public void LeaveEarly_DuringFarewell_IsIgnored()
+        {
+            var job = NewJob();
+            job.Begin();
+            foreach (var room in new[] { "a", "b", "c" })
+                job.AcceptRoom(room);
+            Assume.That(job.Phase, Is.EqualTo(JobPhase.Farewell));
+            job.LeaveEarly();
+            Assert.AreEqual(JobPhase.Farewell, job.Phase, "the farewell must finish as a full success");
+            Assert.IsNull(job.Ending);
+        }
+
+        [Test]
         public void Evict_EndsWithEvicted()
         {
             var job = NewJob();

@@ -38,6 +38,8 @@ namespace SpiritMovers.Interaction
         public IReadOnlyList<ulong> Carriers => m_Carriers.Count == 0 ? new List<ulong>() : Enumerable.Range(0, m_Carriers.Count).Select(i => m_Carriers[i]).ToList();
         public int CarrierCount => m_Carriers.Count;
         public bool IsCarried => m_Carriers.Count > 0;
+        /// <summary>Carried yaw relative to the carrier's heading.</summary>
+        internal float YawOffset => m_YawOffset.Value;
         public string PromptKey => "interact.pickup";
 
         private void Awake()
@@ -74,15 +76,18 @@ namespace SpiritMovers.Interaction
         public bool CanInteract(PlayerCarrier by) =>
             by.Held == null && !IsCarriedBy(by.OwnerClientId) && m_Carriers.Count < CarryRules.MaxCarriersFor(Mass, m_Config);
 
-        /// <summary>Only the interacting player's own machine sends the request (the RPC carries their id).</summary>
+        /// <summary>
+        /// Only the interacting player's own machine sends the request (the RPC carries their id), with the heading
+        /// it is facing now: the host's copy of a remote player's heading lags, so a quick turn-and-grab would fail.
+        /// </summary>
         public void Interact(PlayerCarrier by)
         {
             if (by.IsOwner)
-                RequestPickUpRpc();
+                RequestPickUpRpc(by.Motor.Forward);
         }
 
         [Rpc(SendTo.Server)]
-        public void RequestPickUpRpc(RpcParams rpcParams = default) => TryAddCarrier(rpcParams.Receive.SenderClientId);
+        public void RequestPickUpRpc(Vector3 heading, RpcParams rpcParams = default) => TryAddCarrier(rpcParams.Receive.SenderClientId, heading);
 
         [Rpc(SendTo.Server)]
         public void RequestDropRpc(RpcParams rpcParams = default) => ReleaseCarrier(rpcParams.Receive.SenderClientId);
@@ -97,20 +102,27 @@ namespace SpiritMovers.Interaction
                 m_YawOffset.Value = Mathf.Repeat(m_YawOffset.Value + steps * m_Config.RotateStepDegrees, 360f);
         }
 
-        /// <summary>Server: add a carrier if allowed (not already carrying, room for another, within reach).</summary>
-        public bool TryAddCarrier(ulong clientId)
+        /// <summary>
+        /// Server: add a carrier if allowed (not already carrying, room for another, within reach). <paramref name="heading"/>
+        /// is the carrier's own view of where they face (default: the host's copy).
+        /// </summary>
+        public bool TryAddCarrier(ulong clientId, Vector3? heading = null)
         {
             if (!IsServer || IsCarriedBy(clientId) || m_Carriers.Count >= CarryRules.MaxCarriersFor(Mass, m_Config))
                 return false;
             if (!PlayerCarrier.TryGet(clientId, out var carrier) || carrier.Held != null)
                 return false;
-            if (!InReach(carrier.Motor))
+            var facing = heading is { } h && new Vector2(h.x, h.z).sqrMagnitude > 0.01f ? h : carrier.Motor.Forward;
+            if (!InReach(carrier.Motor, facing, out var why))
+            {
+                Debug.Log($"[Carry] pick-up refused {name} for client {clientId}: {why}");
                 return false;
+            }
 
             m_PendingThrow = null; // a throw not yet applied must not fling the item after this new carry ends
 
             if (m_Carriers.Count == 0)
-                m_YawOffset.Value = Mathf.DeltaAngle(carrier.Motor.transform.eulerAngles.y, transform.eulerAngles.y);
+                m_YawOffset.Value = Mathf.DeltaAngle(Mathf.Atan2(facing.x, facing.z) * Mathf.Rad2Deg, transform.eulerAngles.y);
             m_Carriers.Add(clientId);
             m_HoldWatches[clientId] = new HoldErrorWatch(m_Config);
             UpdateOwnership();
@@ -126,23 +138,32 @@ namespace SpiritMovers.Interaction
         }
 
         /// <summary>
-        /// Host check (TECHNICAL_DESIGN 6): within reach of the chest, roughly in front (heading only: head
-        /// pitch is not synced) and visible from the eyes, so no picking up through walls or behind the back.
+        /// Host check (TECHNICAL_DESIGN 6): within reach of the chest, roughly in front of <paramref name="facing"/>
+        /// (heading only: head pitch is not synced) and visible from the eyes, so no picking up through walls or behind
+        /// the back.
         /// </summary>
-        private bool InReach(PlayerMotor motor)
+        private bool InReach(PlayerMotor motor, Vector3 facing, out string why)
         {
             var item = m_Body.position;
-            if (Vector3.Distance(motor.Feet + Vector3.up, item) > m_Config.ReachMeters + 0.5f)
+            var distance = Vector3.Distance(motor.Feet + Vector3.up, item);
+            why = $"{distance:F2} m away";
+            if (distance > m_Config.ReachMeters + 0.5f)
                 return false;
 
             var toItem = item - motor.Feet;
             toItem.y = 0f;
-            if (toItem.sqrMagnitude > 0.01f && Vector3.Angle(motor.Forward, toItem) > MaxPickUpAngle)
+            facing.y = 0f;
+            var angle = toItem.sqrMagnitude > 0.01f ? Vector3.Angle(facing, toItem) : 0f;
+            why = $"{angle:F0} deg off heading";
+            if (angle > MaxPickUpAngle)
                 return false;
 
             // Rays starting inside the player's own capsule ignore it; anything else hit first is in the way.
-            return !Physics.Linecast(motor.Head.position, item, out var hit, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)
-                   || hit.collider.GetComponentInParent<Carryable>() == this;
+            if (!Physics.Linecast(motor.Head.position, item, out var hit, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)
+                || hit.collider.GetComponentInParent<Carryable>() == this)
+                return true;
+            why = $"blocked by {hit.collider.name}";
+            return false;
         }
 
         /// <summary>Server: stop <paramref name="clientId"/> carrying this item; it stays in the world.</summary>
@@ -151,6 +172,16 @@ namespace SpiritMovers.Interaction
             if (!IsServer || !m_Carriers.Remove(clientId))
                 return;
             m_HoldWatches.Remove(clientId);
+            UpdateOwnership();
+        }
+
+        /// <summary>Server: every carrier lets go at once; ownership is back on the host when this returns.</summary>
+        public void ReleaseAll()
+        {
+            if (!IsServer || m_Carriers.Count == 0)
+                return;
+            m_Carriers.Clear();
+            m_HoldWatches.Clear();
             UpdateOwnership();
         }
 

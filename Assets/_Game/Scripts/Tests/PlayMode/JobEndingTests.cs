@@ -57,6 +57,31 @@ namespace SpiritMovers.Tests
         }
 
         [UnityTest]
+        public IEnumerator VanLeave_DuringFarewell_IsIgnored()
+        {
+            Director.BeginJob(3, JobDifficulty.Normal);
+            foreach (var room in Director.Plan.Rooms)
+                yield return AcceptRoom(room);
+            Assert.IsFalse(Van.CanInteract(Carrier), "no close-the-job prompt during the farewell");
+            Van.Interact(Carrier);
+            yield return Until(() => Director.Phase == JobPhase.Ended, 6f);
+            Assert.AreEqual(JobEnding.FullSuccess, Director.Result.Ending);
+        }
+
+        [UnityTest]
+        public IEnumerator VanLeave_AwayFromVan_IsIgnored()
+        {
+            Director.BeginJob(3, JobDifficulty.Normal);
+            Motor.Teleport(new Vector3(5f, 0f, 0f), 0f);
+            yield return new WaitForFixedUpdate();
+            yield return new WaitForFixedUpdate();
+            Assert.AreEqual("job.leave.wait", Van.PromptKey);
+            Van.Interact(Carrier);
+            yield return Until(() => false, 0.3f);
+            Assert.AreEqual(JobPhase.Exploring, Director.Phase);
+        }
+
+        [UnityTest]
         public IEnumerator LeaveTwice_KeepsFirstResult()
         {
             Director.BeginJob(3, JobDifficulty.Normal);

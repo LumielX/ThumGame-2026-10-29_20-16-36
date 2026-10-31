@@ -64,8 +64,14 @@ namespace SpiritMovers.Tests
             var last = House.Slot(slots[slots.Count - 1].Slot.Id).Item;
             last.SetSingleCarrierForTest(NetworkManager.ServerClientId);
             last.FollowEnabled = false;
-            yield return PutBack(slots[slots.Count - 1].Slot.Id);
+            // Hold it exactly at its place (PlaceAtTarget would make the carrier let go first).
+            var marker = House.Slot(slots[slots.Count - 1].Slot.Id).transform;
+            var body = last.GetComponent<Rigidbody>();
+            body.linearVelocity = Vector3.zero;
+            body.position = marker.position;
+            body.rotation = marker.rotation;
             yield return Wait(1.5f);
+            Assume.That(last.IsCarried, "still in hand");
             CollectionAssert.DoesNotContain(Director.AcceptedRooms, FirstRoom.RoomId, "accepted while still in a player's hands");
 
             last.ReleaseCarrier(NetworkManager.ServerClientId);
