@@ -8,6 +8,15 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Game/Scenes/Boot.unity
     guid: 47b5382ad67272145bd567b69db21dfa
+  - enabled: 1
+    path: Assets/_Game/Scenes/MainMenu.unity
+    guid: 2383e6a252ffa0444ada318cf2d52be2
+  - enabled: 1
+    path: Assets/_Game/Scenes/Lobby.unity
+    guid: e4cce2208dde1f14d971d28d8f75ab4e
+  - enabled: 1
+    path: Assets/_Game/Scenes/Job_Greybox.unity
+    guid: 519f1fe2d14e09345bc1cb0d34b92db1
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: 8194754aa8a5b2b4aaf999bd7ffea8b6, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

@@ -142,6 +142,27 @@ MonoBehaviour:
     m_Localized: Out of film
     m_Metadata:
       m_Items: []
+  - m_Id: 221897808441344
+    m_Localized: "Version mismatch (yours {0} \xB7 room {1}) \u2014 please update
+      the game"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 221897875550208
+    m_Localized: That room code is not valid
+    m_Metadata:
+      m_Items: []
+  - m_Id: 221897875550209
+    m_Localized: "Could not join \u2014 check the code or your internet"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 221897875550210
+    m_Localized: That team is on a job; join when they are back in the van
+    m_Metadata:
+      m_Items: []
+  - m_Id: 221897875550211
+    m_Localized: That room is full
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

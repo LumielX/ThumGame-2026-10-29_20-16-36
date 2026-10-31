@@ -28,7 +28,7 @@ namespace SpiritMovers.Net
     /// Creates and joins Unity Multiplayer Services sessions (Lobby + Relay + join code).
     /// The session SDK starts Netcode for GameObjects as host or client on the scene's NetworkManager.
     /// </summary>
-    public sealed class UgsSessionService
+    public sealed class UgsSessionService : ISessionService
     {
         private const string VersionProperty = "ver";
 

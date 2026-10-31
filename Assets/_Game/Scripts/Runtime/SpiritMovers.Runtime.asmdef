@@ -7,7 +7,9 @@
         "Unity.Localization",
         "Unity.Netcode.Runtime",
         "Unity.InputSystem",
-        "Unity.Collections"
+        "Unity.Collections",
+        "SpiritMovers.Net",
+        "Unity.Networking.Transport"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

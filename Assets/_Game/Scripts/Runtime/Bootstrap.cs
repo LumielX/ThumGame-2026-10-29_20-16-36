@@ -1,5 +1,6 @@
 using SpiritMovers.Core;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace SpiritMovers
 {
@@ -21,6 +22,13 @@ namespace SpiritMovers
 
             Version = version;
             Debug.Log($"[Boot] {Application.productName} v{Version} ({Application.platform})");
+        }
+
+        /// <summary>On to the main menu (the persistent GameNetwork object in this scene comes along).</summary>
+        private void Start()
+        {
+            if (SceneUtility.GetBuildIndexByScenePath("Assets/_Game/Scenes/MainMenu.unity") >= 0)
+                SceneManager.LoadScene("MainMenu");
         }
     }
 }

@@ -139,6 +139,26 @@ MonoBehaviour:
     m_Key: camera.empty
     m_Metadata:
       m_Items: []
+  - m_Id: 221897808441344
+    m_Key: error.version
+    m_Metadata:
+      m_Items: []
+  - m_Id: 221897875550208
+    m_Key: error.code
+    m_Metadata:
+      m_Items: []
+  - m_Id: 221897875550209
+    m_Key: error.join
+    m_Metadata:
+      m_Items: []
+  - m_Id: 221897875550210
+    m_Key: error.in_job
+    m_Metadata:
+      m_Items: []
+  - m_Id: 221897875550211
+    m_Key: error.full
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

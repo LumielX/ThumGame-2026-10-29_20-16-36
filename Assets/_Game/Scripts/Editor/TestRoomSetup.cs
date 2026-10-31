@@ -40,13 +40,13 @@ namespace SpiritMovers.Editor
 
         public const string HouseScenePath = "Assets/_Game/Scenes/M3_TestHouse.unity";
 
-        private struct Prefabs
+        internal struct Prefabs
         {
             public GameObject Player, LightBox, HeavyCrate, JobDirector, GhostBell, Van, Ghost, Cabinet, SpiritCamera;
             public NetworkPrefabsList List;
         }
 
-        private static Prefabs CreatePrefabs()
+        internal static Prefabs CreatePrefabs()
         {
             Directory.CreateDirectory(PrefabDir);
             var result = new Prefabs
@@ -67,8 +67,11 @@ namespace SpiritMovers.Editor
             return result;
         }
 
-        /// <summary>New scene with the greybox shell, spawns, NetworkManager and dev runner.</summary>
-        private static UnityEngine.SceneManagement.Scene NewGreyboxScene(Prefabs prefabs)
+        /// <summary>
+        /// New scene with the greybox shell and six spawns; test scenes also get their own NetworkManager and dev runner
+        /// (production scenes use the persistent GameNetwork from Boot instead).
+        /// </summary>
+        internal static UnityEngine.SceneManagement.Scene NewGreyboxScene(Prefabs prefabs, bool withNetwork = true)
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
             var overview = Camera.main;
@@ -76,9 +79,11 @@ namespace SpiritMovers.Editor
                 overview.transform.SetPositionAndRotation(new Vector3(0f, 18f, -16f), Quaternion.Euler(50f, 0f, 0f));
 
             BuildRoom();
-            for (var i = 0; i < 4; i++)
-                Marker($"PlayerSpawn{i}", new Vector3(-7.5f + i * 1.5f, 0f, -8f), 0f);
+            for (var i = 0; i < 6; i++)
+                Marker($"PlayerSpawn{i}", new Vector3(-7.5f + i % 4 * 1.5f, 0f, i < 4 ? -8f : -6.8f), 0f);
             Marker("StairsBottom", new Vector3(3f, 0f, -6f), 90f);
+            if (!withNetwork)
+                return scene;
 
             var networkObject = new GameObject("NetworkManager");
             var transport = networkObject.AddComponent<UnityTransport>();
@@ -128,85 +133,7 @@ namespace SpiritMovers.Editor
             var prefabs = CreatePrefabs();
             var scene = NewGreyboxScene(prefabs);
 
-            var house = new GameObject("House").AddComponent<HouseAuthoring>();
-            var houseSo = new SerializedObject(house);
-            houseSo.FindProperty("m_HouseId").stringValue = "greybox";
-            houseSo.ApplyModifiedPropertiesWithoutUndo();
-
-            var west = Room(house.transform, "west", new Vector3(-5f, 1.5f, 0f), new Vector3(9.8f, 3f, 19.8f));
-            var east = Room(house.transform, "east", new Vector3(5f, 0.575f, 0f), new Vector3(9.8f, 1.15f, 19.8f));
-            var loft = Room(house.transform, "loft", new Vector3(8f, 2.1f, -6f), new Vector3(3.8f, 1.8f, 3f));
-
-            Slot(west, "w0", prefabs.LightBox, new Vector3(-8f, 0.2f, 3f));
-            Slot(west, "w1", prefabs.LightBox, new Vector3(-6.5f, 0.2f, 3f));
-            Slot(west, "w2", prefabs.LightBox, new Vector3(-5f, 0.2f, 3f));
-            Slot(west, "w3", prefabs.LightBox, new Vector3(-3.5f, 0.2f, 3f));
-            Slot(west, "w4", prefabs.HeavyCrate, new Vector3(-5f, 0.3f, 6.5f));
-            Slot(east, "e0", prefabs.LightBox, new Vector3(3f, 0.2f, 3f));
-            Slot(east, "e1", prefabs.LightBox, new Vector3(5f, 0.2f, 3f));
-            Slot(east, "e2", prefabs.LightBox, new Vector3(7f, 0.2f, 3f));
-            Slot(east, "e3", prefabs.HeavyCrate, new Vector3(5f, 0.3f, 7f));
-            Slot(loft, "l0", prefabs.LightBox, new Vector3(7f, 1.4f, -6f));
-            Slot(loft, "l1", prefabs.LightBox, new Vector3(8f, 1.4f, -5.2f));
-            Slot(loft, "l2", prefabs.LightBox, new Vector3(9f, 1.4f, -6.8f));
-
-            // Moved items land on these (turned 35 degrees so they also need straightening).
-            Spot(west, "Scatter", new Vector3(-8f, 0.25f, -3f));
-            Spot(west, "Scatter", new Vector3(-3f, 0.25f, -3f));
-            Spot(west, "Scatter", new Vector3(-8.5f, 0.25f, 8.5f));
-            Spot(west, "Scatter", new Vector3(-2f, 0.25f, 8.5f));
-            Spot(east, "Scatter", new Vector3(2f, 0.25f, -2f));
-            Spot(east, "Scatter", new Vector3(8f, 0.25f, 1f));
-            Spot(east, "Scatter", new Vector3(2f, 0.25f, 8.5f));
-            Spot(east, "Scatter", new Vector3(8.5f, 0.25f, 8.5f));
-            Spot(loft, "Scatter", new Vector3(6.6f, 1.45f, -4.9f));
-            Spot(loft, "Scatter", new Vector3(9.4f, 1.45f, -4.9f));
-            Spot(west, "Hide", new Vector3(-9.3f, 0.25f, -9.3f));
-            Spot(east, "Hide", new Vector3(9.3f, 0.25f, 9.3f));
-            Spot(east, "Hide", new Vector3(9.3f, 0.25f, -0.5f));
-            Spot(loft, "Hide", new Vector3(6.5f, 1.45f, -7.2f));
-
-            // A prefab instance: a NetworkObject created by script in an unsaved scene gets no GlobalObjectIdHash
-            // and NGO refuses to spawn it.
-            Bell(prefabs.GhostBell, "west", new Vector3(-9.75f, 1.2f, -2f));
-            Bell(prefabs.GhostBell, "east", new Vector3(9.75f, 1.2f, 4f));
-            Bell(prefabs.GhostBell, "loft", new Vector3(9.75f, 1.9f, -6f));
-
-            // The company van stands in the living room by the spawns until the M4 lobby exists.
-            var van = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.Van);
-            van.name = "Van";
-            van.transform.position = new Vector3(-9.2f, 0.6f, -5.5f);
-
-            var ui = new GameObject("JobUI");
-            foreach (var panel in new MonoBehaviour[] { ui.AddComponent<JobSheetPanel>(), ui.AddComponent<ResultsPanel>() })
-            {
-                var panelSo = new SerializedObject(panel);
-                panelSo.FindProperty("m_Font").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontPath);
-                panelSo.FindProperty("m_GlyphMap").objectReferenceValue = AssetDatabase.LoadAssetAtPath<ThaiGlyphMap>(GlyphMapPath);
-                panelSo.ApplyModifiedPropertiesWithoutUndo();
-            }
-
-            // The shy ghost starts at the north end of the living room; the main light flickers when it is angry.
-            var ghost = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.Ghost);
-            ghost.name = "Ghost";
-            ghost.transform.position = new Vector3(-5f, 0f, 8f);
-            // Memory cabinets (GDD 6.3) against the outer walls, doors facing into the room; the loft is too small for one.
-            Cabinet(prefabs.Cabinet, "west", new Vector3(-9.3f, 0f, 6f), 90f);
-            Cabinet(prefabs.Cabinet, "east", new Vector3(9.3f, 0f, 6f), -90f);
-            var sun = Object.FindAnyObjectByType<Light>();
-            if (sun != null)
-                sun.gameObject.AddComponent<GhostLights>();
-
-            // The team toolbox by the van: BeginJob puts the spirit cameras here.
-            var toolSpot = new GameObject("ToolSpot").transform;
-            toolSpot.position = new Vector3(-7.5f, 0.3f, -6.3f);
-
-            var director = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.JobDirector);
-            var so = new SerializedObject(director.GetComponent<JobDirector>());
-            so.FindProperty("m_House").objectReferenceValue = house;
-            so.FindProperty("m_CameraPrefab").objectReferenceValue = prefabs.SpiritCamera;
-            so.FindProperty("m_ToolSpot").objectReferenceValue = toolSpot;
-            so.ApplyModifiedPropertiesWithoutUndo();
+            BuildHouse(prefabs);
 
             EditorSceneManager.SaveScene(scene, HouseScenePath);
             Debug.Log($"[TestRoom] Created {HouseScenePath}");
@@ -319,6 +246,90 @@ namespace SpiritMovers.Editor
             bell.transform.position = position;
             var so = new SerializedObject(bell.GetComponent<GhostBell>());
             so.FindProperty("m_RoomId").stringValue = roomId;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>The greybox house in the open scene: rooms, slots, spots, bells, van, ghost, cabinets, UI and job director.</summary>
+        internal static void BuildHouse(Prefabs prefabs)
+        {
+            var house = new GameObject("House").AddComponent<HouseAuthoring>();
+            var houseSo = new SerializedObject(house);
+            houseSo.FindProperty("m_HouseId").stringValue = "greybox";
+            houseSo.ApplyModifiedPropertiesWithoutUndo();
+
+            var west = Room(house.transform, "west", new Vector3(-5f, 1.5f, 0f), new Vector3(9.8f, 3f, 19.8f));
+            var east = Room(house.transform, "east", new Vector3(5f, 0.575f, 0f), new Vector3(9.8f, 1.15f, 19.8f));
+            var loft = Room(house.transform, "loft", new Vector3(8f, 2.1f, -6f), new Vector3(3.8f, 1.8f, 3f));
+
+            Slot(west, "w0", prefabs.LightBox, new Vector3(-8f, 0.2f, 3f));
+            Slot(west, "w1", prefabs.LightBox, new Vector3(-6.5f, 0.2f, 3f));
+            Slot(west, "w2", prefabs.LightBox, new Vector3(-5f, 0.2f, 3f));
+            Slot(west, "w3", prefabs.LightBox, new Vector3(-3.5f, 0.2f, 3f));
+            Slot(west, "w4", prefabs.HeavyCrate, new Vector3(-5f, 0.3f, 6.5f));
+            Slot(east, "e0", prefabs.LightBox, new Vector3(3f, 0.2f, 3f));
+            Slot(east, "e1", prefabs.LightBox, new Vector3(5f, 0.2f, 3f));
+            Slot(east, "e2", prefabs.LightBox, new Vector3(7f, 0.2f, 3f));
+            Slot(east, "e3", prefabs.HeavyCrate, new Vector3(5f, 0.3f, 7f));
+            Slot(loft, "l0", prefabs.LightBox, new Vector3(7f, 1.4f, -6f));
+            Slot(loft, "l1", prefabs.LightBox, new Vector3(8f, 1.4f, -5.2f));
+            Slot(loft, "l2", prefabs.LightBox, new Vector3(9f, 1.4f, -6.8f));
+
+            // Moved items land on these (turned 35 degrees so they also need straightening).
+            Spot(west, "Scatter", new Vector3(-8f, 0.25f, -3f));
+            Spot(west, "Scatter", new Vector3(-3f, 0.25f, -3f));
+            Spot(west, "Scatter", new Vector3(-8.5f, 0.25f, 8.5f));
+            Spot(west, "Scatter", new Vector3(-2f, 0.25f, 8.5f));
+            Spot(east, "Scatter", new Vector3(2f, 0.25f, -2f));
+            Spot(east, "Scatter", new Vector3(8f, 0.25f, 1f));
+            Spot(east, "Scatter", new Vector3(2f, 0.25f, 8.5f));
+            Spot(east, "Scatter", new Vector3(8.5f, 0.25f, 8.5f));
+            Spot(loft, "Scatter", new Vector3(6.6f, 1.45f, -4.9f));
+            Spot(loft, "Scatter", new Vector3(9.4f, 1.45f, -4.9f));
+            Spot(west, "Hide", new Vector3(-9.3f, 0.25f, -9.3f));
+            Spot(east, "Hide", new Vector3(9.3f, 0.25f, 9.3f));
+            Spot(east, "Hide", new Vector3(9.3f, 0.25f, -0.5f));
+            Spot(loft, "Hide", new Vector3(6.5f, 1.45f, -7.2f));
+
+            // A prefab instance: a NetworkObject created by script in an unsaved scene gets no GlobalObjectIdHash
+            // and NGO refuses to spawn it.
+            Bell(prefabs.GhostBell, "west", new Vector3(-9.75f, 1.2f, -2f));
+            Bell(prefabs.GhostBell, "east", new Vector3(9.75f, 1.2f, 4f));
+            Bell(prefabs.GhostBell, "loft", new Vector3(9.75f, 1.9f, -6f));
+
+            // The company van stands in the living room by the spawns until the M4 lobby exists.
+            var van = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.Van);
+            van.name = "Van";
+            van.transform.position = new Vector3(-9.2f, 0.6f, -5.5f);
+
+            var ui = new GameObject("JobUI");
+            foreach (var panel in new MonoBehaviour[] { ui.AddComponent<JobSheetPanel>(), ui.AddComponent<ResultsPanel>() })
+            {
+                var panelSo = new SerializedObject(panel);
+                panelSo.FindProperty("m_Font").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontPath);
+                panelSo.FindProperty("m_GlyphMap").objectReferenceValue = AssetDatabase.LoadAssetAtPath<ThaiGlyphMap>(GlyphMapPath);
+                panelSo.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            // The shy ghost starts at the north end of the living room; the main light flickers when it is angry.
+            var ghost = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.Ghost);
+            ghost.name = "Ghost";
+            ghost.transform.position = new Vector3(-5f, 0f, 8f);
+            // Memory cabinets (GDD 6.3) against the outer walls, doors facing into the room; the loft is too small for one.
+            Cabinet(prefabs.Cabinet, "west", new Vector3(-9.3f, 0f, 6f), 90f);
+            Cabinet(prefabs.Cabinet, "east", new Vector3(9.3f, 0f, 6f), -90f);
+            var sun = Object.FindAnyObjectByType<Light>();
+            if (sun != null)
+                sun.gameObject.AddComponent<GhostLights>();
+
+            // The team toolbox by the van: BeginJob puts the spirit cameras here.
+            var toolSpot = new GameObject("ToolSpot").transform;
+            toolSpot.position = new Vector3(-7.5f, 0.3f, -6.3f);
+
+            var director = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.JobDirector);
+            var so = new SerializedObject(director.GetComponent<JobDirector>());
+            so.FindProperty("m_House").objectReferenceValue = house;
+            so.FindProperty("m_CameraPrefab").objectReferenceValue = prefabs.SpiritCamera;
+            so.FindProperty("m_ToolSpot").objectReferenceValue = toolSpot;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 

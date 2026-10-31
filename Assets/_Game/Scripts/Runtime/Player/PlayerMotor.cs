@@ -4,6 +4,7 @@ using SpiritMovers.Ghost;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 namespace SpiritMovers.Player
 {
@@ -86,25 +87,45 @@ namespace SpiritMovers.Player
             Local = this;
             Input ??= Application.isBatchMode || m_Actions == null ? new ScriptedInput() : new KeyboardMouseInput(m_Actions);
 
-            var spawn = GameObject.Find($"PlayerSpawn{OwnerClientId % 4}") ?? GameObject.Find("PlayerSpawn0");
-            if (spawn != null)
-                Teleport(spawn.transform.position, spawn.transform.eulerAngles.y);
-
             if (!Application.isBatchMode)
             {
                 m_Head.gameObject.AddComponent<Camera>().nearClipPlane = 0.05f;
                 m_Head.gameObject.AddComponent<AudioListener>();
-                foreach (var other in FindObjectsByType<Camera>(FindObjectsSortMode.None))
-                    if (other.transform != m_Head)
-                        other.gameObject.SetActive(false);
                 Cursor.lockState = CursorLockMode.Locked;
             }
+            EnterScene();
+            // The player object outlives scene changes (MainMenu → Lobby → job → Lobby): stand at each new scene's spawn.
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
         public override void OnNetworkDespawn()
         {
-            if (Local == this)
-                Local = null;
+            if (Local != this)
+                return;
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            Local = null;
+            // Back to menus: give the mouse back (M3B carry-over 5).
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (mode == LoadSceneMode.Single)
+                EnterScene();
+        }
+
+        /// <summary>Owner: go to this scene's spawn for our player number and look through our own eyes only.</summary>
+        private void EnterScene()
+        {
+            var spawn = GameObject.Find($"PlayerSpawn{OwnerClientId % 6}") ?? GameObject.Find("PlayerSpawn0");
+            if (spawn != null)
+                Teleport(spawn.transform.position, spawn.transform.eulerAngles.y);
+            if (Application.isBatchMode)
+                return;
+            foreach (var other in FindObjectsByType<Camera>(FindObjectsSortMode.None))
+                if (other.transform != m_Head)
+                    other.gameObject.SetActive(false);
         }
 
         /// <summary>Owner only: place the feet somewhere and face a heading (spawning, tests).</summary>
