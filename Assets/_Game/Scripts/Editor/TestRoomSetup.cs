@@ -42,7 +42,7 @@ namespace SpiritMovers.Editor
 
         private struct Prefabs
         {
-            public GameObject Player, LightBox, HeavyCrate, JobDirector, GhostBell, Van;
+            public GameObject Player, LightBox, HeavyCrate, JobDirector, GhostBell, Van, Ghost;
             public NetworkPrefabsList List;
         }
 
@@ -58,7 +58,9 @@ namespace SpiritMovers.Editor
             result.JobDirector = CreateJobDirectorPrefab();
             result.GhostBell = CreateBellPrefab();
             result.Van = CreateVanPrefab();
-            result.List = CreatePrefabList(result.Player, result.LightBox, result.HeavyCrate, result.JobDirector, result.GhostBell, result.Van);
+            result.Ghost = CreateGhostPrefab();
+            result.List = CreatePrefabList(result.Player, result.LightBox, result.HeavyCrate, result.JobDirector, result.GhostBell,
+                result.Van, result.Ghost);
             return result;
         }
 
@@ -181,6 +183,14 @@ namespace SpiritMovers.Editor
                 panelSo.ApplyModifiedPropertiesWithoutUndo();
             }
 
+            // The shy ghost starts at the north end of the living room; the main light flickers when it is angry.
+            var ghost = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.Ghost);
+            ghost.name = "Ghost";
+            ghost.transform.position = new Vector3(-5f, 0f, 8f);
+            var sun = Object.FindAnyObjectByType<Light>();
+            if (sun != null)
+                sun.gameObject.AddComponent<GhostLights>();
+
             var director = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.JobDirector);
             var so = new SerializedObject(director.GetComponent<JobDirector>());
             so.FindProperty("m_House").objectReferenceValue = house;
@@ -298,6 +308,28 @@ namespace SpiritMovers.Editor
             var so = new SerializedObject(bell.GetComponent<GhostBell>());
             so.FindProperty("m_RoomId").stringValue = roomId;
             so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>Placeholder ghost: a floating capsule without a collider (it drifts through furniture), host-driven.</summary>
+        private static GameObject CreateGhostPrefab()
+        {
+            var go = new GameObject("Ghost");
+            go.AddComponent<NetworkObject>();
+            go.AddComponent<NetworkTransform>();
+            var ghost = go.AddComponent<ShyGhost>();
+            var body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            body.name = "Body";
+            Object.DestroyImmediate(body.GetComponent<Collider>());
+            body.transform.SetParent(go.transform, false);
+            body.transform.localScale = new Vector3(0.7f, 0.6f, 0.7f);
+            var renderer = body.GetComponent<MeshRenderer>();
+            renderer.sharedMaterial = LitMaterial(PrefabDir + "/Ghost.mat", Color.white);
+            var so = new SerializedObject(ghost);
+            so.FindProperty("m_Body").objectReferenceValue = renderer;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            var prefab = PrefabUtility.SaveAsPrefabAsset(go, PrefabDir + "/Ghost.prefab");
+            Object.DestroyImmediate(go);
+            return prefab;
         }
 
         private static GameObject CreateJobDirectorPrefab()

@@ -315,6 +315,50 @@ namespace SpiritMovers.Job
             return count;
         }
 
+        /// <summary>
+        /// Host: the planned items as the ghost sees them — the room each is in now, whether someone carries it, and
+        /// whether its own or its current room is already accepted (those are off limits to pranks, GDD 7).
+        /// </summary>
+        internal IReadOnlyList<PrankCandidate> PrankCandidates()
+        {
+            if (Plan == null)
+                return Array.Empty<PrankCandidate>();
+            return Plan.Rooms.SelectMany(room => room.Slots.Select(task =>
+            {
+                var item = m_House.Slot(task.Slot.Id).Item;
+                var here = m_House.RoomAt(item.transform.position);
+                var accepted = m_AcceptedCache.Contains(room.RoomId) || m_AcceptedCache.Contains(here);
+                return new PrankCandidate(task.Slot.Id, here, item.IsCarried, accepted);
+            })).ToList();
+        }
+
+        /// <summary>Host: the ghost swaps two planned items' places (refused for carried items or accepted rooms).</summary>
+        internal bool SwapItems(string slotA, string slotB)
+        {
+            if (!IsServer || slotA == slotB || !Prankable(slotA) || !Prankable(slotB))
+                return false;
+            var a = m_House.Slot(slotA).Item;
+            var b = m_House.Slot(slotB).Item;
+            var (posA, rotA) = (a.transform.position, a.transform.rotation);
+            Teleport(a, b.transform.position, b.transform.rotation);
+            Teleport(b, posA, rotA);
+            return true;
+        }
+
+        /// <summary>Host: the ghost flicks a planned item (same limits as <see cref="SwapItems"/>).</summary>
+        internal bool PushItem(string slotId, Vector3 velocity)
+        {
+            if (!IsServer || !Prankable(slotId))
+                return false;
+            var body = m_House.Slot(slotId).Item.GetComponent<Rigidbody>();
+            body.WakeUp();
+            body.linearVelocity = velocity;
+            return true;
+        }
+
+        private bool Prankable(string slotId) =>
+            PrankCandidates().Any(c => c.SlotId == slotId && !c.Carried && !c.RoomAccepted);
+
         /// <summary>Test hook: raise anger (by breaking-item steps) until it reaches at least <paramref name="value"/>.</summary>
         internal void ApplyAngerForTest(float value)
         {
