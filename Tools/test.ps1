@@ -1,6 +1,6 @@
 # Runs Unity tests from the command line and prints a summary.
-# Usage: powershell -ExecutionPolicy Bypass -File Tools\test.ps1 [-Platform EditMode|PlayMode]
-param([ValidateSet('EditMode', 'PlayMode')][string]$Platform = 'EditMode')
+# Usage: powershell -ExecutionPolicy Bypass -File Tools\test.ps1 [-Platform EditMode|PlayMode] [-Filter NameOrRegex]
+param([ValidateSet('EditMode', 'PlayMode')][string]$Platform = 'EditMode', [string]$Filter)
 
 . (Join-Path $PSScriptRoot 'unity-env.ps1')
 
@@ -11,8 +11,9 @@ $results = Join-Path $LogDir "test-$Platform.xml"
 if (Test-Path $results) { Remove-Item $results }
 
 Write-Host "Running $Platform tests... (log: $log)"
+$filterArgs = if ($Filter) { @('-testFilter', $Filter) } else { @() }
 & $UnityExe -batchmode -nographics -projectPath $ProjectRoot -runTests -testPlatform $Platform `
-    -testResults $results -logFile $log | Out-Null
+    -testResults $results -logFile $log @filterArgs | Out-Null
 $code = $LASTEXITCODE
 
 if (-not (Test-Path $results)) { throw "No test results produced (Unity exit code $code). See $log" }
