@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using SpiritMovers.Core.Player;
@@ -11,6 +12,7 @@ namespace SpiritMovers.Interaction
     /// A physics item players carry (D-034). One carrier owns it and moves it locally (method B);
     /// with two carriers (heavy items only) the host owns and moves it toward their shared hold point (method A).
     /// The host decides who carries; the owner of the item applies the follow velocity.
+    /// The host also drops items left far from the hand (stuck, glitched) and releases carriers who disconnect.
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     public sealed class Carryable : NetworkBehaviour, IInteractable
@@ -20,6 +22,13 @@ namespace SpiritMovers.Interaction
         private NetworkList<ulong> m_Carriers;
         private Rigidbody m_Body;
         private Vector3? m_PendingThrow;
+        private HoldErrorWatch m_HoldWatch;
+
+        /// <summary>Server: an item was taken out of a carrier's hands because it stayed far from them.</summary>
+        public static event Action<Carryable, ulong> ForceDropped;
+
+        /// <summary>Test hook: stops the owner pulling the item to the hand.</summary>
+        internal bool FollowEnabled { get; set; } = true;
 
         public float Mass => m_Body.mass;
         public IReadOnlyList<ulong> Carriers => m_Carriers.Count == 0 ? new List<ulong>() : Enumerable.Range(0, m_Carriers.Count).Select(i => m_Carriers[i]).ToList();
@@ -31,11 +40,25 @@ namespace SpiritMovers.Interaction
         {
             m_Body = GetComponent<Rigidbody>();
             m_Carriers = new NetworkList<ulong>();
+            m_HoldWatch = new HoldErrorWatch(m_Config);
         }
 
-        public override void OnNetworkSpawn() => m_Carriers.OnListChanged += _ => PlayerCarrier.RefreshHeld(this);
+        public override void OnNetworkSpawn()
+        {
+            m_Carriers.OnListChanged += _ => PlayerCarrier.RefreshHeld(this);
+            if (IsServer)
+                NetworkManager.OnClientDisconnectCallback += OnClientDisconnected;
+        }
 
-        public override void OnNetworkDespawn() => PlayerCarrier.ForgetItem(this);
+        public override void OnNetworkDespawn()
+        {
+            if (IsServer && NetworkManager != null)
+                NetworkManager.OnClientDisconnectCallback -= OnClientDisconnected;
+            PlayerCarrier.ForgetItem(this);
+        }
+
+        /// <summary>Server: a player who leaves drops what they held; the item stays (D-034).</summary>
+        internal void OnClientDisconnected(ulong clientId) => ReleaseCarrier(clientId);
 
         public bool IsCarriedBy(ulong clientId)
         {
@@ -89,6 +112,7 @@ namespace SpiritMovers.Interaction
         {
             if (!IsServer || !m_Carriers.Remove(clientId))
                 return;
+            m_HoldWatch.Reset();
             UpdateOwnership();
         }
 
@@ -115,7 +139,11 @@ namespace SpiritMovers.Interaction
 
         private void FixedUpdate()
         {
-            if (!IsSpawned || !IsOwner)
+            if (!IsSpawned)
+                return;
+            if (IsServer)
+                CheckHoldError();
+            if (!IsOwner)
                 return;
 
             if (m_PendingThrow is { } velocity && !IsCarried)
@@ -125,12 +153,30 @@ namespace SpiritMovers.Interaction
             }
 
             m_Body.useGravity = !IsCarried;
-            if (!IsCarried || !TryGetHoldPoint(out var hold, out var yaw))
+            if (!IsCarried || !FollowEnabled || !TryGetHoldPoint(out var hold, out var yaw))
                 return;
 
             m_Body.linearVelocity = CarryRules.FollowVelocity(hold.ToNumerics(), m_Body.position.ToNumerics(), m_Config).ToUnity();
             m_Body.angularVelocity = Vector3.zero;
             m_Body.MoveRotation(Quaternion.Euler(0f, yaw + m_YawOffset.Value, 0f));
+        }
+
+        /// <summary>
+        /// Server: a single carrier's item that stays far from their hand is dropped. Both positions are
+        /// the host's (equally delayed) view, so network lag does not count as distance.
+        /// </summary>
+        private void CheckHoldError()
+        {
+            if (m_Carriers.Count != 1 || !PlayerCarrier.TryGet(m_Carriers[0], out var carrier))
+                return;
+            var distance = Vector3.Distance(m_Body.position, carrier.HoldPoint);
+            if (!m_HoldWatch.Update(distance, Time.fixedDeltaTime))
+                return;
+
+            var clientId = m_Carriers[0];
+            Debug.Log($"[Carry] force drop {name} from client {clientId} ({distance:F1} m from hand)");
+            ReleaseCarrier(clientId);
+            ForceDropped?.Invoke(this, clientId);
         }
 
         /// <summary>Where the item should be: the carrier's hold point, or the average of all carriers'.</summary>
