@@ -27,7 +27,7 @@
 | `AngerModelTests` (EditMode) | ความโกรธ 5 ขั้น · ตัวคูณ · ไหว้ห้องละครั้ง · ความเงียบ · ไม่เปลี่ยนหลังไล่ออก | ผ่าน (2026-10-31) |
 | `JobGeneratorTests` (EditMode) | สุ่มงานจาก Seed แบบ Deterministic · จำนวนห้อง/ของตามระดับและจำนวนคน · ประเภทปัญหา · บ้านช่องไม่พอ | ผ่าน (2026-10-31) |
 | `PayoutCalculatorTests` (EditMode) | ค่าจ้าง 3 แบบจบ · โบนัสดาว · หัก Hint ไม่ติดลบ · แบ่งคน | ผ่าน (2026-10-31) |
-| `JobProgressTests` (EditMode) | สถานะงาน Briefing → Exploring → Farewell → Ended · คำสั่งซ้ำ/ผิดลำดับถูกเพิกเฉย | ผ่าน — รวม 82/82 (2026-10-31) |
+| `JobProgressTests` (EditMode) | สถานะงาน Briefing → Exploring → Farewell → Ended · คำสั่งซ้ำ/ผิดลำดับถูกเพิกเฉย | ผ่าน — รวม 88/88 (2026-10-31, หลังแก้ตามรีวิว) |
 | ต้นแบบ Network (`Tools/proto-netsync-matrix.ps1`) | Host+Client ผ่าน Relay, วิธียกของ A/B × Latency 0/100/200 ms | ผ่าน — ผลใน `docs/M2_REPORT.md` |
 
 ### ต้นแบบ Voice ในเครื่องเดียว (Claude รันเองได้)
