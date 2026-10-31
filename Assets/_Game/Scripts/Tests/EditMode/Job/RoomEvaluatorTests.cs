@@ -84,6 +84,23 @@ namespace SpiritMovers.Tests
         }
 
         [Test]
+        public void Evaluate_EveryItemInPlaceWithGlue_IsAccepted()
+        {
+            // A small room must stay winnable after a breakage: 1.5 < 0.8 x 2 and 0.5 < 0.8 x 1.
+            Assert.IsTrue(RoomEvaluator.Evaluate(new[] { Slot("a", Correct), Slot("b", Correct, ItemCondition.Glued) }, RoomRules.Default).Accepted);
+            Assert.IsTrue(RoomEvaluator.Evaluate(new[] { Slot("a", Correct, ItemCondition.Glued) }, RoomRules.Default).Accepted);
+        }
+
+        [Test]
+        public void Defaults_AreFreshInstances()
+        {
+            Tolerance.Default.PositionMeters = 5f;
+            RoomRules.Default.AcceptRatio = 0.1f;
+            Assert.AreEqual(0.25f, Tolerance.Default.PositionMeters);
+            Assert.AreEqual(0.8f, RoomRules.Default.AcceptRatio);
+        }
+
+        [Test]
         public void Evaluate_EmptyRoom_IsNotAccepted()
         {
             var result = RoomEvaluator.Evaluate(Array.Empty<SlotState>(), RoomRules.Default);

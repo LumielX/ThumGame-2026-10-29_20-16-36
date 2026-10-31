@@ -34,7 +34,7 @@ namespace SpiritMovers.Core.Job
         public float AcceptRatio { get; set; } = 0.8f;
         public float GluedWeight { get; set; } = 0.5f;
 
-        public static RoomRules Default { get; } = new();
+        public static RoomRules Default => new();
     }
 
     public readonly struct RoomResult
@@ -67,7 +67,8 @@ namespace SpiritMovers.Core.Job
                 score += slot.Condition == ItemCondition.Glued ? rules.GluedWeight : 1f;
             }
 
-            var accepted = slots.Count > 0 && score >= rules.AcceptRatio * slots.Count;
+            // Every item in place always passes, so a glued breakage can never make a small room unwinnable (GDD 7).
+            var accepted = slots.Count > 0 && (score >= rules.AcceptRatio * slots.Count || correct == slots.Count);
             return new RoomResult(correct, score, accepted);
         }
     }

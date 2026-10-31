@@ -24,7 +24,8 @@ namespace SpiritMovers.Core.Job
         public float PositionMeters { get; set; } = 0.25f;
         public float AngleDegrees { get; set; } = 20f;
 
-        public static Tolerance Default { get; } = new();
+        /// <summary>A fresh copy, so changing one slot's tolerance never changes another's.</summary>
+        public static Tolerance Default => new();
     }
 
     public static class PlacementMath

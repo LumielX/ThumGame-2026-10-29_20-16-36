@@ -61,23 +61,25 @@ namespace SpiritMovers.Core.Job
         public static JobPlan Generate(int seed, HouseLayout house, JobDifficulty difficulty, int playerCount)
         {
             var random = new Random(seed);
-            var rooms = house.Rooms.Where(r => r.Slots.Count > 0).ToList();
+            // Only rooms with a slot this difficulty can disturb: a room with nothing to fix could never be accepted.
+            var rooms = house.Rooms.Where(r => r.Slots.Any(s => IsUsable(s, difficulty))).ToList();
+            if (rooms.Count == 0)
+                throw new InvalidOperationException(
+                    $"House '{house.Id}' has no memory slot that supports a '{difficulty.Id}' problem; the job could never be won.");
             var roomCount = Math.Min(random.Next(difficulty.MinRooms, difficulty.MaxRooms + 1), rooms.Count);
 
             var picked = Shuffled(rooms, random).Take(roomCount).ToList();
+            var spots = new SpotPool(house, random);
             var tasks = new List<RoomTask>();
             foreach (var room in rooms.Where(picked.Contains)) // keep the house's room order
-            {
-                var roomTasks = PickSlots(room, house, difficulty, playerCount, random);
-                // A room with nothing to fix could never be accepted (RoomEvaluator), so it is left out.
-                if (roomTasks.Count > 0)
-                    tasks.Add(new RoomTask(room.Id, roomTasks));
-            }
+                tasks.Add(new RoomTask(room.Id, PickSlots(room, difficulty, playerCount, random, spots)));
 
             return new JobPlan(seed, house.Id, difficulty.Id, playerCount, tasks);
         }
 
-        private static List<SlotTask> PickSlots(RoomLayout room, HouseLayout house, JobDifficulty difficulty, int playerCount, Random random)
+        private static bool IsUsable(SlotDefinition slot, JobDifficulty difficulty) => slot.Supports.Any(difficulty.Problems.Contains);
+
+        private static List<SlotTask> PickSlots(RoomLayout room, JobDifficulty difficulty, int playerCount, Random random, SpotPool spots)
         {
             var wanted = random.Next(difficulty.MinItemsPerRoom, difficulty.MaxItemsPerRoom + 1) + PlayerCountScaling.ItemOffset(playerCount);
             wanted = Math.Clamp(wanted, 1, room.Slots.Count);
@@ -91,22 +93,52 @@ namespace SpiritMovers.Core.Job
                 if (allowed.Count == 0)
                     continue;
                 var problem = allowed[random.Next(allowed.Count)];
-                result.Add(new SlotTask(slot, problem, StartPlacement(slot, problem, house, random)));
+                result.Add(new SlotTask(slot, problem, spots.Take(slot, problem)));
             }
             return result;
         }
 
-        private static Placement StartPlacement(SlotDefinition slot, ProblemType problem, HouseLayout house, Random random)
+        /// <summary>
+        /// Hands out start spots without reuse until a list runs out (then it refills), so items do not
+        /// spawn inside each other while there are spots to spare.
+        /// </summary>
+        private sealed class SpotPool
         {
-            if (problem == ProblemType.Hidden && house.HidingSpots.Count > 0)
-                return house.HidingSpots[random.Next(house.HidingSpots.Count)];
+            private readonly HouseLayout m_House;
+            private readonly Random m_Random;
+            private readonly List<Placement> m_Scatter;
+            private readonly List<Placement> m_Hiding;
 
-            var away = house.ScatterPoints.Where(p => !PlacementMath.IsCorrect(slot.Target, p, slot.Tolerance)).ToList();
-            if (away.Count > 0)
-                return away[random.Next(away.Count)];
+            public SpotPool(HouseLayout house, Random random)
+            {
+                m_House = house;
+                m_Random = random;
+                m_Scatter = house.ScatterPoints.ToList();
+                m_Hiding = house.HidingSpots.ToList();
+            }
 
-            var target = slot.Target;
-            return new Placement(target.RoomId, target.Position + Vector3.UnitX, target.Rotation);
+            public Placement Take(SlotDefinition slot, ProblemType problem)
+            {
+                if (problem == ProblemType.Hidden && m_House.HidingSpots.Count > 0)
+                    return Draw(m_Hiding, m_House.HidingSpots, _ => true);
+
+                bool Away(Placement p) => !PlacementMath.IsCorrect(slot.Target, p, slot.Tolerance);
+                if (m_House.ScatterPoints.Any(Away))
+                    return Draw(m_Scatter, m_House.ScatterPoints, Away);
+
+                var target = slot.Target;
+                return new Placement(target.RoomId, target.Position + Vector3.UnitX, target.Rotation);
+            }
+
+            private Placement Draw(List<Placement> remaining, IReadOnlyList<Placement> all, Func<Placement, bool> allowed)
+            {
+                if (!remaining.Any(allowed))
+                    remaining.AddRange(all.Where(p => !remaining.Contains(p)));
+                var candidates = remaining.Where(allowed).ToList();
+                var chosen = candidates[m_Random.Next(candidates.Count)];
+                remaining.Remove(chosen);
+                return chosen;
+            }
         }
 
         /// <summary>Fisher–Yates on a copy; the input order is the tie-breaker, so the result depends only on the seed.</summary>

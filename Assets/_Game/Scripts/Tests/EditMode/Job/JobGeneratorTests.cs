@@ -134,6 +134,58 @@ namespace SpiritMovers.Tests
             Assert.That(plan.Rooms.Select(r => r.Slots.Count), Is.All.EqualTo(2));
         }
 
+        /// <summary>5 rooms; r0 and r1 only support Order, which Normal does not use.</summary>
+        private static HouseLayout HouseWithUnusableRooms()
+        {
+            var house = TestHouse();
+            var rooms = house.Rooms.Select((room, i) => i >= 2 ? room : new RoomLayout(room.Id,
+                room.Slots.Select(sl => new SlotDefinition(sl.Id, sl.ItemId, sl.Target, sl.Tolerance, new[] { ProblemType.Order })).ToList())).ToList();
+            return new HouseLayout(house.Id, rooms, house.ScatterPoints, house.HidingSpots);
+        }
+
+        [Test]
+        public void Generate_SkipsRoomsWithNoUsableSlotsBeforePicking()
+        {
+            foreach (var plan in Plans(JobDifficulty.Normal, 2, HouseWithUnusableRooms()))
+            {
+                Assert.AreEqual(3, plan.Rooms.Count, $"seed {plan.Seed}");
+                Assert.IsFalse(plan.Rooms.Any(r => r.RoomId == "r0" || r.RoomId == "r1"));
+            }
+        }
+
+        [Test]
+        public void Generate_HouseWithEmptyRoom_IgnoresIt()
+        {
+            var house = TestHouse(rooms: 3);
+            var rooms = house.Rooms.Append(new RoomLayout("empty", Array.Empty<SlotDefinition>())).ToList();
+            var plan = JobGenerator.Generate(3, new HouseLayout("h", rooms, house.ScatterPoints, house.HidingSpots), JobDifficulty.Normal, 2);
+            Assert.AreEqual(3, plan.Rooms.Count);
+            Assert.IsFalse(plan.Rooms.Any(r => r.RoomId == "empty"));
+        }
+
+        [Test]
+        public void Generate_NoUsableRooms_Throws()
+        {
+            var possessedOnly = TestHouse(supports: new[] { ProblemType.Possessed });
+            Assert.Throws<InvalidOperationException>(() => JobGenerator.Generate(1, possessedOnly, JobDifficulty.Normal, 2));
+            var noRooms = new HouseLayout("h", Array.Empty<RoomLayout>(), Array.Empty<Placement>(), Array.Empty<Placement>());
+            Assert.Throws<InvalidOperationException>(() => JobGenerator.Generate(1, noRooms, JobDifficulty.Normal, 2));
+        }
+
+        [Test]
+        public void Generate_StartPlacementsAreDistinctWhileSpotsLast()
+        {
+            // Items dropped on the same spot would spawn inside each other.
+            foreach (var plan in Plans(JobDifficulty.Normal, 2))
+            {
+                var tasks = plan.Rooms.SelectMany(r => r.Slots).ToList();
+                var scattered = tasks.Where(t => t.Problem != ProblemType.Hidden).Select(t => t.StartPlacement.Position).ToList();
+                var hidden = tasks.Where(t => t.Problem == ProblemType.Hidden).Select(t => t.StartPlacement.Position).ToList();
+                Assert.AreEqual(Math.Min(scattered.Count, 10), scattered.Distinct().Count(), $"seed {plan.Seed}");
+                Assert.AreEqual(Math.Min(hidden.Count, 6), hidden.Distinct().Count(), $"seed {plan.Seed}");
+            }
+        }
+
         [Test]
         public void PlayerCountScaling_ClampsOutOfRange()
         {
