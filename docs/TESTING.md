@@ -9,7 +9,7 @@
 |---|---|---|
 | `powershell -ExecutionPolicy Bypass -File Tools\test.ps1` | EditMode Tests (`-Filter ชื่อชุด` รันเฉพาะชุด) | `Logs/test-EditMode.xml`, `Logs/test-EditMode.log` |
 | `powershell -ExecutionPolicy Bypass -File Tools\test.ps1 -Platform PlayMode` | PlayMode Tests — โหลดฉาก `M3_TestRoom` เป็น Host ในเครื่อง (ไม่ใช้ UGS) | `Logs/test-PlayMode.*` |
-| `powershell -ExecutionPolicy Bypass -File Tools\m3b-carry-test.ps1` | Host + Client Headless ผ่าน Relay จริง 3 สถานการณ์ (`carry`, `shared`, `disconnect`) — Build ก่อนด้วย `-executeMethod SpiritMovers.Editor.TestRoomSetup.BuildTestRoom` | PASS/FAIL ต่อสถานการณ์, Log ใน `Logs/m3b/` |
+| `powershell -ExecutionPolicy Bypass -File Tools\m3b-carry-test.ps1` | Host + Client Headless ผ่าน Relay จริง 6 สถานการณ์ (`carry`, `shared`, `split`, `remote`, `disconnect`, `crash`) · `-LatencyMs 150` จำลองความหน่วง — Build ก่อนด้วย `-executeMethod SpiritMovers.Editor.TestRoomSetup.BuildTestRoom` | PASS/FAIL ต่อสถานการณ์, Log ใน `Logs/m3b/` |
 | `powershell -ExecutionPolicy Bypass -File Tools\build.ps1` | Build Windows + Zip | `Builds/SpiritMovers-v<ver>-Windows(.zip)`, `Logs/build.log` |
 
 - ใช้ Editor ตัวอื่น: ตั้ง `UNITY_EXE` เป็น Path ของ `Unity.exe`
@@ -30,10 +30,10 @@
 | `JobGeneratorTests` (EditMode) | สุ่มงานจาก Seed แบบ Deterministic · จำนวนห้อง/ของตามระดับและจำนวนคน · ประเภทปัญหา · บ้านช่องไม่พอ | ผ่าน (2026-10-31) |
 | `PayoutCalculatorTests` (EditMode) | ค่าจ้าง 3 แบบจบ · โบนัสดาว · หัก Hint ไม่ติดลบ · แบ่งคน | ผ่าน (2026-10-31) |
 | `JobProgressTests` (EditMode) | สถานะงาน Briefing → Exploring → Farewell → Ended · คำสั่งซ้ำ/ผิดลำดับถูกเพิกเฉย | ผ่าน (2026-10-31, หลังแก้ตามรีวิว) |
-| `MovementRulesTests`, `CarryRulesTests` (EditMode) | ความเร็ว/Stamina/ของหนัก/เสียงฝีเท้า · จุดถือไม่ขึ้นกับ Pitch · จำกัดความเร็วตามมือ · ตรวจของหลุดมือ | ผ่าน — EditMode รวม 108/108 (2026-10-31) |
+| `MovementRulesTests`, `CarryRulesTests` (EditMode) | ความเร็ว/Stamina/ของหนัก/เสียงฝีเท้า · จุดถือไม่ขึ้นกับ Pitch · จำกัดความเร็วตามมือ · ตรวจของหลุดมือ | ผ่าน — EditMode รวม 109/109 (2026-10-31) |
 | `PlayerMotorTests` (PlayMode) | เดิน/วิ่ง/ย่อ/Stamina หมด/กระโดด/ปิด Input/ขึ้นบันได | ผ่าน (2026-10-31) |
-| `CarryTests`, `CarryAuthorityTests` (PlayMode) | ยก/วาง/หมุน/โยน · ของหนักช้าและโยนไม่ได้ · เอื้อมไม่ถึง · แย่งของ · ปิด Input ขณะถือ · Host บังคับปล่อย · คนถือหลุด | ผ่าน — PlayMode รวม 19/19 (2026-10-31) |
-| `Tools/m3b-carry-test.ps1` (2 Instance ผ่าน Relay) | ยกคนเดียว (ตำแหน่งตรงกันทั้งสองเครื่อง 0.006 ม.) · ยก 2 คน · ปิดเกมขณะถือ | PASS 3/3 (2026-10-31) |
+| `CarryTests`, `CarryAuthorityTests` (PlayMode) | ยก/วาง/หมุน/โยน · ของหนักช้าและโยนไม่ได้ · เอื้อมไม่ถึง · แย่งของ · ปิด Input ขณะถือ · Host บังคับปล่อย · คนถือหลุด | ผ่าน — PlayMode รวม 20/20 (2026-10-31) |
+| `Tools/m3b-carry-test.ps1` (2 Instance ผ่าน Relay) | ยกคนเดียว (ตำแหน่งตรงกัน 0.006 ม.) · ยก 2 คนแล้วส่งต่อให้คนเดียว · ยก 2 คนแล้วเดินแยก (ปล่อยเอง) · Client หมุน+โยน · ปิดเกม/เกมแครชขณะถือ (Host ยกต่อได้) | PASS 6/6 ที่ 0 ms และ 150 ms ต่อทาง (2026-10-31) |
 | ต้นแบบ Network (`Tools/proto-netsync-matrix.ps1`) | Host+Client ผ่าน Relay, วิธียกของ A/B × Latency 0/100/200 ms | ผ่าน — ผลใน `docs/M2_REPORT.md` |
 
 ### ต้นแบบ Voice ในเครื่องเดียว (Claude รันเองได้)

@@ -1,7 +1,9 @@
 # M3B two-instance carry test: a headless host and client join over Unity Relay and run bot scenarios
-# (carry / shared / disconnect) in the M3 test room, then each prints a [M3B] SUMMARY line.
-# Exits 1 if any scenario fails. Usage: powershell -ExecutionPolicy Bypass -File Tools\m3b-carry-test.ps1 [-Seconds 40]
-param([int]$Seconds = 40, [string[]]$Scenarios = @('carry', 'shared', 'disconnect'))
+# in the M3 test room (see DevBot), then each prints a [M3B] SUMMARY line. -LatencyMs adds simulated delay
+# on both peers. Exits 1 if any scenario fails.
+# Usage: powershell -ExecutionPolicy Bypass -File Tools\m3b-carry-test.ps1 [-Seconds 40] [-LatencyMs 0] [-Scenarios carry,shared]
+param([int]$Seconds = 40, [int]$LatencyMs = 0,
+    [string[]]$Scenarios = @('carry', 'shared', 'split', 'remote', 'disconnect', 'crash'))
 
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
@@ -30,19 +32,22 @@ foreach ($scenario in $Scenarios) {
     Remove-Item $code -ErrorAction SilentlyContinue
     $hostLog = Join-Path $logs "host-$scenario.log"
     $clientLog = Join-Path $logs "client-$scenario.log"
-    $common = @('-batchmode', '-nographics', '-dev-codefile', $code, '-dev-scenario', $scenario)
+    $common = @('-batchmode', '-nographics', '-dev-codefile', $code, '-dev-scenario', $scenario, '-dev-latency', "$LatencyMs")
+    # A crashed client is only noticed when the transport times out (30 s), so the host waits longer.
+    $hostSeconds = if ($scenario -eq 'crash') { $Seconds + 40 } else { $Seconds }
     $h = Start-Process $exe.FullName -PassThru -ArgumentList ($common + @('-logFile', $hostLog,
-        '-dev-role', 'host', '-dev-profile', "m3bh$scenario", '-dev-seconds', "$Seconds"))
+        '-dev-role', 'host', '-dev-profile', "m3bh$scenario", '-dev-seconds', "$hostSeconds"))
     Start-Sleep -Seconds 2
     $c = Start-Process $exe.FullName -PassThru -ArgumentList ($common + @('-logFile', $clientLog,
         '-dev-role', 'client', '-dev-profile', "m3bc$scenario", '-dev-seconds', "$($Seconds - 5)"))
-    $h.WaitForExit(($Seconds + 60) * 1000) | Out-Null
+    $h.WaitForExit(($hostSeconds + 60) * 1000) | Out-Null
     $c.WaitForExit(30000) | Out-Null
     foreach ($p in @($h, $c)) { if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force } }
 
     $hs = Get-Summary $hostLog
     $cs = Get-Summary $clientLog
-    $ok = $hs -and $cs -and $hs.ok -eq 'true' -and $cs.ok -eq 'true'
+    # The crashed client never writes a summary; only the host's view counts there.
+    $ok = if ($scenario -eq 'crash') { $hs -and $hs.ok -eq 'true' } else { $hs -and $cs -and $hs.ok -eq 'true' -and $cs.ok -eq 'true' }
     $note = ''
     if ($ok -and $scenario -eq 'carry') {
         $a = Get-Position $hs.itemPos; $b = Get-Position $cs.itemPos

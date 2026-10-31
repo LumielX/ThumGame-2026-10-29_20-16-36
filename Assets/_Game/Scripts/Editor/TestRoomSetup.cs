@@ -5,6 +5,7 @@ using SpiritMovers.Interaction;
 using SpiritMovers.Player;
 using SpiritMovers.Text;
 using TMPro;
+using Unity.Multiplayer.Tools.NetworkSimulator.Runtime;
 using Unity.Netcode;
 using Unity.Netcode.Components;
 using Unity.Netcode.Transports.UTP;
@@ -65,6 +66,7 @@ namespace SpiritMovers.Editor
             var manager = networkObject.AddComponent<NetworkManager>();
             manager.NetworkConfig = new NetworkConfig { NetworkTransport = transport, PlayerPrefab = player };
             manager.NetworkConfig.Prefabs.NetworkPrefabsLists.Add(prefabs);
+            networkObject.AddComponent<NetworkSimulator>(); // -dev-latency in test runs; no effect otherwise
 
             new GameObject("DevSessionRunner").AddComponent<DevSessionRunner>();
 

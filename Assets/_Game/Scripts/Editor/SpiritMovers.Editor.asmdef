@@ -10,7 +10,8 @@
         "SpiritMovers.Dev",
         "Unity.Netcode.Runtime",
         "Unity.InputSystem",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "Unity.Multiplayer.Tools.NetworkSimulator.Runtime"
     ],
     "includePlatforms": [
         "Editor"

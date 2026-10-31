@@ -20,6 +20,8 @@ namespace SpiritMovers.Core.Player
         public float ThrowSpeed { get; set; } = 6f;
         public float RotateStepDegrees { get; set; } = 15f;
         public int MaxCarriers { get; set; } = 2;
+        /// <summary>Hold-error checks pause this long after an item changes owner (the host's view lags a round trip).</summary>
+        public float HandoffGraceSeconds { get; set; } = 1f;
 
         public static CarryConfig Default => new();
     }
@@ -76,12 +78,32 @@ namespace SpiritMovers.Core.Player
     {
         private readonly CarryConfig m_Config;
         private float m_FarSeconds;
+        private float m_SuspendedSeconds;
 
         public HoldErrorWatch(CarryConfig config) => m_Config = config;
+
+        /// <summary>
+        /// Ignore distance for a while, e.g. after an ownership handoff when the host's view of the item
+        /// lags the carrier by a round trip.
+        /// </summary>
+        public void Suspend(float seconds)
+        {
+            m_SuspendedSeconds = MathF.Max(m_SuspendedSeconds, seconds);
+            m_FarSeconds = 0f;
+        }
 
         /// <returns>true once the item has been out of range longer than the grace period.</returns>
         public bool Update(float distanceFromHold, float dt)
         {
+            if (m_SuspendedSeconds > 0f)
+            {
+                var skipped = MathF.Min(dt, m_SuspendedSeconds);
+                m_SuspendedSeconds -= skipped;
+                dt -= skipped;
+                if (dt <= 0f)
+                    return false;
+            }
+
             if (distanceFromHold <= m_Config.MaxHoldError)
             {
                 m_FarSeconds = 0f;
@@ -91,6 +113,10 @@ namespace SpiritMovers.Core.Player
             return m_FarSeconds > m_Config.HoldErrorGraceSeconds;
         }
 
-        public void Reset() => m_FarSeconds = 0f;
+        public void Reset()
+        {
+            m_FarSeconds = 0f;
+            m_SuspendedSeconds = 0f;
+        }
     }
 }

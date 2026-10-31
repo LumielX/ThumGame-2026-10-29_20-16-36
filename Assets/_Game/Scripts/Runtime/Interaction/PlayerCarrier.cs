@@ -30,6 +30,9 @@ namespace SpiritMovers.Interaction
         {
             if (s_ByClient.TryGetValue(OwnerClientId, out var registered) && registered == this)
                 s_ByClient.Remove(OwnerClientId);
+            // A player who goes away (respawn, knocked out) must not leave the item floating.
+            if (IsServer && Held != null)
+                Held.ReleaseCarrier(OwnerClientId);
         }
 
         /// <summary>Called on every peer when an item's carrier list changes.</summary>

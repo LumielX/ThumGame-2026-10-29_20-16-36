@@ -78,6 +78,17 @@ namespace SpiritMovers.Tests
         }
 
         [Test]
+        public void HoldErrorWatch_SuspendIgnoresDistanceForAWhile()
+        {
+            // After an ownership handoff the host's view of the item lags by a round trip.
+            var watch = new HoldErrorWatch(Config);
+            watch.Suspend(1f);
+            Assert.IsFalse(watch.Update(5f, 0.6f));
+            Assert.IsFalse(watch.Update(5f, 0.6f)); // 0.4 s suspended, 0.2 s counted
+            Assert.IsTrue(watch.Update(5f, 0.4f));  // 0.6 s counted > 0.5 s grace
+        }
+
+        [Test]
         public void HoldErrorWatch_ResetsWhenBackInRange()
         {
             var watch = new HoldErrorWatch(Config);

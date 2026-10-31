@@ -22,7 +22,8 @@ namespace SpiritMovers.Interaction
         private NetworkList<ulong> m_Carriers;
         private Rigidbody m_Body;
         private Vector3? m_PendingThrow;
-        private HoldErrorWatch m_HoldWatch;
+        /// <summary>Server: one watch per carrier, so a carrier who walks away from a shared crate lets go.</summary>
+        private readonly Dictionary<ulong, HoldErrorWatch> m_HoldWatches = new();
 
         /// <summary>Server: an item was taken out of a carrier's hands because it stayed far from them.</summary>
         public static event Action<Carryable, ulong> ForceDropped;
@@ -40,7 +41,6 @@ namespace SpiritMovers.Interaction
         {
             m_Body = GetComponent<Rigidbody>();
             m_Carriers = new NetworkList<ulong>();
-            m_HoldWatch = new HoldErrorWatch(m_Config);
         }
 
         public override void OnNetworkSpawn()
@@ -103,6 +103,7 @@ namespace SpiritMovers.Interaction
             if (m_Carriers.Count == 0)
                 m_YawOffset.Value = Mathf.DeltaAngle(carrier.Motor.transform.eulerAngles.y, transform.eulerAngles.y);
             m_Carriers.Add(clientId);
+            m_HoldWatches[clientId] = new HoldErrorWatch(m_Config);
             UpdateOwnership();
             return true;
         }
@@ -112,7 +113,7 @@ namespace SpiritMovers.Interaction
         {
             if (!IsServer || !m_Carriers.Remove(clientId))
                 return;
-            m_HoldWatch.Reset();
+            m_HoldWatches.Remove(clientId);
             UpdateOwnership();
         }
 
@@ -131,6 +132,8 @@ namespace SpiritMovers.Interaction
             var owner = m_Carriers.Count == 1 ? m_Carriers[0] : NetworkManager.ServerClientId;
             if (OwnerClientId == owner)
                 return;
+            foreach (var watch in m_HoldWatches.Values)
+                watch.Suspend(m_Config.HandoffGraceSeconds);
             if (owner == NetworkManager.ServerClientId)
                 NetworkObject.RemoveOwnership();
             else
@@ -162,21 +165,28 @@ namespace SpiritMovers.Interaction
         }
 
         /// <summary>
-        /// Server: a single carrier's item that stays far from their hand is dropped. Both positions are
-        /// the host's (equally delayed) view, so network lag does not count as distance.
+        /// Server: a carrier whose hand stays far from the item lets go of it (stuck item, or a shared crate
+        /// whose carriers walk apart). A carrier whose player object is gone lets go at once. Both positions are
+        /// the host's (equally delayed) view; checks pause briefly after an ownership handoff.
         /// </summary>
         private void CheckHoldError()
         {
-            if (m_Carriers.Count != 1 || !PlayerCarrier.TryGet(m_Carriers[0], out var carrier))
-                return;
-            var distance = Vector3.Distance(m_Body.position, carrier.HoldPoint);
-            if (!m_HoldWatch.Update(distance, Time.fixedDeltaTime))
-                return;
+            for (var i = m_Carriers.Count - 1; i >= 0; i--)
+            {
+                var clientId = m_Carriers[i];
+                if (!PlayerCarrier.TryGet(clientId, out var carrier))
+                {
+                    ReleaseCarrier(clientId);
+                    continue;
+                }
+                var distance = Vector3.Distance(m_Body.position, carrier.HoldPoint);
+                if (!m_HoldWatches.TryGetValue(clientId, out var watch) || !watch.Update(distance, Time.fixedDeltaTime))
+                    continue;
 
-            var clientId = m_Carriers[0];
-            Debug.Log($"[Carry] force drop {name} from client {clientId} ({distance:F1} m from hand)");
-            ReleaseCarrier(clientId);
-            ForceDropped?.Invoke(this, clientId);
+                Debug.Log($"[Carry] force drop {name} from client {clientId} ({distance:F1} m from hand)");
+                ReleaseCarrier(clientId);
+                ForceDropped?.Invoke(this, clientId);
+            }
         }
 
         /// <summary>Where the item should be: the carrier's hold point, or the average of all carriers'.</summary>

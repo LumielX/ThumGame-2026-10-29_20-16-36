@@ -89,6 +89,19 @@ namespace SpiritMovers.Tests
         }
 
         [UnityTest]
+        public IEnumerator DespawnedCarrier_ReleasesItem()
+        {
+            // A carrier whose player object goes away (respawn, knocked out) must not leave the item floating.
+            Carryable box = null;
+            yield return PickUp("LightBox0", b => box = b);
+            Motor.NetworkObject.Despawn();
+            yield return new WaitForFixedUpdate();
+            yield return null;
+            Assert.AreEqual(0, box.CarrierCount);
+            Assert.IsTrue(box.GetComponent<Rigidbody>().useGravity || !box.IsOwner);
+        }
+
+        [UnityTest]
         public IEnumerator DisconnectCallback_ReleasesThatClientOnly()
         {
             Carryable box = null;

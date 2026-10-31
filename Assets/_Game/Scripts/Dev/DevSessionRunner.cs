@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading.Tasks;
 using SpiritMovers.Core;
 using SpiritMovers.Net;
+using Unity.Multiplayer.Tools.NetworkSimulator.Runtime;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
@@ -16,7 +17,7 @@ namespace SpiritMovers.Dev
     /// Relay session by code. Not part of the shipped game flow (the Lobby comes in M4).
     /// Headless automation (command line):
     ///   -dev-role host|client  -dev-profile NAME  -dev-codefile PATH  -dev-seconds S
-    ///   -dev-scenario carry|shared|disconnect (see <see cref="DevBot"/>)  -dev-screenshot PNG
+    ///   -dev-scenario NAME (see <see cref="DevBot"/>)  -dev-screenshot PNG  -dev-latency MS (simulated, each way)
     /// </summary>
     public sealed class DevSessionRunner : MonoBehaviour
     {
@@ -69,6 +70,12 @@ namespace SpiritMovers.Dev
             if (m_Role == null)
                 return;
             float.TryParse(Arg("-dev-seconds"), NumberStyles.Float, CultureInfo.InvariantCulture, out m_QuitAt);
+            if (int.TryParse(Arg("-dev-latency"), out var latency) && latency > 0)
+            {
+                FindAnyObjectByType<NetworkSimulator>().ChangeConnectionPreset(
+                    NetworkSimulatorPreset.Create($"Delay {latency} ms", packetDelayMs: latency, packetJitterMs: latency / 10));
+                Debug.Log($"[M3B] simulated latency {latency} ms");
+            }
             Run(AutomateAsync);
         }
 
@@ -134,9 +141,9 @@ namespace SpiritMovers.Dev
             var moved = Vector3.Distance(m_Bot.ItemStart, item);
             Debug.Log(string.Format(CultureInfo.InvariantCulture,
                 "[M3B] SUMMARY role={0} scenario={1} item={2} pickups={3} carrierCountMax={4} forceDrops={5} " +
-                "itemPos=({6:F3},{7:F3},{8:F3}) moved={9:F2} ok={10}",
+                "itemPos=({6:F3},{7:F3},{8:F3}) moved={9:F2} rotateSeen={10} handoffOk={11} reCarried={12} ok={13}",
                 m_Role, m_Bot.Scenario, m_Bot.Item.name, m_Bot.Pickups, m_Bot.CarrierCountMax, m_Bot.ForceDrops,
-                item.x, item.y, item.z, moved, m_Bot.Passed() ? "true" : "false"));
+                item.x, item.y, item.z, moved, m_Bot.RotateSeen, m_Bot.HandoffOk, m_Bot.ReCarried, m_Bot.Passed() ? "true" : "false"));
         }
 
         private IEnumerator LeaveAndQuit()
