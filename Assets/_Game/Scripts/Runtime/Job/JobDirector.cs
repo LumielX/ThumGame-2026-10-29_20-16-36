@@ -155,6 +155,17 @@ namespace SpiritMovers.Job
             return result.CorrectCount;
         }
 
+        /// <summary>Server: the ghost answers a bell — score the room, count the ring against its patience.</summary>
+        internal int RingBell(string roomId)
+        {
+            var count = EvaluateNow(roomId);
+            if (count < 0)
+                return count;
+            m_Anger.Apply(AngerEvent.BellRung);
+            m_AngerStage.Value = m_Anger.Stage;
+            return count;
+        }
+
         /// <summary>Test hook: raise anger (by breaking-item steps) until it reaches at least <paramref name="value"/>.</summary>
         internal void ApplyAngerForTest(float value)
         {

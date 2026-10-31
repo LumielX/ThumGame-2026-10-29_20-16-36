@@ -30,6 +30,8 @@ namespace SpiritMovers.Editor
             ("interact.pickup", "ยก", "Pick up"),
             ("interact.drop", "วาง", "Put down"),
             ("interact.throw", "โยน", "Throw"),
+            ("bell.ring", "กดกริ่งเรียกผี", "Ring for the ghost"),
+            ("bell.nod", "ผีเคาะ {0} ครั้ง", "The ghost knocked {0} times"),
         };
 
         [MenuItem("Spirit Movers/Localization/Create Settings and UI Table")]

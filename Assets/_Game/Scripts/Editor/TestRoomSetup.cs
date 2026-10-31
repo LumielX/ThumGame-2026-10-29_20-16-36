@@ -41,7 +41,7 @@ namespace SpiritMovers.Editor
 
         private struct Prefabs
         {
-            public GameObject Player, LightBox, HeavyCrate, JobDirector;
+            public GameObject Player, LightBox, HeavyCrate, JobDirector, GhostBell;
             public NetworkPrefabsList List;
         }
 
@@ -55,7 +55,8 @@ namespace SpiritMovers.Editor
                 HeavyCrate = CreateCarryablePrefab(HeavyCratePath, "HeavyCrate", new Vector3(0.8f, 0.6f, 0.6f), 25f, new Color(0.45f, 0.3f, 0.2f)),
             };
             result.JobDirector = CreateJobDirectorPrefab();
-            result.List = CreatePrefabList(result.Player, result.LightBox, result.HeavyCrate, result.JobDirector);
+            result.GhostBell = CreateBellPrefab();
+            result.List = CreatePrefabList(result.Player, result.LightBox, result.HeavyCrate, result.JobDirector, result.GhostBell);
             return result;
         }
 
@@ -160,6 +161,10 @@ namespace SpiritMovers.Editor
 
             // A prefab instance: a NetworkObject created by script in an unsaved scene gets no GlobalObjectIdHash
             // and NGO refuses to spawn it.
+            Bell(prefabs.GhostBell, "west", new Vector3(-9.75f, 1.2f, -2f));
+            Bell(prefabs.GhostBell, "east", new Vector3(9.75f, 1.2f, 4f));
+            Bell(prefabs.GhostBell, "loft", new Vector3(9.75f, 1.9f, -6f));
+
             var director = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.JobDirector);
             var so = new SerializedObject(director.GetComponent<JobDirector>());
             so.FindProperty("m_House").objectReferenceValue = house;
@@ -202,6 +207,47 @@ namespace SpiritMovers.Editor
             material.SetColor("_BaseColor", new Color(0.72f, 0.48f, 0.3f));
             AssetDatabase.CreateAsset(material, path);
             return material;
+        }
+
+        private static GameObject CreateBellPrefab()
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            go.name = "GhostBell";
+            go.transform.localScale = new Vector3(0.25f, 0.25f, 0.25f);
+            go.GetComponent<Renderer>().sharedMaterial = BellMaterial();
+            go.AddComponent<NetworkObject>();
+            var light = new GameObject("Flash").AddComponent<Light>();
+            light.transform.SetParent(go.transform, false);
+            light.type = LightType.Point;
+            light.color = new Color(1f, 0.7f, 0.28f); // memory amber #ffb347 (ART_BIBLE 3.3)
+            light.range = 6f;
+            light.intensity = 3f;
+            go.AddComponent<GhostBell>().Configure("", light);
+            var prefab = PrefabUtility.SaveAsPrefabAsset(go, PrefabDir + "/GhostBell.prefab");
+            Object.DestroyImmediate(go);
+            return prefab;
+        }
+
+        private static Material BellMaterial()
+        {
+            const string path = PrefabDir + "/GhostBell.mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material != null)
+                return material;
+            material = new Material(AssetDatabase.LoadAssetAtPath<Material>(UrpLitMaterialPath));
+            material.SetColor("_BaseColor", new Color(1f, 0.7f, 0.28f));
+            AssetDatabase.CreateAsset(material, path);
+            return material;
+        }
+
+        private static void Bell(GameObject prefab, string roomId, Vector3 position)
+        {
+            var bell = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            bell.name = $"Bell_{roomId}";
+            bell.transform.position = position;
+            var so = new SerializedObject(bell.GetComponent<GhostBell>());
+            so.FindProperty("m_RoomId").stringValue = roomId;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static GameObject CreateJobDirectorPrefab()

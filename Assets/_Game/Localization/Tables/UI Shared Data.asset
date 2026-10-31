@@ -39,6 +39,14 @@ MonoBehaviour:
     m_Key: interact.throw
     m_Metadata:
       m_Items: []
+  - m_Id: 106668600619008
+    m_Key: bell.ring
+    m_Metadata:
+      m_Items: []
+  - m_Id: 106668667727872
+    m_Key: bell.nod
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:
