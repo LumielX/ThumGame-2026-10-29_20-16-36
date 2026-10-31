@@ -37,6 +37,8 @@ namespace SpiritMovers.Player
         public CarryLoad Load { get; set; }
         public Stamina Stamina { get; } = new();
         public MoveResult LastMove { get; private set; }
+        /// <summary>The input read this frame (owner); other player components read it in LateUpdate.</summary>
+        public PlayerInputState CurrentInput { get; private set; }
         /// <summary>Eyes: the camera on the owner, the interaction ray origin everywhere.</summary>
         public Transform Head => m_Head;
         public Vector3 Feet => transform.position;
@@ -93,12 +95,24 @@ namespace SpiritMovers.Player
             m_VerticalVelocity = 0f;
         }
 
+        /// <summary>Owner only: turn the body and head toward a point (tests, bots).</summary>
+        public void LookAt(Vector3 point)
+        {
+            var toPoint = point - m_Head.position;
+            var flat = new Vector3(toPoint.x, 0f, toPoint.z);
+            if (flat.sqrMagnitude > 0.0001f)
+                transform.rotation = Quaternion.LookRotation(flat);
+            Pitch = Mathf.Clamp(Mathf.Atan2(-toPoint.y, flat.magnitude) * Mathf.Rad2Deg, -85f, 85f);
+            m_Head.localRotation = Quaternion.Euler(Pitch, 0f, 0f);
+        }
+
         private void Update()
         {
             if (!IsSpawned || !IsOwner)
                 return;
 
             var input = InputEnabled && Input != null ? Input.Read() : default;
+            CurrentInput = input;
             Look(input.Look);
             Move(input, Time.deltaTime);
         }

@@ -27,6 +27,9 @@ namespace SpiritMovers.Editor
             ("chat.hint", "กด Enter เพื่อพิมพ์แชต", "Press Enter to chat"),
             ("chat.placeholder", "พิมพ์ข้อความ…", "Type a message…"),
             ("language.switch", "F2 เปลี่ยนภาษา (ไทย/English)", "F2 change language (ไทย/English)"),
+            ("interact.pickup", "ยก", "Pick up"),
+            ("interact.drop", "วาง", "Put down"),
+            ("interact.throw", "โยน", "Throw"),
         };
 
         [MenuItem("Spirit Movers/Localization/Create Settings and UI Table")]

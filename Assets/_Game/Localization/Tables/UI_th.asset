@@ -31,6 +31,18 @@ MonoBehaviour:
       (\u0E44\u0E17\u0E22/English)"
     m_Metadata:
       m_Items: []
+  - m_Id: 23712926298112
+    m_Localized: "\u0E22\u0E01"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 23712980824064
+    m_Localized: "\u0E27\u0E32\u0E07"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 23712980824065
+    m_Localized: "\u0E42\u0E22\u0E19"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

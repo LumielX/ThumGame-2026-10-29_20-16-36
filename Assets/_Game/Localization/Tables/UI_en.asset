@@ -30,6 +30,18 @@ MonoBehaviour:
     m_Localized: "F2 change language (\u0E44\u0E17\u0E22/English)"
     m_Metadata:
       m_Items: []
+  - m_Id: 23712926298112
+    m_Localized: Pick up
+    m_Metadata:
+      m_Items: []
+  - m_Id: 23712980824064
+    m_Localized: Put down
+    m_Metadata:
+      m_Items: []
+  - m_Id: 23712980824065
+    m_Localized: Throw
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

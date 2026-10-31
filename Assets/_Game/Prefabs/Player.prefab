@@ -13,6 +13,8 @@ GameObject:
   - component: {fileID: 1380945551843599020}
   - component: {fileID: 4625015656282217441}
   - component: {fileID: 7669334603416892051}
+  - component: {fileID: 7068468092375165928}
+  - component: {fileID: 5990368921321128585}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -148,6 +150,34 @@ MonoBehaviour:
   m_EditorClassIdentifier: SpiritMovers.Runtime::SpiritMovers.Player.PlayerMotor
   ShowTopMostFoldoutHeaderGroup: 1
   m_Actions: {fileID: -944628639613478452, guid: dc85b450d2c829c4a833a4dc207f4e9d, type: 3}
+--- !u!114 &7068468092375165928
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2312789036647863127}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ee8fc6b7c4b1a649993d6bf51dea485, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpiritMovers.Runtime::SpiritMovers.Interaction.PlayerCarrier
+  ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &5990368921321128585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2312789036647863127}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb48b50565de0e847ad28418e19f0b25, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpiritMovers.Runtime::SpiritMovers.Interaction.PlayerInteractor
+  ShowTopMostFoldoutHeaderGroup: 1
+  m_PromptFont: {fileID: 11400000, guid: 65a822db624332f40a59f21d4c31acb2, type: 2}
+  m_PromptGlyphMap: {fileID: 11400000, guid: e7d66ad960549204085d8f0835160c66, type: 2}
 --- !u!1 &2741069964411467503
 GameObject:
   m_ObjectHideFlags: 0

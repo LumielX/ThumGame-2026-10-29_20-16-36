@@ -29,6 +29,7 @@ namespace SpiritMovers.Player
         public PlayerInputState Read()
         {
             var state = Next;
+            Next.Look = Vector2.zero; // a per-frame delta, not a held value
             Next.JumpPressed = false;
             Next.InteractPressed = false;
             Next.ThrowPressed = false;

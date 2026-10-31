@@ -27,6 +27,18 @@ MonoBehaviour:
     m_Key: language.switch
     m_Metadata:
       m_Items: []
+  - m_Id: 23712926298112
+    m_Key: interact.pickup
+    m_Metadata:
+      m_Items: []
+  - m_Id: 23712980824064
+    m_Key: interact.drop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 23712980824065
+    m_Key: interact.throw
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

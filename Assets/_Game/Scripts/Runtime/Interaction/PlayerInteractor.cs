@@ -1,0 +1,107 @@
+using SpiritMovers.Core.Player;
+using SpiritMovers.Player;
+using SpiritMovers.Text;
+using TMPro;
+using Unity.Netcode;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace SpiritMovers.Interaction
+{
+    /// <summary>
+    /// Owner-side aiming and use: finds what the player looks at, shows the hint, and turns
+    /// interact / throw / rotate presses into requests to the host.
+    /// </summary>
+    [RequireComponent(typeof(PlayerCarrier))]
+    public sealed class PlayerInteractor : NetworkBehaviour
+    {
+        private const float AimRadius = 0.25f;
+
+        [SerializeField] private TMP_FontAsset m_PromptFont;
+        [SerializeField] private ThaiGlyphMap m_PromptGlyphMap;
+
+        private readonly CarryConfig m_Config = CarryConfig.Default;
+        private PlayerCarrier m_Carrier;
+        private LocalizedThaiText m_Prompt;
+        private string m_PromptKey;
+
+        public IInteractable Focus { get; private set; }
+
+        private void Awake() => m_Carrier = GetComponent<PlayerCarrier>();
+
+        public override void OnNetworkSpawn()
+        {
+            if (IsOwner && !Application.isBatchMode && m_PromptFont != null)
+                m_Prompt = CreatePrompt();
+        }
+
+        private void LateUpdate()
+        {
+            if (!IsSpawned || !IsOwner)
+                return;
+
+            var motor = m_Carrier.Motor;
+            var held = m_Carrier.Held;
+            Focus = held == null ? FindFocus(motor.Head) : null;
+
+            var input = motor.CurrentInput;
+            if (input.InteractPressed)
+            {
+                if (held != null)
+                    held.RequestDropRpc();
+                else
+                    Focus?.Interact(m_Carrier);
+            }
+            if (held != null && input.ThrowPressed && CarryRules.CanThrow(held.Mass, held.CarrierCount, m_Config))
+                held.RequestThrowRpc(motor.Head.forward);
+            if (held != null && input.RotateSteps != 0f)
+                held.RequestRotateRpc(input.RotateSteps);
+
+            ShowPrompt(held != null ? "interact.drop" : Focus?.PromptKey);
+        }
+
+        private IInteractable FindFocus(Transform head)
+        {
+            // Rays starting inside the player's own capsule ignore it, so no layer mask is needed yet.
+            if (!Physics.SphereCast(head.position, AimRadius, head.forward, out var hit, m_Config.ReachMeters,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+                return null;
+            var interactable = hit.collider.GetComponentInParent<IInteractable>();
+            return interactable != null && interactable.CanInteract(m_Carrier) ? interactable : null;
+        }
+
+        private void ShowPrompt(string key)
+        {
+            if (m_Prompt == null || key == m_PromptKey)
+                return;
+            m_PromptKey = key;
+            m_Prompt.gameObject.SetActive(key != null);
+            if (key != null)
+                m_Prompt.Bind("UI", key);
+        }
+
+        private LocalizedThaiText CreatePrompt()
+        {
+            ThaiFontSupport.Register(m_PromptFont, m_PromptGlyphMap);
+            var canvas = new GameObject("InteractionPrompt", typeof(Canvas), typeof(CanvasScaler));
+            canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+            var scaler = canvas.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+
+            var label = new GameObject("Prompt", typeof(RectTransform));
+            label.transform.SetParent(canvas.transform, false);
+            var text = label.AddComponent<TextMeshProUGUI>();
+            text.font = m_PromptFont;
+            text.fontSize = 32;
+            text.alignment = TextAlignmentOptions.Center;
+            text.outlineWidth = 0.25f;
+            text.outlineColor = Color.black;
+            var rect = label.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.42f);
+            rect.sizeDelta = new Vector2(600, 60);
+            label.SetActive(false);
+            return label.AddComponent<LocalizedThaiText>();
+        }
+    }
+}

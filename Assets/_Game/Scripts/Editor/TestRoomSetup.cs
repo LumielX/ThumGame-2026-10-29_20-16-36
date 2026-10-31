@@ -1,6 +1,9 @@
 using System.IO;
 using SpiritMovers.Dev;
+using SpiritMovers.Interaction;
 using SpiritMovers.Player;
+using SpiritMovers.Text;
+using TMPro;
 using Unity.Netcode;
 using Unity.Netcode.Components;
 using Unity.Netcode.Transports.UTP;
@@ -13,7 +16,7 @@ namespace SpiritMovers.Editor
 {
     /// <summary>
     /// Builds the M3 greybox test room: two rooms joined by a doorway, stairs up to a mezzanine,
-    /// player spawns, the networked Player prefab and the scene's NetworkManager.
+    /// player spawns, carryable boxes and crates, the networked prefabs and the scene's NetworkManager.
     /// Batch mode: -executeMethod SpiritMovers.Editor.TestRoomSetup.CreateScene
     /// </summary>
     public static class TestRoomSetup
@@ -23,6 +26,10 @@ namespace SpiritMovers.Editor
         private const string PlayerPath = PrefabDir + "/Player.prefab";
         private const string PrefabListPath = PrefabDir + "/NetworkPrefabs.asset";
         private const string ActionsPath = "Assets/_Game/Settings/Input/SpiritMovers.inputactions";
+        private const string LightBoxPath = PrefabDir + "/LightBox.prefab";
+        private const string HeavyCratePath = PrefabDir + "/HeavyCrate.prefab";
+        private const string FontPath = "Assets/_Game/Fonts/Mali/Mali-Regular SDF.asset";
+        private const string GlyphMapPath = "Assets/_Game/Fonts/Mali/Mali-Regular ThaiGlyphMap.asset";
         private const float WallHeight = 3f;
 
         [MenuItem("Spirit Movers/Test Room/Create Scene")]
@@ -30,7 +37,9 @@ namespace SpiritMovers.Editor
         {
             Directory.CreateDirectory(PrefabDir);
             var player = CreatePlayerPrefab();
-            var prefabs = CreatePrefabList(player);
+            var lightBox = CreateCarryablePrefab(LightBoxPath, "LightBox", new Vector3(0.4f, 0.4f, 0.4f), 2f, new Color(0.85f, 0.7f, 0.45f));
+            var heavyCrate = CreateCarryablePrefab(HeavyCratePath, "HeavyCrate", new Vector3(0.8f, 0.6f, 0.6f), 25f, new Color(0.45f, 0.3f, 0.2f));
+            var prefabs = CreatePrefabList(player, lightBox, heavyCrate);
 
             var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
             var overview = Camera.main;
@@ -41,6 +50,12 @@ namespace SpiritMovers.Editor
             for (var i = 0; i < 4; i++)
                 Marker($"PlayerSpawn{i}", new Vector3(-7.5f + i * 1.5f, 0f, -8f), 0f);
             Marker("StairsBottom", new Vector3(3f, 0f, -6f), 90f);
+
+            // In-scene items, north of the spawns so the movement tests have a clear run.
+            for (var i = 0; i < 8; i++)
+                Place(lightBox, $"LightBox{i}", new Vector3(-8f + (i % 4) * 1.5f, 0.2f, i < 4 ? 3f : 6f));
+            Place(heavyCrate, "HeavyCrate0", new Vector3(-5f, 0.3f, 0.5f));
+            Place(heavyCrate, "HeavyCrate1", new Vector3(-2.5f, 0.3f, 0.5f));
 
             var networkObject = new GameObject("NetworkManager");
             var transport = networkObject.AddComponent<UnityTransport>();
@@ -85,6 +100,35 @@ namespace SpiritMovers.Editor
             block.isStatic = true;
         }
 
+        private static void Place(GameObject prefab, string name, Vector3 position)
+        {
+            var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            instance.name = name;
+            instance.transform.position = position;
+        }
+
+        private static GameObject CreateCarryablePrefab(string path, string name, Vector3 size, float mass, Color color)
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            go.name = name;
+            go.transform.localScale = size;
+            var material = new Material(go.GetComponent<Renderer>().sharedMaterial) { color = color };
+            AssetDatabase.CreateAsset(material, path.Replace(".prefab", ".mat"));
+            go.GetComponent<Renderer>().sharedMaterial = material;
+            var body = go.AddComponent<Rigidbody>();
+            body.mass = mass;
+            body.interpolation = RigidbodyInterpolation.Interpolate;
+            body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+            // Items must survive their carrier disconnecting (M2 finding, D-034).
+            go.AddComponent<NetworkObject>().DontDestroyWithOwner = true;
+            go.AddComponent<NetworkTransform>().AuthorityMode = NetworkTransform.AuthorityModes.Owner;
+            go.AddComponent<NetworkRigidbody>();
+            go.AddComponent<Carryable>();
+            var prefab = PrefabUtility.SaveAsPrefabAsset(go, path);
+            Object.DestroyImmediate(go);
+            return prefab;
+        }
+
         private static void Marker(string name, Vector3 position, float yaw) =>
             new GameObject(name).transform.SetPositionAndRotation(position, Quaternion.Euler(0f, yaw, 0f));
 
@@ -105,6 +149,11 @@ namespace SpiritMovers.Editor
             var serialized = new SerializedObject(motor);
             serialized.FindProperty("m_Actions").objectReferenceValue = AssetDatabase.LoadAssetAtPath<InputActionAsset>(ActionsPath);
             serialized.ApplyModifiedPropertiesWithoutUndo();
+            root.AddComponent<PlayerCarrier>();
+            var interactor = new SerializedObject(root.AddComponent<PlayerInteractor>());
+            interactor.FindProperty("m_PromptFont").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontPath);
+            interactor.FindProperty("m_PromptGlyphMap").objectReferenceValue = AssetDatabase.LoadAssetAtPath<ThaiGlyphMap>(GlyphMapPath);
+            interactor.ApplyModifiedPropertiesWithoutUndo();
 
             var body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             body.name = "Body";

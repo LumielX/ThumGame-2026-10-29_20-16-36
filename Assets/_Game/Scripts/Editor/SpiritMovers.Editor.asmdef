@@ -9,7 +9,8 @@
         "Unity.Addressables.Editor",
         "SpiritMovers.Dev",
         "Unity.Netcode.Runtime",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [
         "Editor"
