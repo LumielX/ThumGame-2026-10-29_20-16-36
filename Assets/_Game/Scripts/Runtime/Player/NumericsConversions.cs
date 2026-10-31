@@ -6,5 +6,9 @@ namespace SpiritMovers.Player
         public static System.Numerics.Vector3 ToNumerics(this UnityEngine.Vector3 v) => new(v.x, v.y, v.z);
 
         public static UnityEngine.Vector3 ToUnity(this System.Numerics.Vector3 v) => new(v.X, v.Y, v.Z);
+
+        public static System.Numerics.Quaternion ToNumerics(this UnityEngine.Quaternion q) => new(q.x, q.y, q.z, q.w);
+
+        public static UnityEngine.Quaternion ToUnity(this System.Numerics.Quaternion q) => new(q.X, q.Y, q.Z, q.W);
     }
 }

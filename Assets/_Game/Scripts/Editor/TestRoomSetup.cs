@@ -2,6 +2,7 @@ using System.IO;
 using SpiritMovers.Core;
 using SpiritMovers.Dev;
 using SpiritMovers.Interaction;
+using SpiritMovers.Job;
 using SpiritMovers.Player;
 using SpiritMovers.Text;
 using TMPro;
@@ -36,15 +37,31 @@ namespace SpiritMovers.Editor
         private const float WallHeight = 3f;
         private const string UrpLitMaterialPath = "Packages/com.unity.render-pipelines.universal/Runtime/Materials/Lit.mat";
 
-        [MenuItem("Spirit Movers/Test Room/Create Scene")]
-        public static void CreateScene()
+        public const string HouseScenePath = "Assets/_Game/Scenes/M3_TestHouse.unity";
+
+        private struct Prefabs
+        {
+            public GameObject Player, LightBox, HeavyCrate, JobDirector;
+            public NetworkPrefabsList List;
+        }
+
+        private static Prefabs CreatePrefabs()
         {
             Directory.CreateDirectory(PrefabDir);
-            var player = CreatePlayerPrefab();
-            var lightBox = CreateCarryablePrefab(LightBoxPath, "LightBox", new Vector3(0.4f, 0.4f, 0.4f), 2f, new Color(0.85f, 0.7f, 0.45f));
-            var heavyCrate = CreateCarryablePrefab(HeavyCratePath, "HeavyCrate", new Vector3(0.8f, 0.6f, 0.6f), 25f, new Color(0.45f, 0.3f, 0.2f));
-            var prefabs = CreatePrefabList(player, lightBox, heavyCrate);
+            var result = new Prefabs
+            {
+                Player = CreatePlayerPrefab(),
+                LightBox = CreateCarryablePrefab(LightBoxPath, "LightBox", new Vector3(0.4f, 0.4f, 0.4f), 2f, new Color(0.85f, 0.7f, 0.45f)),
+                HeavyCrate = CreateCarryablePrefab(HeavyCratePath, "HeavyCrate", new Vector3(0.8f, 0.6f, 0.6f), 25f, new Color(0.45f, 0.3f, 0.2f)),
+            };
+            result.JobDirector = CreateJobDirectorPrefab();
+            result.List = CreatePrefabList(result.Player, result.LightBox, result.HeavyCrate, result.JobDirector);
+            return result;
+        }
 
+        /// <summary>New scene with the greybox shell, spawns, NetworkManager and dev runner.</summary>
+        private static UnityEngine.SceneManagement.Scene NewGreyboxScene(Prefabs prefabs)
+        {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
             var overview = Camera.main;
             if (overview != null)
@@ -55,20 +72,30 @@ namespace SpiritMovers.Editor
                 Marker($"PlayerSpawn{i}", new Vector3(-7.5f + i * 1.5f, 0f, -8f), 0f);
             Marker("StairsBottom", new Vector3(3f, 0f, -6f), 90f);
 
+            var networkObject = new GameObject("NetworkManager");
+            var transport = networkObject.AddComponent<UnityTransport>();
+            var manager = networkObject.AddComponent<NetworkManager>();
+            manager.NetworkConfig = new NetworkConfig { NetworkTransport = transport, PlayerPrefab = prefabs.Player };
+            manager.NetworkConfig.Prefabs.NetworkPrefabsLists.Add(prefabs.List);
+            networkObject.AddComponent<NetworkSimulator>(); // -dev-latency in test runs; no effect otherwise
+
+            new GameObject("DevSessionRunner").AddComponent<DevSessionRunner>();
+            return scene;
+        }
+
+        [MenuItem("Spirit Movers/Test Room/Create Scene")]
+        public static void CreateScene()
+        {
+            var prefabs = CreatePrefabs();
+            var lightBox = prefabs.LightBox;
+            var heavyCrate = prefabs.HeavyCrate;
+            var scene = NewGreyboxScene(prefabs);
+
             // In-scene items, north of the spawns so the movement tests have a clear run.
             for (var i = 0; i < 8; i++)
                 Place(lightBox, $"LightBox{i}", new Vector3(-8f + (i % 4) * 1.5f, 0.2f, i < 4 ? 3f : 6f));
             Place(heavyCrate, "HeavyCrate0", new Vector3(-5f, 0.3f, 0.5f));
             Place(heavyCrate, "HeavyCrate1", new Vector3(-2.5f, 0.3f, 0.5f));
-
-            var networkObject = new GameObject("NetworkManager");
-            var transport = networkObject.AddComponent<UnityTransport>();
-            var manager = networkObject.AddComponent<NetworkManager>();
-            manager.NetworkConfig = new NetworkConfig { NetworkTransport = transport, PlayerPrefab = player };
-            manager.NetworkConfig.Prefabs.NetworkPrefabsLists.Add(prefabs);
-            networkObject.AddComponent<NetworkSimulator>(); // -dev-latency in test runs; no effect otherwise
-
-            new GameObject("DevSessionRunner").AddComponent<DevSessionRunner>();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             Debug.Log($"[TestRoom] Created {ScenePath}");
@@ -79,17 +106,131 @@ namespace SpiritMovers.Editor
         public static void BuildTestRoom()
         {
             CreateScene();
+            BuildScene(ScenePath, "M3-TestRoom");
+        }
+
+        /// <summary>
+        /// M3C greybox house: the test room shell as three rooms (west living room, east kitchen, loft bedroom),
+        /// 12 memory slots with their items at home, scatter and hiding spots, and the job director.
+        /// Batch mode (no -nographics): -executeMethod SpiritMovers.Editor.TestRoomSetup.CreateHouseScene
+        /// </summary>
+        [MenuItem("Spirit Movers/Test Room/Create House Scene")]
+        public static void CreateHouseScene()
+        {
+            var prefabs = CreatePrefabs();
+            var scene = NewGreyboxScene(prefabs);
+
+            var house = new GameObject("House").AddComponent<HouseAuthoring>();
+            var houseSo = new SerializedObject(house);
+            houseSo.FindProperty("m_HouseId").stringValue = "greybox";
+            houseSo.ApplyModifiedPropertiesWithoutUndo();
+
+            var west = Room(house.transform, "west", new Vector3(-5f, 1.5f, 0f), new Vector3(9.8f, 3f, 19.8f));
+            var east = Room(house.transform, "east", new Vector3(5f, 0.575f, 0f), new Vector3(9.8f, 1.15f, 19.8f));
+            var loft = Room(house.transform, "loft", new Vector3(8f, 2.1f, -6f), new Vector3(3.8f, 1.8f, 3f));
+
+            Slot(west, "w0", prefabs.LightBox, new Vector3(-8f, 0.2f, 3f));
+            Slot(west, "w1", prefabs.LightBox, new Vector3(-6.5f, 0.2f, 3f));
+            Slot(west, "w2", prefabs.LightBox, new Vector3(-5f, 0.2f, 3f));
+            Slot(west, "w3", prefabs.LightBox, new Vector3(-3.5f, 0.2f, 3f));
+            Slot(west, "w4", prefabs.HeavyCrate, new Vector3(-5f, 0.3f, 6.5f));
+            Slot(east, "e0", prefabs.LightBox, new Vector3(3f, 0.2f, 3f));
+            Slot(east, "e1", prefabs.LightBox, new Vector3(5f, 0.2f, 3f));
+            Slot(east, "e2", prefabs.LightBox, new Vector3(7f, 0.2f, 3f));
+            Slot(east, "e3", prefabs.HeavyCrate, new Vector3(5f, 0.3f, 7f));
+            Slot(loft, "l0", prefabs.LightBox, new Vector3(7f, 1.4f, -6f));
+            Slot(loft, "l1", prefabs.LightBox, new Vector3(8f, 1.4f, -5.2f));
+            Slot(loft, "l2", prefabs.LightBox, new Vector3(9f, 1.4f, -6.8f));
+
+            // Moved items land on these (turned 35 degrees so they also need straightening).
+            Spot(west, "Scatter", new Vector3(-8f, 0.25f, -3f));
+            Spot(west, "Scatter", new Vector3(-3f, 0.25f, -3f));
+            Spot(west, "Scatter", new Vector3(-8.5f, 0.25f, 8.5f));
+            Spot(west, "Scatter", new Vector3(-2f, 0.25f, 8.5f));
+            Spot(east, "Scatter", new Vector3(2f, 0.25f, -2f));
+            Spot(east, "Scatter", new Vector3(8f, 0.25f, 1f));
+            Spot(east, "Scatter", new Vector3(2f, 0.25f, 8.5f));
+            Spot(east, "Scatter", new Vector3(8.5f, 0.25f, 8.5f));
+            Spot(loft, "Scatter", new Vector3(6.6f, 1.45f, -4.9f));
+            Spot(loft, "Scatter", new Vector3(9.4f, 1.45f, -4.9f));
+            Spot(west, "Hide", new Vector3(-9.3f, 0.25f, -9.3f));
+            Spot(east, "Hide", new Vector3(9.3f, 0.25f, 9.3f));
+            Spot(east, "Hide", new Vector3(9.3f, 0.25f, -0.5f));
+            Spot(loft, "Hide", new Vector3(6.5f, 1.45f, -7.2f));
+
+            // A prefab instance: a NetworkObject created by script in an unsaved scene gets no GlobalObjectIdHash
+            // and NGO refuses to spawn it.
+            var director = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.JobDirector);
+            var so = new SerializedObject(director.GetComponent<JobDirector>());
+            so.FindProperty("m_House").objectReferenceValue = house;
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            EditorSceneManager.SaveScene(scene, HouseScenePath);
+            Debug.Log($"[TestRoom] Created {HouseScenePath}");
+        }
+
+        /// <summary>Development player of the house for the job tests (Tools/m3c-job-test.ps1).</summary>
+        [MenuItem("Spirit Movers/Test Room/Create House Scene and Build")]
+        public static void BuildTestHouse()
+        {
+            CreateHouseScene();
+            BuildScene(HouseScenePath, "M3-TestHouse");
+        }
+
+        private static void BuildScene(string scenePath, string folder)
+        {
             var version = GameVersion.Parse(PlayerSettings.bundleVersion);
             var summary = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
-                scenes = new[] { ScenePath },
-                locationPathName = Path.Combine("Builds", $"M3-TestRoom-v{version}", "SpiritMovers.exe"),
+                scenes = new[] { scenePath },
+                locationPathName = Path.Combine("Builds", $"{folder}-v{version}", "SpiritMovers.exe"),
                 target = BuildTarget.StandaloneWindows64,
                 options = BuildOptions.Development,
             }).summary;
             Debug.Log($"[TestRoom] build result={summary.result} output={summary.outputPath} errors={summary.totalErrors}");
             if (summary.result != BuildResult.Succeeded && Application.isBatchMode)
                 EditorApplication.Exit(1);
+        }
+
+        private static GameObject CreateJobDirectorPrefab()
+        {
+            var go = new GameObject("JobDirector");
+            go.AddComponent<NetworkObject>();
+            go.AddComponent<JobDirector>();
+            var prefab = PrefabUtility.SaveAsPrefabAsset(go, PrefabDir + "/JobDirector.prefab");
+            Object.DestroyImmediate(go);
+            return prefab;
+        }
+
+        private static Transform Room(Transform house, string id, Vector3 center, Vector3 size)
+        {
+            var room = new GameObject($"Room_{id}");
+            room.transform.SetParent(house, false);
+            room.transform.position = center;
+            room.AddComponent<BoxCollider>().size = size;
+            var so = new SerializedObject(room.AddComponent<RoomVolume>());
+            so.FindProperty("m_RoomId").stringValue = id;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return room.transform;
+        }
+
+        private static void Slot(Transform room, string slotId, GameObject prefab, Vector3 home)
+        {
+            var item = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            item.name = $"Item_{slotId}";
+            item.transform.position = home;
+            var marker = new GameObject($"Slot_{slotId}");
+            marker.transform.SetParent(room, false);
+            marker.transform.SetPositionAndRotation(home, Quaternion.identity);
+            marker.AddComponent<MemorySlotMarker>().Configure(slotId, item.GetComponent<Carryable>());
+            EditorUtility.SetDirty(marker);
+        }
+
+        private static void Spot(Transform room, string kind, Vector3 position)
+        {
+            var spot = new GameObject($"{kind}{room.childCount}");
+            spot.transform.SetParent(room, false);
+            spot.transform.SetPositionAndRotation(position, Quaternion.Euler(0f, 35f, 0f));
         }
 
         private static void BuildRoom()

@@ -6,7 +6,8 @@
         "Unity.TextMeshPro",
         "Unity.Localization",
         "Unity.Netcode.Runtime",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Unity.Collections"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

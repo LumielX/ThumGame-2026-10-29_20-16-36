@@ -18,7 +18,7 @@ namespace SpiritMovers.Tests
     /// </summary>
     public abstract class TestRoomFixture
     {
-        public const string ScenePath = "Assets/_Game/Scenes/M3_TestRoom.unity";
+        protected virtual string ScenePath => "Assets/_Game/Scenes/M3_TestRoom.unity";
 
         protected PlayerMotor Motor { get; private set; }
         protected ScriptedInput Input { get; private set; }
@@ -29,6 +29,7 @@ namespace SpiritMovers.Tests
 #if UNITY_EDITOR
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode(ScenePath, new LoadSceneParameters(LoadSceneMode.Single));
 #endif
+            yield return BeforeHost();
             Object.FindAnyObjectByType<DevSessionRunner>().StartLocalHost();
 
             var deadline = Time.realtimeSinceStartup + 10f;
@@ -55,6 +56,12 @@ namespace SpiritMovers.Tests
             }
             yield return null;
             yield return null;
+        }
+
+        /// <summary>Runs after the scene loads and before the host starts.</summary>
+        protected virtual IEnumerator BeforeHost()
+        {
+            yield break;
         }
 
         protected IEnumerator WaitForGrounded(float timeout = 3f)
