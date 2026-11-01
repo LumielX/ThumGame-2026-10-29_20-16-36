@@ -17,6 +17,8 @@ GameObject:
   - component: {fileID: 3268664487403729849}
   - component: {fileID: 551327287029354997}
   - component: {fileID: 7543739840876307046}
+  - component: {fileID: 524489487802701860}
+  - component: {fileID: 6163740587142692809}
   - component: {fileID: 3071514040948534894}
   m_Layer: 0
   m_Name: GameNetwork
@@ -128,7 +130,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Multiplayer.Tools.NetworkSimulator.Runtime::Unity.Multiplayer.Tools.NetworkSimulator.Runtime.NetworkSimulator
   m_PresetAsset: {fileID: 0}
   m_PresetReference:
-    rid: 5115185404940648448
+    rid: 5115185407260098560
   m_Scenario:
     rid: -2
   m_IsScenarioSettingsFolded: 0
@@ -138,7 +140,7 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 5115185404940648448
+    - rid: 5115185407260098560
       type: {class: NetworkSimulatorPreset, ns: Unity.Multiplayer.Tools.NetworkSimulator.Runtime, asm: Unity.Multiplayer.Tools.NetworkSimulator.Runtime}
       data:
         <Name>k__BackingField: 
@@ -211,6 +213,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5935af49835e99648a61ab548fe00527, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SpiritMovers.Runtime::SpiritMovers.Settings.SettingsPanel
+  m_Font: {fileID: 11400000, guid: 65a822db624332f40a59f21d4c31acb2, type: 2}
+  m_GlyphMap: {fileID: 11400000, guid: e7d66ad960549204085d8f0835160c66, type: 2}
+--- !u!114 &524489487802701860
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 612032786755669571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8be8e8927c3648d49ad8d7b57359b72d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpiritMovers.Runtime::SpiritMovers.Voice.VoiceDirector
+--- !u!114 &6163740587142692809
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 612032786755669571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eaeee955a28ea7242817fc464774ca0c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpiritMovers.Runtime::SpiritMovers.Voice.VoiceStatus
   m_Font: {fileID: 11400000, guid: 65a822db624332f40a59f21d4c31acb2, type: 2}
   m_GlyphMap: {fileID: 11400000, guid: e7d66ad960549204085d8f0835160c66, type: 2}
 --- !u!114 &3071514040948534894

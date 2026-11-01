@@ -32,6 +32,9 @@ namespace SpiritMovers.Core.Save
         public bool pushToTalk;
         public bool ghostHearsMic = true;
         public string bindingOverrides = "";
+        /// <summary>Microphone and speaker by device name; "" = the Windows default (M4C).</summary>
+        public string micDevice = "";
+        public string speakerDevice = "";
 
         public float Volume(AudioGroup group) => group switch
         {
@@ -77,6 +80,8 @@ namespace SpiritMovers.Core.Save
                 pushToTalk = pushToTalk,
                 ghostHearsMic = ghostHearsMic,
                 bindingOverrides = bindingOverrides ?? "",
+                micDevice = micDevice ?? "",
+                speakerDevice = speakerDevice ?? "",
             };
         }
 

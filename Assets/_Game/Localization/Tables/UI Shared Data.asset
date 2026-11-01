@@ -471,6 +471,34 @@ MonoBehaviour:
     m_Key: action.pause
     m_Metadata:
       m_Items: []
+  - m_Id: 442773556457472
+    m_Key: settings.mic
+    m_Metadata:
+      m_Items: []
+  - m_Id: 442773602594816
+    m_Key: settings.speaker
+    m_Metadata:
+      m_Items: []
+  - m_Id: 442773602594817
+    m_Key: settings.device_default
+    m_Metadata:
+      m_Items: []
+  - m_Id: 442773602594818
+    m_Key: settings.mic_help
+    m_Metadata:
+      m_Items: []
+  - m_Id: 442773602594819
+    m_Key: voice.connecting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 442773602594820
+    m_Key: voice.lost
+    m_Metadata:
+      m_Items: []
+  - m_Id: 442773602594821
+    m_Key: voice.unavailable
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

@@ -97,6 +97,33 @@ namespace SpiritMovers.Tests
         protected IEnumerator SoloIntoJob()
         {
             yield return SoloIntoLobby();
+            yield return SetOffFromVan();
+        }
+
+        /// <summary>
+        /// Host an online room without the internet (fake session service on this machine, room code "FAKE01") with
+        /// this voice service, into the van.
+        /// </summary>
+        protected IEnumerator OnlineIntoLobby(SpiritMovers.Net.IVoiceService voice)
+        {
+            Session.ServiceOverride = new FakeSessionService();
+            SpiritMovers.Voice.VoiceDirector.Instance.ServiceOverride = voice;
+            UnityEngine.Object.FindAnyObjectByType<MainMenuPanel>().ClickHost();
+            yield return WaitFor(() => ActiveScene == GameSession.LobbyScene && PlayerMotor.Local != null, 10f, "online van");
+            yield return null;
+            yield return new WaitForFixedUpdate();
+        }
+
+        protected IEnumerator OnlineIntoJob(SpiritMovers.Net.IVoiceService voice)
+        {
+            yield return OnlineIntoLobby(voice);
+            yield return SetOffFromVan();
+        }
+
+        /// <summary>Ready, set off, and wait until the job is running.</summary>
+        protected IEnumerator SetOffFromVan()
+        {
+            yield return WaitFor(() => UnityEngine.Object.FindAnyObjectByType<LobbyState>()?.Members.Count == 1, 3f, "lobby members");
             yield return Press(i => i.Next.ReadyPressed = true);
             yield return Press(i => i.Next.ConfirmPressed = true);
             yield return WaitFor(() => ActiveScene == GameSession.JobScene, 8f, "job scene");

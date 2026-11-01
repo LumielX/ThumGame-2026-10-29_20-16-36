@@ -195,6 +195,12 @@ namespace SpiritMovers.Settings
                     v => SetVolume(group, v), v => Mathf.RoundToInt(v * 100f).ToString());
             Toggle(audio, "settings.push_to_talk", settings.pushToTalk, SetPushToTalk);
             Toggle(audio, "settings.ghost_hears_mic", settings.ghostHearsMic, SetGhostHearsMic);
+            Device(audio, "settings.mic", () => VoiceDevices(input: true), () => GameData.Settings.micDevice,
+                name => GameData.Settings.micDevice = name);
+            Device(audio, "settings.speaker", () => VoiceDevices(input: false), () => GameData.Settings.speakerDevice,
+                name => GameData.Settings.speakerDevice = name);
+            var help = SessionUi.CreateLabel(audio, m_Font, 60, 20);
+            help.text = SessionUi.Text("settings.mic_help");
 
             var keysTab = Tab(column, 2);
             keysTab.GetComponent<VerticalLayoutGroup>().spacing = 4;
@@ -238,6 +244,34 @@ namespace SpiritMovers.Settings
                 set(v);
                 label.text = SessionUi.Text(key, show(v));
             });
+        }
+
+        /// <summary>A device line: its name (or "Windows default") and a button that steps to the next one.</summary>
+        private void Device(Transform parent, string key, Func<IReadOnlyList<string>> devices, Func<string> get, Action<string> set)
+        {
+            var row = SessionUi.CreateRow(parent, 48);
+            var label = SessionUi.CreateLabel(row, m_Font, 48, 24);
+            label.GetComponent<LayoutElement>().preferredWidth = 620;
+            void Show() => label.text = SessionUi.Text(key, string.IsNullOrEmpty(get()) ? JobUi.Text("settings.device_default") : get());
+            Show();
+            SessionUi.CreateButton(row, m_Font, "settings.change_key", () =>
+            {
+                // "" (the Windows default) first, then every device voice reports, round and round.
+                var choices = new List<string> { "" };
+                choices.AddRange(devices());
+                set(choices[(choices.IndexOf(get()) + 1) % choices.Count]);
+                Show();
+                Voice.VoiceDirector.Instance?.ApplyDevices();
+            });
+        }
+
+        /// <summary>The devices voice knows about (none until voice has connected once).</summary>
+        private static IReadOnlyList<string> VoiceDevices(bool input)
+        {
+            var voice = Voice.VoiceDirector.Instance;
+            if (voice == null || voice.State != Voice.VoiceState.On)
+                return Array.Empty<string>();
+            return input ? voice.Service.InputDevices : voice.Service.OutputDevices;
         }
 
         private void Toggle(Transform parent, string key, bool value, Action<bool> set)

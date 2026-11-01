@@ -479,6 +479,35 @@ MonoBehaviour:
     m_Localized: Open the menu
     m_Metadata:
       m_Items: []
+  - m_Id: 442773556457472
+    m_Localized: 'Microphone: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 442773602594816
+    m_Localized: 'Speaker: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 442773602594817
+    m_Localized: Windows default
+    m_Metadata:
+      m_Items: []
+  - m_Id: 442773602594818
+    m_Localized: Friends can't hear you? Windows > Settings > Privacy & security
+      > Microphone > let apps use it
+    m_Metadata:
+      m_Items: []
+  - m_Id: 442773602594819
+    m_Localized: "Connecting voice\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 442773602594820
+    m_Localized: "Voice dropped \u2014 reconnecting\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 442773602594821
+    m_Localized: "Voice is unavailable \u2014 play on with pings and chat"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []
