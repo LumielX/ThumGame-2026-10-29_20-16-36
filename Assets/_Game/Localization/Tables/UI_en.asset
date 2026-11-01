@@ -318,6 +318,158 @@ MonoBehaviour:
     m_Localized: Middle click
     m_Metadata:
       m_Items: []
+  - m_Id: 405659888414720
+    m_Localized: Settings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134976
+    m_Localized: General
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134977
+    m_Localized: Audio
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134978
+    m_Localized: Keys
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134979
+    m_Localized: Language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134980
+    m_Localized: "\u0E44\u0E17\u0E22"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134981
+    m_Localized: English
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134982
+    m_Localized: Mouse sensitivity {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134983
+    m_Localized: Invert mouse up/down
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134984
+    m_Localized: Field of view {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134985
+    m_Localized: Master {0}%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134986
+    m_Localized: Music {0}%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134987
+    m_Localized: Effects {0}%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134988
+    m_Localized: Ambience {0}%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134989
+    m_Localized: Voice chat {0}%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134990
+    m_Localized: Menus {0}%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134991
+    m_Localized: Push to talk (off = open mic)
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134992
+    m_Localized: Let the ghost hear my mic
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134993
+    m_Localized: Reset keys
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134994
+    m_Localized: Change
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134995
+    m_Localized: "Press a key\u2026 (Esc cancels)"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134996
+    m_Localized: Same as {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134997
+    m_Localized: Save and close
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134998
+    m_Localized: Forward
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134999
+    m_Localized: Back
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135000
+    m_Localized: Left
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135001
+    m_Localized: Right
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135002
+    m_Localized: Sprint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135003
+    m_Localized: Crouch
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135004
+    m_Localized: Jump
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135005
+    m_Localized: Pick up / use
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135006
+    m_Localized: Throw
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135007
+    m_Localized: Work order
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135008
+    m_Localized: Wai
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135009
+    m_Localized: Use held item
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135010
+    m_Localized: Ready (van)
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135011
+    m_Localized: Confirm / set off
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135012
+    m_Localized: Push to talk
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

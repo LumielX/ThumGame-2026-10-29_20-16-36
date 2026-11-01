@@ -15,6 +15,7 @@ namespace SpiritMovers.Session
         private static readonly Color s_Paper = new(0.12f, 0.09f, 0.07f, 0.9f);
         private static readonly Color s_Button = new(0.32f, 0.22f, 0.12f, 1f);
         private static readonly Color s_Ink = new(1f, 0.95f, 0.85f);
+        private static readonly Color s_Amber = new(0.95f, 0.65f, 0.2f);
 
         /// <summary>Localized, Thai-shaped text of a key (table "UI").</summary>
         public static string Text(string key, params object[] args) =>
@@ -64,6 +65,77 @@ namespace SpiritMovers.Session
             var button = go.GetComponent<Button>();
             button.onClick.AddListener(onClick);
             return button;
+        }
+
+        /// <summary>A row that lays its children out left to right.</summary>
+        public static Transform CreateRow(Transform parent, float height)
+        {
+            var go = new GameObject("Row", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(LayoutElement));
+            go.transform.SetParent(parent, false);
+            go.GetComponent<LayoutElement>().preferredHeight = height;
+            var layout = go.GetComponent<HorizontalLayoutGroup>();
+            layout.spacing = 12;
+            layout.childForceExpandWidth = false;
+            layout.childControlWidth = true;
+            return go.transform;
+        }
+
+        /// <summary>A horizontal slider (track, amber fill, handle).</summary>
+        public static Slider CreateSlider(Transform parent, float min, float max, float value, UnityAction<float> onChange)
+        {
+            var go = new GameObject("Slider", typeof(RectTransform), typeof(LayoutElement));
+            go.transform.SetParent(parent, false);
+            var element = go.GetComponent<LayoutElement>();
+            element.preferredWidth = 360;
+            element.preferredHeight = 28;
+            var track = new GameObject("Background", typeof(RectTransform), typeof(Image));
+            track.transform.SetParent(go.transform, false);
+            track.GetComponent<Image>().color = s_Button;
+            Stretch(track.GetComponent<RectTransform>());
+            var fillArea = new GameObject("Fill Area", typeof(RectTransform));
+            fillArea.transform.SetParent(go.transform, false);
+            Stretch(fillArea.GetComponent<RectTransform>());
+            var fill = new GameObject("Fill", typeof(RectTransform), typeof(Image));
+            fill.transform.SetParent(fillArea.transform, false);
+            fill.GetComponent<Image>().color = s_Amber;
+            fill.GetComponent<RectTransform>().sizeDelta = Vector2.zero;
+            var handleArea = new GameObject("Handle Slide Area", typeof(RectTransform));
+            handleArea.transform.SetParent(go.transform, false);
+            Stretch(handleArea.GetComponent<RectTransform>(), 12);
+            var handle = new GameObject("Handle", typeof(RectTransform), typeof(Image));
+            handle.transform.SetParent(handleArea.transform, false);
+            handle.GetComponent<Image>().color = s_Ink;
+            handle.GetComponent<RectTransform>().sizeDelta = new Vector2(24, 0);
+            var slider = go.AddComponent<Slider>();
+            slider.fillRect = fill.GetComponent<RectTransform>();
+            slider.handleRect = handle.GetComponent<RectTransform>();
+            slider.targetGraphic = handle.GetComponent<Image>();
+            slider.minValue = min;
+            slider.maxValue = max;
+            slider.SetValueWithoutNotify(value);
+            slider.onValueChanged.AddListener(onChange);
+            return slider;
+        }
+
+        /// <summary>A tick box.</summary>
+        public static Toggle CreateToggle(Transform parent, bool value, UnityAction<bool> onChange)
+        {
+            var go = new GameObject("Toggle", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+            go.transform.SetParent(parent, false);
+            go.GetComponent<Image>().color = s_Button;
+            var element = go.GetComponent<LayoutElement>();
+            element.preferredWidth = 40;
+            element.preferredHeight = 40;
+            var check = new GameObject("Checkmark", typeof(RectTransform), typeof(Image));
+            check.transform.SetParent(go.transform, false);
+            check.GetComponent<Image>().color = s_Amber;
+            Stretch(check.GetComponent<RectTransform>(), 8);
+            var toggle = go.AddComponent<Toggle>();
+            toggle.targetGraphic = go.GetComponent<Image>();
+            toggle.graphic = check.GetComponent<Image>();
+            toggle.SetIsOnWithoutNotify(value);
+            toggle.onValueChanged.AddListener(onChange);
+            return toggle;
         }
 
         /// <summary>A single-line field for the player's name: Thai shaped while typing (read it back with Unshape).</summary>

@@ -311,6 +311,158 @@ MonoBehaviour:
     m_Key: key.mouse_middle
     m_Metadata:
       m_Items: []
+  - m_Id: 405659888414720
+    m_Key: settings.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134976
+    m_Key: settings.tab_general
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134977
+    m_Key: settings.tab_audio
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134978
+    m_Key: settings.tab_keys
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134979
+    m_Key: settings.language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134980
+    m_Key: settings.lang_th
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134981
+    m_Key: settings.lang_en
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134982
+    m_Key: settings.sensitivity
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134983
+    m_Key: settings.invert_y
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134984
+    m_Key: settings.fov
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134985
+    m_Key: settings.vol_master
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134986
+    m_Key: settings.vol_music
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134987
+    m_Key: settings.vol_sfx
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134988
+    m_Key: settings.vol_ambience
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134989
+    m_Key: settings.vol_voice
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134990
+    m_Key: settings.vol_ui
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134991
+    m_Key: settings.push_to_talk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134992
+    m_Key: settings.ghost_hears_mic
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134993
+    m_Key: settings.reset_keys
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134994
+    m_Key: settings.change_key
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134995
+    m_Key: settings.press_key
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134996
+    m_Key: settings.conflict
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134997
+    m_Key: settings.close
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134998
+    m_Key: action.move_up
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947134999
+    m_Key: action.move_down
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135000
+    m_Key: action.move_left
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135001
+    m_Key: action.move_right
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135002
+    m_Key: action.sprint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135003
+    m_Key: action.crouch
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135004
+    m_Key: action.jump
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135005
+    m_Key: action.interact
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135006
+    m_Key: action.throw
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135007
+    m_Key: action.jobsheet
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135008
+    m_Key: action.wai
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135009
+    m_Key: action.use
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135010
+    m_Key: action.ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135011
+    m_Key: action.confirm
+    m_Metadata:
+      m_Items: []
+  - m_Id: 405659947135012
+    m_Key: action.push_to_talk
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

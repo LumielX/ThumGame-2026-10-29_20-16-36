@@ -13,16 +13,17 @@ namespace SpiritMovers.Settings
         public static string For(string actionPath)
         {
             var action = SettingsApplier.Actions != null ? SettingsApplier.Actions.FindAction(actionPath) : null;
-            if (action == null || action.bindings.Count == 0)
-                return "?";
-            switch (action.bindings[0].effectivePath)
-            {
-                case "<Mouse>/leftButton": return JobUi.Text("key.mouse_left");
-                case "<Mouse>/rightButton": return JobUi.Text("key.mouse_right");
-                case "<Mouse>/middleButton": return JobUi.Text("key.mouse_middle");
-                default: return action.GetBindingDisplayString(0);
-            }
+            return action == null || action.bindings.Count == 0 ? "?" : Display(action, 0);
         }
+
+        /// <summary>The name of one binding of an action as it is bound now.</summary>
+        public static string Display(InputAction action, int bindingIndex) => action.bindings[bindingIndex].effectivePath switch
+        {
+            "<Mouse>/leftButton" => JobUi.Text("key.mouse_left"),
+            "<Mouse>/rightButton" => JobUi.Text("key.mouse_right"),
+            "<Mouse>/middleButton" => JobUi.Text("key.mouse_middle"),
+            _ => action.GetBindingDisplayString(bindingIndex),
+        };
 
         /// <summary>The key names an interaction prompt shows in its "{0}" (none for prompts without one).</summary>
         public static object[] ArgsFor(string promptKey) => promptKey switch

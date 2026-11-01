@@ -20,12 +20,14 @@ namespace SpiritMovers.Session
         private GameSession m_Session;
         private GameObject m_Panel;
         private Transform m_Canvas;
+        private SettingsPanel m_Settings;
 
         public bool IsOpen { get; private set; }
 
         private void Start()
         {
             m_Session = GetComponent<GameSession>();
+            m_Settings = GetComponent<SettingsPanel>();
             ThaiFontSupport.Register(m_Font, m_GlyphMap);
             Build();
             m_Panel.SetActive(false);
@@ -46,8 +48,9 @@ namespace SpiritMovers.Session
             var canvas = SessionUi.CreateCanvas(transform, "PauseCanvas");
             m_Canvas = canvas;
             canvas.GetComponent<Canvas>().sortingOrder = 50;
-            var column = SessionUi.CreateColumn(canvas, new Vector2(0.5f, 0.5f), new Vector2(560, 260));
+            var column = SessionUi.CreateColumn(canvas, new Vector2(0.5f, 0.5f), new Vector2(560, 340));
             SessionUi.CreateButton(column, m_Font, "pause.resume", ClickResume);
+            SessionUi.CreateButton(column, m_Font, "menu.settings", ClickSettings);
             SessionUi.CreateButton(column, m_Font, "pause.leave", ClickLeave);
             m_Panel = column.gameObject;
         }
@@ -61,8 +64,17 @@ namespace SpiritMovers.Session
                     SetOpen(false);
                 return;
             }
+            // Esc belongs to the settings page while it is open (it closes the page, not this menu).
+            if (m_Settings != null && (m_Settings.IsOpen || m_Settings.ClosedThisFrame))
+                return;
             if (local.CurrentInput.PausePressed)
                 SetOpen(!IsOpen);
+        }
+
+        internal void ClickSettings()
+        {
+            if (m_Settings != null)
+                m_Settings.Open();
         }
 
         internal void ClickResume() => SetOpen(false);

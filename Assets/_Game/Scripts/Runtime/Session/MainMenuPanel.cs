@@ -123,6 +123,13 @@ namespace SpiritMovers.Session
             Run(m_Session.JoinAsync(code));
         }
 
+        internal void ClickSettings()
+        {
+            var settings = FindAnyObjectByType<SettingsPanel>();
+            if (settings != null)
+                settings.Open();
+        }
+
         internal void ClickSolo()
         {
             SetBusy(true);
@@ -150,8 +157,7 @@ namespace SpiritMovers.Session
             m_Code = SessionUi.CreateCodeField(column, m_Font, "menu.code_hint");
             var join = SessionUi.CreateButton(column, m_Font, "menu.join", () => ClickJoin(m_Code.text));
             var solo = SessionUi.CreateButton(column, m_Font, "menu.solo", ClickSolo);
-            var settings = SessionUi.CreateButton(column, m_Font, "menu.settings", () => { });
-            settings.interactable = false; // M4B
+            SessionUi.CreateButton(column, m_Font, "menu.settings", ClickSettings);
             var quit = SessionUi.CreateButton(column, m_Font, "menu.quit", Application.Quit);
             m_Status = SessionUi.CreateLabel(column, m_Font, 120, 26);
             m_Buttons = new[] { host, join, solo, quit };
