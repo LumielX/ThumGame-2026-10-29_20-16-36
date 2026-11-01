@@ -6,6 +6,7 @@ using SpiritMovers.Text;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
+using SpiritMovers.Save;
 
 namespace SpiritMovers.Session
 {
@@ -63,6 +64,7 @@ namespace SpiritMovers.Session
                 lines.Add(SessionUi.Text("lobby.member", member.Number, SessionUi.Text(member.Ready ? "lobby.ready" : "lobby.not_ready")));
             if (SessionRules.SizeLabel(members.Count) == CrewSize.Experimental)
                 lines.Add(SessionUi.Text("lobby.experimental"));
+            lines.Add(SessionUi.Text("menu.money", GameData.Money));
             lines.Add(SessionUi.Text("lobby.job"));
             lines.Add(SessionUi.Text("lobby.hard_locked"));
             lines.Add(countdown >= 0 ? SessionUi.Text("lobby.countdown", countdown)

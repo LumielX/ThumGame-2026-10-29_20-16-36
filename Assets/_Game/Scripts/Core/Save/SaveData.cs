@@ -14,6 +14,8 @@ namespace SpiritMovers.Core.Save
         public int schema = CurrentSchema;
         public int money;
         public string playerName = "";
+        /// <summary>Picks this install's default name ("พนักงาน dddd"); set once on first run, 0 = not yet.</summary>
+        public int nameSeed;
 
         /// <summary>Add pay; nothing for zero or less, and the total stops at int.MaxValue.</summary>
         public void Credit(int amount)
@@ -29,6 +31,7 @@ namespace SpiritMovers.Core.Save
             schema = schema,
             money = Math.Max(0, money),
             playerName = PlayerName.Clean(playerName),
+            nameSeed = nameSeed,
         };
     }
 }

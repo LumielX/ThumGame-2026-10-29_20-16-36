@@ -51,6 +51,9 @@ namespace SpiritMovers.Job
             };
             if (result.Ending == JobEnding.FullSuccess)
                 lines.Add(JobUi.Format("results.stars", result.Stars));
+            // The production game's save (JobPay already added this job); the M3 test house has none.
+            if (Save.GameData.IsLoaded)
+                lines.Add(JobUi.Format("results.total", Save.GameData.Money));
             LastText = ThaiShaper.Shape(string.Join("\n", lines));
             m_Text.text = LastText;
             m_Text.transform.parent.gameObject.SetActive(true);

@@ -267,6 +267,30 @@ MonoBehaviour:
     m_Key: session.connection_lost_job
     m_Metadata:
       m_Items: []
+  - m_Id: 399612176003072
+    m_Key: menu.money
+    m_Metadata:
+      m_Items: []
+  - m_Id: 399612222140416
+    m_Key: results.total
+    m_Metadata:
+      m_Items: []
+  - m_Id: 399612222140417
+    m_Key: save.restored
+    m_Metadata:
+      m_Items: []
+  - m_Id: 399612222140418
+    m_Key: save.reset
+    m_Metadata:
+      m_Items: []
+  - m_Id: 399612222140419
+    m_Key: save.newer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 399612222140420
+    m_Key: save.failed
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

@@ -272,6 +272,32 @@ MonoBehaviour:
     m_Localized: "Connection lost \u2014 you keep the pay for accepted rooms: {0}"
     m_Metadata:
       m_Items: []
+  - m_Id: 399612176003072
+    m_Localized: Savings {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 399612222140416
+    m_Localized: Total savings {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 399612222140417
+    m_Localized: "The save file was damaged \u2014 the last backup was used"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 399612222140418
+    m_Localized: "The save file was damaged with no backup \u2014 starting over (the
+      damaged file is kept in the game folder)"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 399612222140419
+    m_Localized: "The save comes from a newer version of the game \u2014 nothing
+      will be saved this time"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 399612222140420
+    m_Localized: "Could not save \u2014 check your disk space"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using SpiritMovers.Player;
+using SpiritMovers.Save;
 using SpiritMovers.Session;
 using Unity.Netcode;
 using UnityEngine;
@@ -21,6 +22,8 @@ namespace SpiritMovers.Tests
     public abstract class GameFlowFixture
     {
         protected GameSession Session => GameSession.Instance;
+        /// <summary>This test's own data folder: no test reads or writes the player's real save (M4B Review Focus 2).</summary>
+        protected string DataDir { get; private set; }
         protected static string ActiveScene => SceneManager.GetActiveScene().name;
 
         [UnitySetUp]
@@ -29,6 +32,9 @@ namespace SpiritMovers.Tests
             GameSession.PendingMessageKey = null;
             GameSession.PendingPay = 0;
             GameSession.PendingArgs = null;
+            DataDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "SpiritMoversTests", Guid.NewGuid().ToString("N"));
+            System.IO.Directory.CreateDirectory(DataDir);
+            DataLocation.OverrideRoot = DataDir;
 #if UNITY_EDITOR
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/_Game/Scenes/Boot.unity",
                 new LoadSceneParameters(LoadSceneMode.Single));
@@ -48,6 +54,10 @@ namespace SpiritMovers.Tests
             GameSession.PendingMessageKey = null;
             GameSession.PendingPay = 0;
             GameSession.PendingArgs = null;
+            GameData.Unload();
+            DataLocation.OverrideRoot = null;
+            if (DataDir != null && System.IO.Directory.Exists(DataDir))
+                System.IO.Directory.Delete(DataDir, true);
             yield return null;
             yield return null;
         }

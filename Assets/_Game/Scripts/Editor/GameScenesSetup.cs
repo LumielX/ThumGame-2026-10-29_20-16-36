@@ -121,6 +121,7 @@ namespace SpiritMovers.Editor
             var scene = TestRoomSetup.NewGreyboxScene(prefabs, withNetwork: false);
             TestRoomSetup.BuildHouse(prefabs);
             new GameObject("JobAutoStart").AddComponent<JobAutoStart>();
+            new GameObject("JobPay").AddComponent<SpiritMovers.Save.JobPay>();
             SetFont(new GameObject("ReturnToLobby").AddComponent<ReturnToLobby>());
             SaveWithSceneIds(scene, JobPath);
         }

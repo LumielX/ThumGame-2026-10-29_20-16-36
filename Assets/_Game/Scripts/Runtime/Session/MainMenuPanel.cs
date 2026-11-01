@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using SpiritMovers.Core.Session;
 using SpiritMovers.Player;
+using SpiritMovers.Save;
 using SpiritMovers.Text;
 using TMPro;
 using UnityEngine;
@@ -23,6 +24,7 @@ namespace SpiritMovers.Session
         private Button[] m_Buttons = Array.Empty<Button>();
         private TMP_InputField m_Code;
         private TextMeshProUGUI m_Status;
+        private TextMeshProUGUI m_Money;
         private GameSession m_Session;
 
         /// <summary>Key of the message on the status line (null when empty).</summary>
@@ -30,6 +32,8 @@ namespace SpiritMovers.Session
         /// <summary>The status line as shown (localized and shaped).</summary>
         public string StatusText => m_Status != null ? m_Status.text : "";
         public bool ButtonsInteractable { get; private set; } = true;
+        /// <summary>The saved-money line as shown.</summary>
+        public string MoneyText => m_Money != null ? m_Money.text : "";
 
         private void Start()
         {
@@ -47,12 +51,31 @@ namespace SpiritMovers.Session
                 GameSession.PendingArgs = null;
                 GameSession.PendingPay = 0;
             }
+            else if (GameData.MessageKey != null)
+            {
+                ShowStatus(GameData.MessageKey);
+                GameData.MessageKey = null;
+            }
+            GameData.Changed += ShowMoney;
+            ShowMoney();
+        }
+
+        private void ShowMoney()
+        {
+            if (m_Money != null)
+                m_Money.text = SessionUi.Text("menu.money", GameData.Money);
+            if (GameData.MessageKey == "save.failed")
+            {
+                ShowStatus(GameData.MessageKey);
+                GameData.MessageKey = null;
+            }
         }
 
         private void OnDestroy()
         {
             if (m_Session != null)
                 m_Session.Failed -= OnFailed;
+            GameData.Changed -= ShowMoney;
         }
 
         internal void ClickHost()
@@ -85,6 +108,8 @@ namespace SpiritMovers.Session
             var title = SessionUi.CreateLabel(column, m_Font, 80, 48);
             title.text = Application.productName;
             title.alignment = TextAlignmentOptions.Center;
+            m_Money = SessionUi.CreateLabel(column, m_Font, 40, 26);
+            m_Money.alignment = TextAlignmentOptions.Center;
             var host = SessionUi.CreateButton(column, m_Font, "menu.host", ClickHost);
             m_Code = SessionUi.CreateCodeField(column, m_Font, "menu.code_hint");
             var join = SessionUi.CreateButton(column, m_Font, "menu.join", () => ClickJoin(m_Code.text));

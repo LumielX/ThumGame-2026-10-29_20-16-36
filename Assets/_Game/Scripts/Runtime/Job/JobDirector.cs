@@ -236,16 +236,24 @@ namespace SpiritMovers.Job
             else if (!m_SettledSince.ContainsKey(roomId))
                 m_SettledSince[roomId] = Time.time;
             var stayedStill = settled && Time.time - m_SettledSince[roomId] >= SettledSeconds;
-            if (result.Accepted && stayedStill && m_Progress.AcceptRoom(roomId))
-            {
-                m_Anger.OnRoomAccepted();
-                m_AngerStage.Value = m_Anger.Stage;
-                m_Accepted.Add(roomId);
-                m_Phase.Value = m_Progress.Phase;
-                Debug.Log($"[Job] room accepted {roomId} ({m_Progress.AcceptedRooms.Count}/{m_Progress.RoomsRequired})");
-            }
+            if (result.Accepted && stayedStill)
+                Accept(roomId);
             return result.CorrectCount;
         }
+
+        private void Accept(string roomId)
+        {
+            if (!m_Progress.AcceptRoom(roomId))
+                return;
+            m_Anger.OnRoomAccepted();
+            m_AngerStage.Value = m_Anger.Stage;
+            m_Accepted.Add(roomId);
+            m_Phase.Value = m_Progress.Phase;
+            Debug.Log($"[Job] room accepted {roomId} ({m_Progress.AcceptedRooms.Count}/{m_Progress.RoomsRequired})");
+        }
+
+        /// <summary>Test hook (host): the ghost accepts this planned room now, the same way as after a real check.</summary>
+        internal void AcceptRoomForTest(int roomIndex) => Accept(Plan.Rooms[roomIndex].RoomId);
 
         /// <summary>Host: how many of a planned room's items are in place right now (0 for a room not in the job).</summary>
         internal int CorrectCount(string roomId)

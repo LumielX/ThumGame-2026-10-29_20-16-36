@@ -143,6 +143,8 @@ namespace SpiritMovers.Session
                 PendingMessageKey = MessageForHostLeft(phase);
                 PendingArgs = null;
                 PendingPay = PayForHostLeft(phase);
+                // During the results this job's pay is already in the save; the same job is never paid twice.
+                Save.GameData.CreditPay(PendingPay, FindAnyObjectByType<JobDirector>());
                 Debug.Log($"[Net] the host left during {phase}; pay {PendingPay}");
             }
             _ = LeaveAsync();
@@ -165,6 +167,7 @@ namespace SpiritMovers.Session
             PendingMessageKey = phase is SessionPhase.Job or SessionPhase.Results ? ConnectionLostJobKey : ConnectionLostKey;
             PendingArgs = null;
             PendingPay = PayForHostLeft(phase);
+            Save.GameData.CreditPay(PendingPay, FindAnyObjectByType<JobDirector>());
             Debug.LogWarning($"[Net] the connection stopped during {phase} ({(wasHost ? "host" : "client")}); pay {PendingPay}");
             _ = LeaveAsync();
         }
@@ -203,7 +206,7 @@ namespace SpiritMovers.Session
         };
 
         /// <summary>What this player keeps: the synced job report if there was one, else the accepted rooms' share.</summary>
-        private static int PayForHostLeft(SessionPhase phase)
+        internal static int PayForHostLeft(SessionPhase phase)
         {
             var director = FindAnyObjectByType<JobDirector>();
             if (director == null || director.Plan == null)
@@ -229,7 +232,7 @@ namespace SpiritMovers.Session
             m_StartedThisAttempt = false;
             try
             {
-                await Service.InitializeAsync(Profile);
+                await Service.InitializeAsync(Save.DataLocation.DevProfile);
                 JoinCode = await Service.HostAsync(SessionRules.MaxPlayers, Bootstrap.Version);
                 IsSolo = false;
                 LoadLobby();
@@ -255,7 +258,7 @@ namespace SpiritMovers.Session
             SetVersionPayload();
             try
             {
-                await Service.InitializeAsync(Profile);
+                await Service.InitializeAsync(Save.DataLocation.DevProfile);
                 await Service.JoinAsync(code, Bootstrap.Version);
                 JoinCode = code;
                 IsSolo = false;
@@ -366,17 +369,5 @@ namespace SpiritMovers.Session
             SceneManager.LoadScene(MainMenuScene);
         }
 
-        /// <summary>Several game instances on one machine sign in as different players (dev runs only).</summary>
-        private static string Profile
-        {
-            get
-            {
-                var args = Environment.GetCommandLineArgs();
-                for (var i = 0; i < args.Length - 1; i++)
-                    if (args[i] == "-dev-profile")
-                        return args[i + 1];
-                return null;
-            }
-        }
     }
 }

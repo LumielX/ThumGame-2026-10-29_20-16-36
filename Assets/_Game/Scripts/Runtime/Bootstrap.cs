@@ -29,6 +29,7 @@ namespace SpiritMovers
                 Version = pretend;
 #endif
             Debug.Log($"[Boot] {Application.productName} v{Version} ({Application.platform})");
+            Save.GameData.Load();
         }
 
         /// <summary>On to the main menu (the persistent GameNetwork object in this scene comes along).</summary>
