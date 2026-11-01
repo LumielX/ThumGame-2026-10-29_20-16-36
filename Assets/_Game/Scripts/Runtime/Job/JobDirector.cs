@@ -80,6 +80,7 @@ namespace SpiritMovers.Job
         [SerializeField] private HouseAuthoring m_House;
         [Tooltip("Spirit camera prefab; BeginJob puts the team's cameras at the tool spot (GDD 8.3).")]
         [SerializeField] private GameObject m_CameraPrefab;
+        [SerializeField] private GameObject m_WalkiePrefab;
         [SerializeField] private Transform m_ToolSpot;
 
         private readonly NetworkVariable<JobSpec> m_Spec = new();
@@ -277,18 +278,37 @@ namespace SpiritMovers.Job
             return RoomEvaluator.Evaluate(m_SlotStates, RoomRules.Default);
         }
 
-        /// <summary>Host: the team's spirit cameras go to the tool spot by the van (1 for 1–3 players, 2 for 4–6).</summary>
+        /// <summary>
+        /// Host: the team's toolbox goes to the tool spot by the van (GDD 8.3) — spirit cameras (1 for 1–3 players,
+        /// 2 for 4–6) and walkie-talkies (none alone, 2 for 2–4, 3 for 5–6).
+        /// </summary>
         private void SpawnTools(int players)
         {
-            if (m_CameraPrefab == null || m_ToolSpot == null)
+            if (m_ToolSpot == null)
                 return;
-            for (var i = 0; i < ToolConfig.SpiritCameras(players); i++)
-            {
-                var camera = Instantiate(m_CameraPrefab, m_ToolSpot.position + m_ToolSpot.right * (0.4f * i), m_ToolSpot.rotation);
-                // Tools belong to this house: they go when the job scene unloads (M4A, back to the van).
-                camera.GetComponent<NetworkObject>().Spawn(destroyWithScene: true);
-            }
+            var cameras = m_CameraPrefab != null ? ToolConfig.SpiritCameras(players) : 0;
+            for (var i = 0; i < cameras; i++)
+                SpawnTool(m_CameraPrefab, i);
+            SpawnRadios(players, cameras);
         }
+
+        private void SpawnRadios(int players, int firstSlot)
+        {
+            if (m_WalkiePrefab == null || m_ToolSpot == null)
+                return;
+            for (var i = 0; i < ToolConfig.Radios(players); i++)
+                SpawnTool(m_WalkiePrefab, firstSlot + i);
+        }
+
+        private void SpawnTool(GameObject prefab, int slot)
+        {
+            var tool = Instantiate(prefab, m_ToolSpot.position + m_ToolSpot.right * (0.4f * slot), m_ToolSpot.rotation);
+            // Tools belong to this house: they go when the job scene unloads (M4A, back to the van).
+            tool.GetComponent<NetworkObject>().Spawn(destroyWithScene: true);
+        }
+
+        /// <summary>Test hook (host): the walkie-talkies a team of <paramref name="players"/> gets (a fake room has one player).</summary>
+        internal void SpawnToolsForTest(int players) => SpawnRadios(players, 4);
 
         /// <summary>Host: someone looked through the spirit camera — it annoys the ghost (GDD 5.2).</summary>
         internal void CameraUsed()

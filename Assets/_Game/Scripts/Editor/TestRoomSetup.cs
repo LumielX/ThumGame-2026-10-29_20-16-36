@@ -42,7 +42,7 @@ namespace SpiritMovers.Editor
 
         internal struct Prefabs
         {
-            public GameObject Player, LightBox, HeavyCrate, JobDirector, GhostBell, Van, Ghost, Cabinet, SpiritCamera, LobbyState;
+            public GameObject Player, LightBox, HeavyCrate, JobDirector, GhostBell, Van, Ghost, Cabinet, SpiritCamera, Walkie, LobbyState;
             public NetworkPrefabsList List;
         }
 
@@ -62,9 +62,11 @@ namespace SpiritMovers.Editor
             result.Cabinet = CreateCabinetPrefab();
             result.SpiritCamera = CreateCarryablePrefab(PrefabDir + "/SpiritCamera.prefab", "SpiritCamera",
                 new Vector3(0.25f, 0.18f, 0.15f), 1f, new Color(0.15f, 0.15f, 0.17f), typeof(SpiritCamera));
+            result.Walkie = CreateCarryablePrefab(PrefabDir + "/Walkie.prefab", "Walkie",
+                new Vector3(0.08f, 0.22f, 0.06f), 0.6f, new Color(0.22f, 0.32f, 0.2f), typeof(SpiritMovers.Voice.Walkie));
             result.LobbyState = CreateLobbyStatePrefab();
             result.List = CreatePrefabList(result.Player, result.LightBox, result.HeavyCrate, result.JobDirector, result.GhostBell,
-                result.Van, result.Ghost, result.Cabinet, result.SpiritCamera, result.LobbyState);
+                result.Van, result.Ghost, result.Cabinet, result.SpiritCamera, result.Walkie, result.LobbyState);
             return result;
         }
 
@@ -330,6 +332,7 @@ namespace SpiritMovers.Editor
             var so = new SerializedObject(director.GetComponent<JobDirector>());
             so.FindProperty("m_House").objectReferenceValue = house;
             so.FindProperty("m_CameraPrefab").objectReferenceValue = prefabs.SpiritCamera;
+            so.FindProperty("m_WalkiePrefab").objectReferenceValue = prefabs.Walkie;
             so.FindProperty("m_ToolSpot").objectReferenceValue = toolSpot;
             so.ApplyModifiedPropertiesWithoutUndo();
         }

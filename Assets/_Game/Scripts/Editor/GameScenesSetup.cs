@@ -129,6 +129,7 @@ namespace SpiritMovers.Editor
             TestRoomSetup.BuildHouse(prefabs);
             new GameObject("JobAutoStart").AddComponent<JobAutoStart>();
             new GameObject("JobPay").AddComponent<SpiritMovers.Save.JobPay>();
+            new GameObject("RadioListener").AddComponent<SpiritMovers.Voice.RadioListener>();
             SetFont(new GameObject("ReturnToLobby").AddComponent<ReturnToLobby>());
             SaveWithSceneIds(scene, JobPath);
         }

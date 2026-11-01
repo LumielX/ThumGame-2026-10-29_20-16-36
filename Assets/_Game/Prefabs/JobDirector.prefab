@@ -77,6 +77,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   m_House: {fileID: 0}
   m_CameraPrefab: {fileID: 0}
+  m_WalkiePrefab: {fileID: 0}
   m_ToolSpot: {fileID: 0}
 --- !u!114 &8119700927271349235
 MonoBehaviour:

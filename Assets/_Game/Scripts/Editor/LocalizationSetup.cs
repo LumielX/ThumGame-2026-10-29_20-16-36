@@ -84,6 +84,8 @@ namespace SpiritMovers.Editor
             ("settings.speaker", "ลำโพง: {0}", "Speaker: {0}"),
             ("settings.device_default", "ค่าเริ่มต้นของ Windows", "Windows default"),
             ("settings.mic_help", "เพื่อนไม่ได้ยิน? Windows > Settings > Privacy & security > Microphone > เปิดให้แอปใช้ไมค์", "Friends can't hear you? Windows > Settings > Privacy & security > Microphone > let apps use it"),
+            ("radio.talk", "{0} ค้างไว้เพื่อพูดทางวิทยุ", "Hold {0} to talk on the radio"),
+            ("radio.on_air", "กำลังพูดทางวิทยุ", "On the radio"),
             ("voice.connecting", "กำลังเชื่อมต่อเสียง…", "Connecting voice…"),
             ("voice.lost", "เสียงหลุด — กำลังเชื่อมใหม่…", "Voice dropped — reconnecting…"),
             ("voice.unavailable", "ใช้เสียงไม่ได้ — เล่นต่อได้ ใช้ Ping/แชตแทน", "Voice is unavailable — play on with pings and chat"),

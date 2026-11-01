@@ -43,15 +43,24 @@ namespace SpiritMovers.Voice
             Settings.SettingsApplier.LanguageChanged -= Show;
         }
 
+        private void Update()
+        {
+            if (KeyNow() != LastKey)
+                Show();
+        }
+
+        private string KeyNow() => m_Director == null ? null : m_Director.State switch
+        {
+            VoiceState.Connecting => "voice.connecting",
+            VoiceState.Lost => "voice.lost",
+            VoiceState.Unavailable => "voice.unavailable",
+            VoiceState.On when m_Director.RadioHeld => "radio.on_air",
+            _ => null,
+        };
+
         private void Show()
         {
-            LastKey = m_Director == null ? null : m_Director.State switch
-            {
-                VoiceState.Connecting => "voice.connecting",
-                VoiceState.Lost => "voice.lost",
-                VoiceState.Unavailable => "voice.unavailable",
-                _ => null,
-            };
+            LastKey = KeyNow();
             if (m_Label != null)
                 m_Label.text = LastKey == null ? "" : SessionUi.Text(LastKey);
         }

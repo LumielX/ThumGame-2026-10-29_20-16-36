@@ -20,6 +20,8 @@ namespace SpiritMovers.Player
         public bool WaiPressed;
         /// <summary>Use the held tool (right mouse button).</summary>
         public bool UsePressed;
+        /// <summary>Use kept down (talking on a walkie-talkie).</summary>
+        public bool UseHeld;
         /// <summary>Lobby: toggle ready (R).</summary>
         public bool ReadyPressed;
         /// <summary>Confirm / go now (Enter) — the host departs or leaves the results early.</summary>

@@ -30,6 +30,7 @@ namespace SpiritMovers.Settings
         public static object[] ArgsFor(string promptKey) => promptKey switch
         {
             "camera.use" => new object[] { For("Gameplay/Use") },
+            "radio.talk" => new object[] { For("Gameplay/Use") },
             _ => null,
         };
     }

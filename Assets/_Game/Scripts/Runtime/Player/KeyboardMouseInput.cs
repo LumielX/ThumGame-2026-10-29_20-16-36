@@ -62,6 +62,7 @@ namespace SpiritMovers.Player
                 JobSheetHeld = m_JobSheet.IsPressed(),
                 WaiPressed = m_Wai.WasPressedThisFrame(),
                 UsePressed = m_Use.WasPressedThisFrame(),
+                UseHeld = m_Use.IsPressed(),
                 ReadyPressed = m_Ready.WasPressedThisFrame(),
                 ConfirmPressed = m_Confirm.WasPressedThisFrame(),
                 PausePressed = m_Pause.WasPressedThisFrame(),
