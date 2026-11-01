@@ -246,8 +246,11 @@ namespace SpiritMovers.Net
         private static void StartInjectionIfAsked()
         {
             var wav = DevArg("-dev-wav");
-            if (wav != null && !Vivox.IsInjectingAudio)
+            if (wav != null)
             {
+                // Injection belongs to the channels it started in: leaving the van ends it, so start again on every join.
+                if (Vivox.IsInjectingAudio)
+                    Vivox.StopAudioInjection();
                 Vivox.StartAudioInjection(wav);
                 Debug.Log($"[Voice] speaking from {System.IO.Path.GetFileName(wav)} instead of a microphone");
             }

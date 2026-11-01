@@ -50,13 +50,13 @@ namespace SpiritMovers.Voice
             m_Feed = SessionUi.CreateLabel(canvas, m_Font, 220, 22);
             var rect = m_Feed.rectTransform;
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0f, 0f);
-            rect.anchoredPosition = new Vector2(24f, 380f);
-            rect.sizeDelta = new Vector2(640f, 240f);
+            // Low on the left, under the van's job board and above the list of who is talking.
+            rect.anchoredPosition = new Vector2(24f, 110f);
+            rect.sizeDelta = new Vector2(640f, 140f);
             m_Feed.alignment = TextAlignmentOptions.BottomLeft;
 
-            var column = SessionUi.CreateColumn(canvas, new Vector2(0f, 0f), new Vector2(680, 96));
-            column.anchoredPosition = new Vector2(24f, 300f);
-            column.pivot = Vector2.zero;
+            var column = SessionUi.CreateColumn(canvas, new Vector2(0.5f, 0f), new Vector2(680, 96));
+            column.anchoredPosition = new Vector2(0f, 24f);
             m_Field = SessionUi.CreateNameField(column, m_Font, "chat.placeholder");
             m_Field.characterLimit = ChatText.MaxLength + 20;
             m_Field.onSubmit.AddListener(typed => Submit(ThaiShaper.Unshape(typed)));

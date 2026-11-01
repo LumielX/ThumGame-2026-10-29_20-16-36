@@ -32,11 +32,11 @@ namespace SpiritMovers.Voice
             ThaiFontSupport.Register(m_Font, m_GlyphMap);
             var canvas = SessionUi.CreateCanvas(transform, "VoiceHudCanvas");
             canvas.GetComponent<Canvas>().sortingOrder = 30;
-            m_Label = SessionUi.CreateLabel(canvas, m_Font, 220, 24);
+            m_Label = SessionUi.CreateLabel(canvas, m_Font, 90, 22);
             var rect = m_Label.rectTransform;
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0f, 0f);
-            rect.anchoredPosition = new Vector2(24f, 140f);
-            rect.sizeDelta = new Vector2(420f, 220f);
+            rect.anchoredPosition = new Vector2(24f, 16f);
+            rect.sizeDelta = new Vector2(420f, 90f);
             m_Label.alignment = TextAlignmentOptions.BottomLeft;
         }
 
