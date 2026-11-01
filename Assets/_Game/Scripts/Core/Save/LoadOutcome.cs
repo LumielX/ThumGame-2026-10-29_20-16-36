@@ -8,5 +8,7 @@ namespace SpiritMovers.Core.Save
         RestoredFromBackup,
         ResetCorrupt,
         NewerVersion,
+        /// <summary>The file exists but could not be read or repaired right now (locked, no permission): nothing is written.</summary>
+        Unreadable,
     }
 }

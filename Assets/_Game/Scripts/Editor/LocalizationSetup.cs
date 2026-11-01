@@ -46,6 +46,8 @@ namespace SpiritMovers.Editor
             ("save.restored", "ไฟล์บันทึกเสีย — ใช้สำรองล่าสุดแทน", "The save file was damaged — the last backup was used"),
             ("save.reset", "ไฟล์บันทึกเสียและไม่มีสำรอง — เริ่มใหม่ (เก็บไฟล์เสียไว้ในโฟลเดอร์เกม)", "The save file was damaged with no backup — starting over (the damaged file is kept in the game folder)"),
             ("save.newer", "ไฟล์บันทึกมาจากเกมรุ่นใหม่กว่า — รอบนี้จะไม่บันทึก", "The save comes from a newer version of the game — nothing will be saved this time"),
+            ("save.locked", "อ่านหรือซ่อมไฟล์บันทึกไม่ได้ (โปรแกรมอื่นอาจเปิดอยู่) — รอบนี้จะไม่บันทึก", "The save file could not be read or repaired (another program may have it open) — nothing will be saved this time"),
+            ("action.pause", "เปิดเมนู", "Open the menu"),
             ("save.failed", "บันทึกไม่สำเร็จ — ตรวจพื้นที่ดิสก์", "Could not save — check your disk space"),
             ("menu.connecting", "กำลังเชื่อมต่อ…", "Connecting…"),
             ("session.host_left_lobby", "หัวหน้าห้องออกแล้ว", "The host left"),

@@ -105,6 +105,12 @@ namespace SpiritMovers.Tests
         }
 
         [Test]
+        public void Conflicts_SameActionTwiceIsNotAClash()
+        {
+            Assert.AreEqual(0, BindingRules.Conflicts(new[] { ("Crouch", "<Keyboard>/c"), ("Crouch", "<Keyboard>/C") }).Count);
+        }
+
+        [Test]
         public void Conflicts_FindsSamePathExceptThrowUse()
         {
             var conflicts = BindingRules.Conflicts(new[]

@@ -470,6 +470,15 @@ MonoBehaviour:
     m_Localized: Push to talk
     m_Metadata:
       m_Items: []
+  - m_Id: 414477066203136
+    m_Localized: "The save file could not be read or repaired (another program may
+      have it open) \u2014 nothing will be saved this time"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 414477129117696
+    m_Localized: Open the menu
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

@@ -54,17 +54,28 @@ namespace SpiritMovers.Core.Save
                     return Newer();
                 if (read == Read.Ok)
                     return (value, LoadOutcome.Loaded);
+                // Locked or not permitted is not damaged: never "repair" a file we could not even read.
+                if (read == Read.Unreadable)
+                    return Blocked(new T());
                 if (TryRead(FilePath + ".bak", out var backup) == Read.Ok)
+                    return Restore(backup);
+                try
                 {
-                    WriteAtomic(m_Codec.ToJson(backup), keepBackup: false);
-                    return (backup, LoadOutcome.RestoredFromBackup);
+                    var evidence = FilePath + ".corrupt";
+                    if (File.Exists(evidence))
+                        File.Delete(evidence);
+                    File.Move(FilePath, evidence);
                 }
-                var evidence = FilePath + ".corrupt";
-                if (File.Exists(evidence))
-                    File.Delete(evidence);
-                File.Move(FilePath, evidence);
+                catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
+                {
+                    return Blocked(new T());
+                }
                 return (new T(), LoadOutcome.ResetCorrupt);
             }
+
+            // A replace that failed half way can leave only the backup: it is the player's last copy.
+            if (File.Exists(FilePath + ".bak") && TryRead(FilePath + ".bak", out var lone) == Read.Ok)
+                return Restore(lone);
 
             for (var n = m_CurrentSchema - 1; n >= 0; n--)
             {
@@ -72,10 +83,32 @@ namespace SpiritMovers.Core.Save
                     continue;
                 if (TryRead(PathFor(n), out var migrated) != Read.Ok)
                     break;
-                Save(migrated);
-                return (migrated, LoadOutcome.Loaded);
+                return TryWrite(m_Codec.ToJson(migrated), keepBackup: true) ? (migrated, LoadOutcome.Loaded) : Blocked(migrated);
             }
             return (new T(), LoadOutcome.Fresh);
+        }
+
+        private (T, LoadOutcome) Restore(T backup) =>
+            TryWrite(m_Codec.ToJson(backup), keepBackup: false) ? (backup, LoadOutcome.RestoredFromBackup) : Blocked(backup);
+
+        /// <summary>Play on with what could be read, writing nothing this session.</summary>
+        private (T, LoadOutcome) Blocked(T value)
+        {
+            ReadOnly = true;
+            return (value, LoadOutcome.Unreadable);
+        }
+
+        private bool TryWrite(string json, bool keepBackup)
+        {
+            try
+            {
+                WriteAtomic(json, keepBackup);
+                return true;
+            }
+            catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
+            {
+                return false;
+            }
         }
 
         public void Save(T value)
@@ -92,9 +125,9 @@ namespace SpiritMovers.Core.Save
 
         private string PathFor(int schema) => Path.Combine(m_Directory, m_FileName(schema));
 
-        private enum Read { Ok, Damaged, Newer }
+        private enum Read { Ok, Damaged, Newer, Unreadable }
 
-        /// <summary>Reads and, for an older schema, migrates a file; any IO or parse problem counts as damaged.</summary>
+        /// <summary>Reads and, for an older schema, migrates a file: a parse problem is damage, an IO problem is not.</summary>
         private Read TryRead(string path, out T value)
         {
             value = null;
@@ -119,8 +152,11 @@ namespace SpiritMovers.Core.Save
                 value = m_Codec.FromJson<T>(json);
                 return value == null ? Read.Damaged : Read.Ok;
             }
-            catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is ArgumentException ||
-                                      e is FormatException || e is InvalidOperationException)
+            catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
+            {
+                return Read.Unreadable;
+            }
+            catch (Exception e) when (e is ArgumentException || e is FormatException || e is InvalidOperationException)
             {
                 return Read.Damaged;
             }

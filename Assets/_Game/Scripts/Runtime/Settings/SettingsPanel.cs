@@ -255,17 +255,42 @@ namespace SpiritMovers.Settings
             RefreshRows();
         }
 
-        /// <summary>Show each key and flag both actions when two share one (Throw/Use excepted, BindingRules).</summary>
+        /// <summary>
+        /// Show each key and flag both actions when two share one (Throw/Use excepted, BindingRules). The keys that are
+        /// not on the page take part too — Crouch also answers to C, Interact to the left button, Esc opens the menu.
+        /// </summary>
         private void RefreshRows()
         {
-            var conflicts = BindingRules.Conflicts(m_Rows.Select(r => (r.ConflictName, r.Binding.effectivePath)).ToList());
+            var labels = m_Rows.ToDictionary(r => r.ConflictName, r => r.LabelKey);
+            labels["Pause"] = "action.pause";
+            var keys = m_Rows.Select(r => (r.ConflictName, r.Binding.effectivePath)).ToList();
+            keys.AddRange(HiddenKeys());
+            var conflicts = BindingRules.Conflicts(keys);
             foreach (var row in m_Rows)
             {
                 var other = conflicts.Where(c => c.A == row.ConflictName || c.B == row.ConflictName)
                     .Select(c => c.A == row.ConflictName ? c.B : c.A)
-                    .Select(name => m_Rows.First(r => r.ConflictName == name))
                     .FirstOrDefault();
-                row.Refresh(other != null ? JobUi.Text(other.LabelKey) : null);
+                row.Refresh(other == null ? null : JobUi.Text(labels.TryGetValue(other, out var key) ? key : "action.pause"));
+            }
+        }
+
+        /// <summary>Every keyboard or mouse-button binding the page does not show, by action name.</summary>
+        private IEnumerable<(string, string)> HiddenKeys()
+        {
+            if (SettingsApplier.Actions == null)
+                yield break;
+            foreach (var action in SettingsApplier.Actions)
+            {
+                for (var i = 0; i < action.bindings.Count; i++)
+                {
+                    var binding = action.bindings[i];
+                    var path = binding.effectivePath ?? "";
+                    var shown = binding.isPartOfComposite || (i == 0 && m_Rows.Any(r => r.ActionPath == $"{action.actionMap.name}/{action.name}"));
+                    var pressable = path.StartsWith("<Keyboard>/") || path.EndsWith("Button");
+                    if (!binding.isComposite && !shown && pressable)
+                        yield return (action.name, path);
+                }
             }
         }
     }

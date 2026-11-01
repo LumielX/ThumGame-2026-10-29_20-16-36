@@ -133,6 +133,66 @@ namespace SpiritMovers.Tests
         }
 
         [Test]
+        public void Load_LockedFileIsLeftAlone()
+        {
+            // Final review: a good file that only cannot be read right now (antivirus, another copy of the game) must
+            // not be "repaired" from the older backup.
+            var store = SaveStore();
+            store.Save(new SaveData { money = 1 });
+            store.Save(new SaveData { money = 2 });
+            var before = File.ReadAllText(SavePath(1));
+            JsonFileStore<SaveData> locked;
+            (SaveData Value, LoadOutcome Outcome) loaded;
+            using (new FileStream(SavePath(1), FileMode.Open, FileAccess.Read, FileShare.None))
+            {
+                locked = SaveStore();
+                loaded = locked.Load();
+            }
+            Assert.AreEqual(LoadOutcome.Unreadable, loaded.Outcome);
+            Assert.IsTrue(locked.ReadOnly, "nothing is written over a file we could not read");
+            locked.Save(new SaveData { money = 99 });
+            Assert.AreEqual(before, File.ReadAllText(SavePath(1)));
+            Assert.AreEqual(1, s_Codec.FromJson<SaveData>(File.ReadAllText(SavePath(1) + ".bak")).money);
+        }
+
+        [Test]
+        public void Load_DamagedButUnwritable_DoesNotThrow()
+        {
+            var store = SaveStore();
+            store.Save(new SaveData { money = 7 });
+            store.Save(new SaveData { money = 9 });
+            File.WriteAllText(SavePath(1), "{\"schema\":1,\"mon");
+            JsonFileStore<SaveData> blocked;
+            (SaveData Value, LoadOutcome Outcome) loaded;
+            // Readable but not replaceable (another program holds it open): the repair cannot be written.
+            using (new FileStream(SavePath(1), FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                blocked = SaveStore();
+                loaded = blocked.Load();
+            }
+            Assert.AreEqual(7, loaded.Value.money, "the backup's money is still shown");
+            Assert.AreEqual(LoadOutcome.Unreadable, loaded.Outcome);
+            Assert.IsTrue(blocked.ReadOnly);
+            Assert.AreEqual(7, s_Codec.FromJson<SaveData>(File.ReadAllText(SavePath(1) + ".bak")).money, "the backup is untouched");
+        }
+
+        [Test]
+        public void Load_MissingMainUsesBackup()
+        {
+            // Final review: a replace that failed half way leaves only save_v1.json.bak; starting fresh would later
+            // write over that last copy.
+            var store = SaveStore();
+            store.Save(new SaveData { money = 5 });
+            store.Save(new SaveData { money = 6 });
+            File.Delete(SavePath(1));
+            var (value, outcome) = SaveStore().Load();
+            Assert.AreEqual(LoadOutcome.RestoredFromBackup, outcome);
+            Assert.AreEqual(5, value.money);
+            Assert.IsTrue(File.Exists(SavePath(1)));
+            Assert.AreEqual(5, s_Codec.FromJson<SaveData>(File.ReadAllText(SavePath(1) + ".bak")).money);
+        }
+
+        [Test]
         public void Load_MigratesOlderFileStepByStep()
         {
             File.WriteAllText(SavePath(1), s_Codec.ToJson(new SaveData { schema = 1, money = 5 }));

@@ -16,7 +16,8 @@ namespace SpiritMovers.Core.Save
                     continue;
                 for (var j = i + 1; j < bindings.Count; j++)
                 {
-                    if (string.Equals(bindings[i].Path, bindings[j].Path, StringComparison.OrdinalIgnoreCase) &&
+                    if (bindings[i].Action != bindings[j].Action &&
+                        string.Equals(bindings[i].Path, bindings[j].Path, StringComparison.OrdinalIgnoreCase) &&
                         !SharedOnPurpose(bindings[i].Action, bindings[j].Action))
                         conflicts.Add((bindings[i].Action, bindings[j].Action));
                 }

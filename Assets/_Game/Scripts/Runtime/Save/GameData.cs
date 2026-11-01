@@ -52,8 +52,8 @@ namespace SpiritMovers.Save
             s_SaveStore = new JsonFileStore<SaveData>(root, n => $"save_v{n}.json", SaveData.CurrentSchema, codec);
             s_SettingsStore = new JsonFileStore<SettingsData>(root, _ => "settings.json", SettingsData.CurrentSchema, codec);
 
-            var (save, saveOutcome) = s_SaveStore.Load();
-            var (settings, settingsOutcome) = s_SettingsStore.Load();
+            var (save, saveOutcome) = LoadSafely(s_SaveStore);
+            var (settings, settingsOutcome) = LoadSafely(s_SettingsStore);
             Save = save.Sanitized();
             Settings = settings.Sanitized();
             s_PaidJob = null;
@@ -120,7 +120,22 @@ namespace SpiritMovers.Save
             LoadOutcome.RestoredFromBackup => "save.restored",
             LoadOutcome.ResetCorrupt => "save.reset",
             LoadOutcome.NewerVersion => "save.newer",
+            LoadOutcome.Unreadable => "save.locked",
             _ => null,
         };
+
+        /// <summary>The stores do not throw; this is the last guard so Boot always reaches the menu.</summary>
+        private static (T, LoadOutcome) LoadSafely<T>(JsonFileStore<T> store) where T : class, new()
+        {
+            try
+            {
+                return store.Load();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                return (new T(), LoadOutcome.Unreadable);
+            }
+        }
     }
 }

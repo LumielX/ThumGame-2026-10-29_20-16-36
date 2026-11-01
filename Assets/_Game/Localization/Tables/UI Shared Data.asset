@@ -463,6 +463,14 @@ MonoBehaviour:
     m_Key: action.push_to_talk
     m_Metadata:
       m_Items: []
+  - m_Id: 414477066203136
+    m_Key: save.locked
+    m_Metadata:
+      m_Items: []
+  - m_Id: 414477129117696
+    m_Key: action.pause
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

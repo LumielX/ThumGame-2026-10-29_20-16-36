@@ -181,6 +181,55 @@ namespace SpiritMovers.Tests
         }
 
         [UnityTest]
+        public IEnumerator Rebind_ConflictWithSecondKeyIsShown()
+        {
+            // Final review: Crouch also answers to C and Interact to the left button; those keys were never checked.
+            yield return OpenFromMenu();
+            Panel.ShowTab(2);
+            Panel.Row("Gameplay/Jump").StartRebind();
+            yield return Tap(Key.C);
+            Assert.AreEqual("<Keyboard>/c", Action("Gameplay/Jump").bindings[0].effectivePath);
+            Assert.IsTrue(Panel.Row("Gameplay/Jump").Conflicted);
+            StringAssert.Contains("ซ้ำกับ ย่อตัว", ThaiShaper.Unshape(Panel.LastText));
+        }
+
+        [UnityTest]
+        public IEnumerator KeyNames_IgnoreKeyboardLayout()
+        {
+            // Final review: with the Thai layout active Windows names the T key "ะ"; hints must still say T.
+            Action("Gameplay/Ready").ApplyBindingOverride(0, "<Keyboard>/t");
+            var key = m_Keyboard[Key.T];
+            _ = key.displayName;
+            typeof(InputControl).GetField("m_DisplayName", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .SetValue(key, "ะ");
+            Assert.AreEqual("ะ", key.displayName, "the virtual key now reports a Thai layout name");
+            Assert.AreEqual("T", KeyNames.For("Gameplay/Ready"));
+            yield break;
+        }
+
+        [UnityTest]
+        public IEnumerator SceneChange_WithPageOpen_NoWalkingUnderIt()
+        {
+            // Final review: the team moves on (van → job) while one player has the settings page open.
+            yield return SoloIntoLobby();
+            yield return Press(i => i.Next.PausePressed = true);
+            Object.FindAnyObjectByType<PauseMenu>().ClickSettings();
+            yield return null;
+            Session.Network.SceneManager.LoadScene(GameSession.LobbyScene, UnityEngine.SceneManagement.LoadSceneMode.Single);
+            yield return new WaitForSeconds(2f);
+            Assert.IsNotNull(PlayerMotor.Local);
+            if (Panel.IsOpen)
+            {
+                Assert.IsFalse(PlayerMotor.Local.InputEnabled, "no walking under the page");
+                Assert.IsFalse(GameCursor.Captured, "the mouse can reach the page");
+            }
+            else
+            {
+                Assert.IsFalse(Object.FindAnyObjectByType<PauseMenu>().IsOpen && PlayerMotor.Local.InputEnabled);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator ResetBindings_RestoresDefaults()
         {
             yield return OpenFromMenu();

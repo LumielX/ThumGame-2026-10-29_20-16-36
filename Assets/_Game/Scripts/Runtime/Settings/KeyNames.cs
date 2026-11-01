@@ -22,7 +22,8 @@ namespace SpiritMovers.Settings
             "<Mouse>/leftButton" => JobUi.Text("key.mouse_left"),
             "<Mouse>/rightButton" => JobUi.Text("key.mouse_right"),
             "<Mouse>/middleButton" => JobUi.Text("key.mouse_middle"),
-            _ => action.GetBindingDisplayString(bindingIndex),
+            // Not GetBindingDisplayString: that asks the keyboard, and a Thai layout names T "ะ" (M4B final review).
+            var path => InputControlPath.ToHumanReadableString(path, InputControlPath.HumanReadableStringOptions.OmitDevice),
         };
 
         /// <summary>The key names an interaction prompt shows in its "{0}" (none for prompts without one).</summary>
