@@ -91,6 +91,19 @@ namespace SpiritMovers.Tests
         }
 
         [UnityTest]
+        public IEnumerator Layout_ButtonsWideEnoughToRead()
+        {
+            // Found in the windowed screenshots: buttons in a row got no width and their text ran down one letter per line.
+            yield return OpenFromMenu();
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            var buttons = Panel.GetComponentsInChildren<UnityEngine.UI.Button>(false);
+            Assert.Greater(buttons.Length, 4);
+            foreach (var button in buttons)
+                Assert.Greater(((RectTransform)button.transform).rect.width, 80f, button.name);
+        }
+
+        [UnityTest]
         public IEnumerator Changes_ApplyNowAndSaveOnClose()
         {
             yield return OpenFromMenu();

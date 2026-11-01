@@ -75,8 +75,13 @@ namespace SpiritMovers.Session
             go.GetComponent<LayoutElement>().preferredHeight = height;
             var layout = go.GetComponent<HorizontalLayoutGroup>();
             layout.spacing = 12;
-            layout.childForceExpandWidth = false;
+            layout.childAlignment = TextAnchor.MiddleLeft;
+            // Children share the row's width (a button with no preferred width would otherwise get none) and keep
+            // their own height (sliders and tick boxes are shorter than the row).
             layout.childControlWidth = true;
+            layout.childForceExpandWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandHeight = false;
             return go.transform;
         }
 

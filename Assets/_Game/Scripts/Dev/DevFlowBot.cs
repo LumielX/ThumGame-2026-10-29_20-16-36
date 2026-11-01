@@ -13,6 +13,7 @@ using SpiritMovers.Session;
 using Unity.Multiplayer.Tools.NetworkSimulator.Runtime;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 namespace SpiritMovers.Dev
@@ -36,6 +37,9 @@ namespace SpiritMovers.Dev
         private int m_Jobs;
         private string m_Refused = "none";
         private string m_Name;
+        /// <summary>Saved money when the bot started and this player's pay from job 1's report (M4B).</summary>
+        private int m_MoneyBefore = -1;
+        private int m_JobPay = -1;
         /// <summary>The names on the van board, last seen (M4B).</summary>
         private string m_Names = "none";
         private string m_Message = "none";
@@ -76,6 +80,9 @@ namespace SpiritMovers.Dev
 
         private void LateUpdate()
         {
+            var director = Director;
+            if (m_JobPay < 0 && director != null && director.Result.IsSet)
+                m_JobPay = director.Result.PerPlayer;
             var lobby = Lobby;
             if (lobby != null && lobby.IsSpawned && lobby.Members.Count > 0)
                 m_Names = string.Join(",", lobby.Members.OrderBy(m => m.Number).Select(m => m.Name.ToString()));
@@ -98,6 +105,7 @@ namespace SpiritMovers.Dev
             yield return Until(() => Menu != null && GameSession.Instance != null, "main menu");
             if (Failed)
                 yield break;
+            m_MoneyBefore = Save.GameData.Money;
             if (int.TryParse(Arg("-dev-latency"), out var latency) && latency > 0)
             {
                 GameSession.Instance.GetComponent<NetworkSimulator>().ChangeConnectionPreset(
@@ -117,6 +125,9 @@ namespace SpiritMovers.Dev
                     break;
                 case "late":
                     yield return Late();
+                    break;
+                case "settings":
+                    yield return SettingsCheck();
                     break;
             }
         }
@@ -268,6 +279,47 @@ namespace SpiritMovers.Dev
             m_Pay = digits.Count > 0 ? int.Parse(digits[digits.Count - 1].Value, CultureInfo.InvariantCulture) : -1;
         }
 
+        // ---- settings (M4B, windowed) ----
+
+        private bool m_SettingsOk;
+
+        /// <summary>
+        /// -dev-flow settings: first launch (-dev-settings-step 1) sets a name, shows the settings tabs for screenshots,
+        /// changes the Ready key to T through the page and closes it (saved); the second launch (step 2, same
+        /// profile) checks the key and name came back from settings.json / save_v1.json.
+        /// </summary>
+        private IEnumerator SettingsCheck()
+        {
+            var panel = FindAnyObjectByType<SpiritMovers.Settings.SettingsPanel>();
+            var ready = SpiritMovers.Settings.SettingsApplier.Actions.FindAction("Gameplay/Ready", true);
+            if (Arg("-dev-settings-step") == "2")
+            {
+                Debug.Log($"[M4B] after restart: ready={ready.bindings[0].effectivePath} name={Save.GameData.PlayerName}");
+                m_SettingsOk = ready.bindings[0].effectivePath == "<Keyboard>/t" && Save.GameData.PlayerName == m_Name;
+                yield return Shot("menu-after-restart-th.png");
+            }
+            else
+            {
+                UseName();
+                Menu.NameField.SetTextWithoutNotify(SpiritMovers.Core.Text.ThaiShaper.Shape(Save.GameData.PlayerName));
+                yield return Shot("main-menu-th.png");
+                Menu.ClickSettings();
+                yield return Shot("settings-general-th.png");
+                panel.ShowTab(1);
+                yield return Shot("settings-audio-th.png");
+                // The same override a key press on the Keys tab makes (no real keyboard in a scripted run); Close saves it.
+                ready.ApplyBindingOverride(0, "<Keyboard>/t");
+                panel.Close();
+                Menu.ClickSettings();
+                panel.ShowTab(2);
+                yield return Shot("settings-keys-th.png");
+                panel.Close();
+                m_SettingsOk = true;
+            }
+            m_Done = true;
+            Finish();
+        }
+
         // ---- shared ----
 
         /// <summary>Windowed runs with -dev-shot-dir: capture the screen as it is now.</summary>
@@ -347,15 +399,25 @@ namespace SpiritMovers.Dev
                 "host-idle" => Lobby != null && Lobby.Members.Count == 1,
                 "client" => m_Jobs == 2 && m_Message == "session.host_left_job" && m_Pay >= 0,
                 "late" => m_Refused == "error.in_job",
+                "settings" => m_SettingsOk,
                 _ => false,
             };
             if (m_Role == "client" && Arg("-dev-version") != null)
                 ok = m_Done && m_Refused == "error.version";
             Debug.Log(string.Format(CultureInfo.InvariantCulture,
-                "[M4A] SUMMARY role={0} scenes={1} jobs={2} refused={3} message={4} pay={5} failed={6} name={7} names={8} ok={9}",
+                "[M4A] SUMMARY role={0} scenes={1} jobs={2} refused={3} message={4} pay={5} failed={6} name={7} names={8} " +
+                "jobpay={9} moneyBefore={10} moneyAfter={11} saved={12} ok={13}",
                 m_Role, string.Join(">", m_Scenes), m_Jobs, m_Refused, m_Message, m_Pay, Failed ? m_Failure : "none",
-                Save.GameData.PlayerName.Replace(' ', '_'), m_Names.Replace(' ', '_'), ok ? "true" : "false"));
+                Save.GameData.PlayerName.Replace(' ', '_'), m_Names.Replace(' ', '_'), m_JobPay, m_MoneyBefore,
+                Save.GameData.Money, SavedInOwnProfile() ? "true" : "false", ok ? "true" : "false"));
             Application.Quit();
+        }
+
+        /// <summary>This bot's save sits in its own profile folder (several bots run on one machine, M4B).</summary>
+        private static bool SavedInOwnProfile()
+        {
+            var root = Save.DataLocation.Root;
+            return root.Replace('\\', '/').Contains("/profiles/") && File.Exists(Path.Combine(root, "save_v1.json"));
         }
 
         private static string Arg(string name)

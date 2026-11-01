@@ -155,8 +155,17 @@ namespace SpiritMovers.Settings
             m_Rows.Clear();
             m_Canvas = SessionUi.CreateCanvas(transform, "SettingsCanvas");
             m_Canvas.GetComponent<Canvas>().sortingOrder = 60;
+            // Dim whatever menu is underneath: the page reads as its own screen.
+            var backdrop = new GameObject("Backdrop", typeof(RectTransform), typeof(Image));
+            backdrop.transform.SetParent(m_Canvas, false);
+            backdrop.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.7f);
+            var backdropRect = backdrop.GetComponent<RectTransform>();
+            backdropRect.anchorMin = Vector2.zero;
+            backdropRect.anchorMax = Vector2.one;
+            backdropRect.offsetMin = backdropRect.offsetMax = Vector2.zero;
             var column = SessionUi.CreateColumn(m_Canvas, new Vector2(0.5f, 0.5f), new Vector2(1000, 1000));
             column.GetComponent<VerticalLayoutGroup>().spacing = 10;
+            column.GetComponent<Image>().color = new Color(0.12f, 0.09f, 0.07f, 1f);
             m_Root = column.gameObject;
 
             var title = SessionUi.CreateLabel(column, m_Font, 50, 36);

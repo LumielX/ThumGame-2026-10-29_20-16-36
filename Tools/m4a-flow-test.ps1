@@ -2,7 +2,8 @@
 # Normal run: a headless host creates a room, N clients join by code, everyone readies, two jobs (the first ends at the
 # van, the host quits during the second); one extra "late" client tries to join during the first job and must be refused.
 # Passes when the host did 2 jobs, every client did 2 jobs and landed on the menu with "session.host_left_job" and the
-# same pay, and the late client got "error.in_job".
+# same pay, and the late client got "error.in_job". M4B: everyone sees the names in the van, each bot saves in its own
+# profile folder, and the saved money grew by exactly this player's pay (host: job 1; clients: job 1 + host-left pay).
 # -VersionMismatch: a host and one client pretending to be v0.0.0; passes when the client gets "error.version" and the
 # host's van stays with one player.
 # Usage: powershell -ExecutionPolicy Bypass -File Tools\m4a-flow-test.ps1 [-Runs 3] [-Clients 1] [-LatencyMs 0] [-Seconds 150] [-VersionMismatch]
@@ -70,8 +71,20 @@ for ($run = 1; $run -le $Runs; $run++) {
                 if (@($hostSummary.names -split ',') -notcontains $s.name) { $ok = $false }
             }
         }
+        # Saved money (M4B): the change must be exactly what this player was paid, saved in its own profile folder.
+        foreach ($s in $summaries) {
+            $gain = [int]$s.moneyAfter - [int]$s.moneyBefore
+            $jobPay = [Math]::Max(0, [int]$s.jobpay)
+            $expected = switch ($s.role) {
+                'host' { $jobPay }
+                'client' { if ($VersionMismatch) { 0 } else { $jobPay + [Math]::Max(0, [int]$s.pay) } }
+                default { 0 }
+            }
+            if ($s.moneyBefore -eq $null -or $gain -ne $expected) { $ok = $false }
+            if ($s.saved -ne 'true') { $ok = $false }
+        }
     }
-    $detail = ($bots | ForEach-Object { $s = Get-Summary $_.Log; if ($s) { "$($_.Role): jobs=$($s.jobs) refused=$($s.refused) message=$($s.message) pay=$($s.pay) names=$($s.names)" } else { "$($_.Role): NO SUMMARY" } }) -join ' | '
+    $detail = ($bots | ForEach-Object { $s = Get-Summary $_.Log; if ($s) { "$($_.Role): jobs=$($s.jobs) refused=$($s.refused) message=$($s.message) pay=$($s.pay) names=$($s.names) money=$($s.moneyBefore)->$($s.moneyAfter) jobpay=$($s.jobpay)" } else { "$($_.Role): NO SUMMARY" } }) -join ' | '
     Write-Host ("run {0} ({1}): {2}  {3}" -f $run, $tag, $(if ($ok) { 'PASS' } else { 'FAIL' }), $detail)
     if (-not $ok) {
         $failed++
