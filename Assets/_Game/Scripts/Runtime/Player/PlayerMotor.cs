@@ -1,5 +1,6 @@
 using SpiritMovers.Core.Ghost;
 using SpiritMovers.Core.Player;
+using SpiritMovers.Save;
 using SpiritMovers.Ghost;
 using Unity.Netcode;
 using Unity.Netcode.Components;
@@ -34,6 +35,7 @@ namespace SpiritMovers.Player
         private float m_NextFootstepAt;
         private CharacterController m_Controller;
         private Transform m_Head;
+        private Camera m_Camera;
         private float m_VerticalVelocity;
         private bool m_WasRunning;
 
@@ -53,6 +55,8 @@ namespace SpiritMovers.Player
         public PlayerInputState CurrentInput { get; private set; }
         /// <summary>Eyes: the camera on the owner, the interaction ray origin everywhere.</summary>
         public Transform Head => m_Head;
+        /// <summary>The field of view of this player's own camera (settings, GDD 18).</summary>
+        public float Fov => GameData.Settings.fov;
         public Vector3 Feet => transform.position;
         /// <summary>Heading (yaw only).</summary>
         public Vector3 Forward => transform.forward;
@@ -90,7 +94,8 @@ namespace SpiritMovers.Player
 
             if (!Application.isBatchMode)
             {
-                m_Head.gameObject.AddComponent<Camera>().nearClipPlane = 0.05f;
+                m_Camera = m_Head.gameObject.AddComponent<Camera>();
+                m_Camera.nearClipPlane = 0.05f;
                 m_Head.gameObject.AddComponent<AudioListener>();
             }
             EnterScene();
@@ -157,6 +162,8 @@ namespace SpiritMovers.Player
             if (!IsSpawned || !IsOwner)
                 return;
 
+            if (m_Camera != null)
+                m_Camera.fieldOfView = Fov;
             var raw = Input != null ? Input.Read() : default;
             // With gameplay input off (pause menu, chat field) only Esc gets through, so the menu can be closed again.
             var input = InputEnabled ? raw : new PlayerInputState { PausePressed = raw.PausePressed };
@@ -176,8 +183,10 @@ namespace SpiritMovers.Player
         {
             if (delta == Vector2.zero)
                 return;
-            transform.Rotate(0f, delta.x * LookSensitivity, 0f);
-            SetPitch(m_Pitch - delta.y * LookSensitivity);
+            var settings = GameData.Settings;
+            var sensitivity = LookSensitivity * settings.mouseSensitivity;
+            transform.Rotate(0f, delta.x * sensitivity, 0f);
+            SetPitch(m_Pitch - (settings.invertY ? -delta.y : delta.y) * sensitivity);
         }
 
         private void SetPitch(float pitch)

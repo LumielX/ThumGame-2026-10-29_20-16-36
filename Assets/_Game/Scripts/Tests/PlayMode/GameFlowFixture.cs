@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using SpiritMovers.Player;
 using SpiritMovers.Save;
+using UnityEngine.InputSystem;
 using SpiritMovers.Session;
 using Unity.Netcode;
 using UnityEngine;
@@ -55,6 +56,9 @@ namespace SpiritMovers.Tests
             GameSession.PendingPay = 0;
             GameSession.PendingArgs = null;
             GameData.Unload();
+            // The input asset is shared by the whole run: no test leaves a changed key behind.
+            SpiritMovers.Settings.SettingsApplier.Actions?.RemoveAllBindingOverrides();
+            AudioListener.volume = 1f;
             DataLocation.OverrideRoot = null;
             if (DataDir != null && System.IO.Directory.Exists(DataDir))
                 System.IO.Directory.Delete(DataDir, true);

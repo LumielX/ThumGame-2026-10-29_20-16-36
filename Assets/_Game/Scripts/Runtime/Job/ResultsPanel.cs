@@ -29,7 +29,13 @@ namespace SpiritMovers.Job
             m_Director = FindAnyObjectByType<JobDirector>();
             ThaiFontSupport.Register(m_Font, m_GlyphMap);
             m_Text = JobUi.CreatePanel(JobUi.CreateCanvas(transform), m_Font, "Results", new Vector2(0.5f, 0.5f), new Vector2(760, 460));
+            Settings.SettingsApplier.LanguageChanged += Redraw;
         }
+
+        private void OnDestroy() => Settings.SettingsApplier.LanguageChanged -= Redraw;
+
+        /// <summary>The language changed: the report is written again on the next frame.</summary>
+        private void Redraw() => m_Shown = false;
 
         private void Update()
         {

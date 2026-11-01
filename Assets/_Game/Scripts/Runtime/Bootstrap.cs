@@ -35,6 +35,7 @@ namespace SpiritMovers
         /// <summary>On to the main menu (the persistent GameNetwork object in this scene comes along).</summary>
         private void Start()
         {
+            Settings.SettingsApplier.ApplyAll();
             if (SceneUtility.GetBuildIndexByScenePath("Assets/_Game/Scenes/MainMenu.unity") >= 0)
                 SceneManager.LoadScene("MainMenu");
         }

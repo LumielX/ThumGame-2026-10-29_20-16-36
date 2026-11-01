@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 2728410472005896729}
   - component: {fileID: 3268664487403729849}
   - component: {fileID: 551327287029354997}
+  - component: {fileID: 3071514040948534894}
   m_Layer: 0
   m_Name: GameNetwork
   m_TagString: Untagged
@@ -126,7 +127,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Multiplayer.Tools.NetworkSimulator.Runtime::Unity.Multiplayer.Tools.NetworkSimulator.Runtime.NetworkSimulator
   m_PresetAsset: {fileID: 0}
   m_PresetReference:
-    rid: 5115185404562636800
+    rid: 5115185404847063040
   m_Scenario:
     rid: -2
   m_IsScenarioSettingsFolded: 0
@@ -136,7 +137,7 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 5115185404562636800
+    - rid: 5115185404847063040
       type: {class: NetworkSimulatorPreset, ns: Unity.Multiplayer.Tools.NetworkSimulator.Runtime, asm: Unity.Multiplayer.Tools.NetworkSimulator.Runtime}
       data:
         <Name>k__BackingField: 
@@ -197,3 +198,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: SpiritMovers.Runtime::SpiritMovers.Session.PauseMenu
   m_Font: {fileID: 11400000, guid: 65a822db624332f40a59f21d4c31acb2, type: 2}
   m_GlyphMap: {fileID: 11400000, guid: e7d66ad960549204085d8f0835160c66, type: 2}
+--- !u!114 &3071514040948534894
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 612032786755669571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae0f09fa6eea44740b0c6fd4ee5e4791, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpiritMovers.Runtime::SpiritMovers.Settings.SettingsHost
+  m_Actions: {fileID: -944628639613478452, guid: dc85b450d2c829c4a833a4dc207f4e9d, type: 3}

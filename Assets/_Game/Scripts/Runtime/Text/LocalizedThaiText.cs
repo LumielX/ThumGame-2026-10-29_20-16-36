@@ -16,11 +16,13 @@ namespace SpiritMovers.Text
         private TMP_Text m_Target;
         private bool m_Subscribed;
 
-        /// <summary>Points the text at a table entry; updates now and whenever the language changes.</summary>
-        public void Bind(string table, string key)
+        /// <summary>
+        /// Points the text at a table entry (with values for its "{0}"…); updates now and whenever the language changes.
+        /// </summary>
+        public void Bind(string table, string key, object[] arguments = null)
         {
             Unsubscribe();
-            m_String = new LocalizedString(table, key);
+            m_String = new LocalizedString(table, key) { Arguments = arguments };
             if (isActiveAndEnabled)
                 Subscribe();
         }

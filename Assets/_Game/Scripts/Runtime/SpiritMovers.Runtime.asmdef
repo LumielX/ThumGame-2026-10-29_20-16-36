@@ -5,6 +5,7 @@
         "SpiritMovers.Core",
         "Unity.TextMeshPro",
         "Unity.Localization",
+        "Unity.ResourceManager",
         "Unity.Netcode.Runtime",
         "Unity.InputSystem",
         "Unity.Collections",

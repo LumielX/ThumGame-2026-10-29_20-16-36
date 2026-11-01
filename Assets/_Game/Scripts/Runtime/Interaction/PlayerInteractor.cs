@@ -1,6 +1,7 @@
 using SpiritMovers.Core.Player;
 using SpiritMovers.Ghost;
 using SpiritMovers.Player;
+using SpiritMovers.Settings;
 using SpiritMovers.Text;
 using TMPro;
 using Unity.Netcode;
@@ -93,7 +94,7 @@ namespace SpiritMovers.Interaction
             m_PromptKey = key;
             m_Prompt.gameObject.SetActive(key != null);
             if (key != null)
-                m_Prompt.Bind("UI", key);
+                m_Prompt.Bind("UI", key, KeyNames.ArgsFor(key));
         }
 
         private LocalizedThaiText CreatePrompt()

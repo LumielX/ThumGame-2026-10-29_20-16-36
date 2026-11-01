@@ -20,6 +20,7 @@ namespace SpiritMovers.Player
         private readonly InputAction m_Ready;
         private readonly InputAction m_Confirm;
         private readonly InputAction m_Pause;
+        private readonly InputAction m_Talk;
 
         public KeyboardMouseInput(InputActionAsset actions)
         {
@@ -39,6 +40,9 @@ namespace SpiritMovers.Player
             m_Confirm = map.FindAction("Confirm", true);
             m_Pause = map.FindAction("Pause", true);
             map.Enable();
+            var voice = actions.FindActionMap("Voice", true);
+            m_Talk = voice.FindAction("PushToTalk", true);
+            voice.Enable();
         }
 
         public PlayerInputState Read()
@@ -61,6 +65,7 @@ namespace SpiritMovers.Player
                 ReadyPressed = m_Ready.WasPressedThisFrame(),
                 ConfirmPressed = m_Confirm.WasPressedThisFrame(),
                 PausePressed = m_Pause.WasPressedThisFrame(),
+                TalkHeld = m_Talk.IsPressed(),
             };
         }
     }

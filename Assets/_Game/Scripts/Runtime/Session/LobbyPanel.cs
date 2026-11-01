@@ -7,6 +7,7 @@ using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 using SpiritMovers.Save;
+using SpiritMovers.Settings;
 
 namespace SpiritMovers.Session
 {
@@ -71,7 +72,9 @@ namespace SpiritMovers.Session
             lines.Add(SessionUi.Text("lobby.job"));
             lines.Add(SessionUi.Text("lobby.hard_locked"));
             lines.Add(countdown >= 0 ? SessionUi.Text("lobby.countdown", countdown)
-                : SessionUi.Text(SessionRules.CanStart(members.Select(m => m.Ready).ToList()) ? "lobby.hint_start" : "lobby.hint_ready"));
+                : SessionRules.CanStart(members.Select(m => m.Ready).ToList())
+                    ? SessionUi.Text("lobby.hint_start", KeyNames.For("Gameplay/Confirm"))
+                    : SessionUi.Text("lobby.hint_ready", KeyNames.For("Gameplay/Ready")));
             LastText = string.Join("\n", lines);
             if (m_Text != null)
                 m_Text.text = LastText;

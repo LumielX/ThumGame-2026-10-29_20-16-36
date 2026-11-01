@@ -135,7 +135,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 188739188715520
-    m_Localized: Right-click to look through the spirit camera
+    m_Localized: '{0}: look through the spirit camera'
     m_Metadata:
       m_Items: []
   - m_Id: 188739264212992
@@ -237,11 +237,11 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 224611397300231
-    m_Localized: Press R when ready
+    m_Localized: Press {0} when ready
     m_Metadata:
       m_Items: []
   - m_Id: 224611397300232
-    m_Localized: "Everyone is ready \u2014 the host presses Enter to set off"
+    m_Localized: "Everyone is ready \u2014 the host presses {0} to set off"
     m_Metadata:
       m_Items: []
   - m_Id: 224611397300233
@@ -253,7 +253,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 226222525935616
-    m_Localized: 'Back to the van in {0} s (host: Enter to go now)'
+    m_Localized: 'Back to the van in {0} s (host: {1} to go now)'
     m_Metadata:
       m_Items: []
   - m_Id: 228360597565440
@@ -304,6 +304,18 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 401743171842048
     m_Localized: Your name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 404158013009920
+    m_Localized: Left click
+    m_Metadata:
+      m_Items: []
+  - m_Id: 404158063341568
+    m_Localized: Right click
+    m_Metadata:
+      m_Items: []
+  - m_Id: 404158063341569
+    m_Localized: Middle click
     m_Metadata:
       m_Items: []
   references:

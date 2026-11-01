@@ -1,9 +1,11 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using SpiritMovers.Core.Session;
 using SpiritMovers.Core.Text;
 using SpiritMovers.Player;
 using SpiritMovers.Save;
+using SpiritMovers.Settings;
 using SpiritMovers.Text;
 using TMPro;
 using UnityEngine;
@@ -25,6 +27,8 @@ namespace SpiritMovers.Session
         private Button[] m_Buttons = Array.Empty<Button>();
         private TMP_InputField m_Code;
         private TMP_InputField m_Name;
+        private Transform m_Canvas;
+        private object[] m_StatusArgs = Array.Empty<object>();
         private TextMeshProUGUI m_Status;
         private TextMeshProUGUI m_Money;
         private GameSession m_Session;
@@ -38,6 +42,9 @@ namespace SpiritMovers.Session
         public string MoneyText => m_Money != null ? m_Money.text : "";
         /// <summary>The name field (holds shaped Thai).</summary>
         internal TMP_InputField NameField => m_Name;
+        /// <summary>Every button label as shown (shaped), one per line.</summary>
+        internal string ButtonTexts => m_Canvas == null ? ""
+            : string.Join("\n", m_Canvas.GetComponentsInChildren<Button>(true).Select(b => b.GetComponentInChildren<TMP_Text>().text));
 
         private void Start()
         {
@@ -61,6 +68,22 @@ namespace SpiritMovers.Session
                 GameData.MessageKey = null;
             }
             GameData.Changed += ShowMoney;
+            SettingsApplier.LanguageChanged += Relabel;
+            ShowMoney();
+        }
+
+        /// <summary>The language changed: build the menu again, keeping what was typed and shown.</summary>
+        private void Relabel()
+        {
+            var code = m_Code != null ? m_Code.text : "";
+            if (m_Canvas != null)
+                Destroy(m_Canvas.gameObject);
+            Build();
+            m_Code.SetTextWithoutNotify(code);
+            foreach (var button in m_Buttons)
+                button.interactable = ButtonsInteractable;
+            if (StatusKey != null)
+                ShowStatus(StatusKey, m_StatusArgs);
             ShowMoney();
         }
 
@@ -80,6 +103,7 @@ namespace SpiritMovers.Session
             if (m_Session != null)
                 m_Session.Failed -= OnFailed;
             GameData.Changed -= ShowMoney;
+            SettingsApplier.LanguageChanged -= Relabel;
         }
 
         internal void ClickHost()
@@ -108,6 +132,7 @@ namespace SpiritMovers.Session
         private void Build()
         {
             var canvas = SessionUi.CreateCanvas(transform, "MenuCanvas");
+            m_Canvas = canvas;
             var column = SessionUi.CreateColumn(canvas, new Vector2(0.5f, 0.5f), new Vector2(620, 720));
             var title = SessionUi.CreateLabel(column, m_Font, 80, 48);
             title.text = Application.productName;
@@ -166,6 +191,7 @@ namespace SpiritMovers.Session
         private void ShowStatus(string key, params object[] args)
         {
             StatusKey = key;
+            m_StatusArgs = args;
             if (m_Status != null)
                 m_Status.text = SessionUi.Text(key, args);
         }

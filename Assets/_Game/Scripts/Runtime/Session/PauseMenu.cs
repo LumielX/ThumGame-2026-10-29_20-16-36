@@ -1,4 +1,5 @@
 using SpiritMovers.Player;
+using SpiritMovers.Settings;
 using SpiritMovers.Text;
 using TMPro;
 using UnityEngine;
@@ -18,6 +19,7 @@ namespace SpiritMovers.Session
 
         private GameSession m_Session;
         private GameObject m_Panel;
+        private Transform m_Canvas;
 
         public bool IsOpen { get; private set; }
 
@@ -25,13 +27,29 @@ namespace SpiritMovers.Session
         {
             m_Session = GetComponent<GameSession>();
             ThaiFontSupport.Register(m_Font, m_GlyphMap);
+            Build();
+            m_Panel.SetActive(false);
+            SettingsApplier.LanguageChanged += Relabel;
+        }
+
+        private void OnDestroy() => SettingsApplier.LanguageChanged -= Relabel;
+
+        private void Relabel()
+        {
+            Destroy(m_Canvas.gameObject);
+            Build();
+            m_Panel.SetActive(IsOpen);
+        }
+
+        private void Build()
+        {
             var canvas = SessionUi.CreateCanvas(transform, "PauseCanvas");
+            m_Canvas = canvas;
             canvas.GetComponent<Canvas>().sortingOrder = 50;
             var column = SessionUi.CreateColumn(canvas, new Vector2(0.5f, 0.5f), new Vector2(560, 260));
             SessionUi.CreateButton(column, m_Font, "pause.resume", ClickResume);
             SessionUi.CreateButton(column, m_Font, "pause.leave", ClickLeave);
             m_Panel = column.gameObject;
-            m_Panel.SetActive(false);
         }
 
         private void Update()

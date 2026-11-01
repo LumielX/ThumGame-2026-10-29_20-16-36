@@ -1,5 +1,6 @@
 using SpiritMovers.Job;
 using SpiritMovers.Player;
+using SpiritMovers.Settings;
 using SpiritMovers.Text;
 using TMPro;
 using Unity.Netcode;
@@ -46,7 +47,7 @@ namespace SpiritMovers.Session
                 m_BackAt = Time.time + ResultsSeconds;
                 m_Label.transform.parent.gameObject.SetActive(true);
             }
-            m_Label.text = SessionUi.Text("results.back_in", Mathf.CeilToInt(SecondsLeft));
+            m_Label.text = SessionUi.Text("results.back_in", Mathf.CeilToInt(SecondsLeft), KeyNames.For("Gameplay/Confirm"));
 
             var network = NetworkManager.Singleton;
             if (m_Leaving || network == null || !network.IsServer)

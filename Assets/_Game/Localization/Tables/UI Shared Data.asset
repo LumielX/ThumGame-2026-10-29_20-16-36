@@ -299,6 +299,18 @@ MonoBehaviour:
     m_Key: menu.name_hint
     m_Metadata:
       m_Items: []
+  - m_Id: 404158013009920
+    m_Key: key.mouse_left
+    m_Metadata:
+      m_Items: []
+  - m_Id: 404158063341568
+    m_Key: key.mouse_right
+    m_Metadata:
+      m_Items: []
+  - m_Id: 404158063341569
+    m_Key: key.mouse_middle
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:
