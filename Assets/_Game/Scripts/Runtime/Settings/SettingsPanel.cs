@@ -40,6 +40,7 @@ namespace SpiritMovers.Settings
             ("Gameplay/Ready", null, "action.ready"),
             ("Gameplay/Confirm", null, "action.confirm"),
             ("Voice/PushToTalk", null, "action.push_to_talk"),
+            ("Gameplay/Chat", null, "action.chat"),
         };
 
         [SerializeField] private TMP_FontAsset m_Font;

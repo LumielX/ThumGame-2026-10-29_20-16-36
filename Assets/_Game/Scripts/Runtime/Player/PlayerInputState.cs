@@ -28,6 +28,8 @@ namespace SpiritMovers.Player
         public bool ConfirmPressed;
         /// <summary>Open / close the pause menu (Esc).</summary>
         public bool PausePressed;
+        /// <summary>Open the chat field (M4C).</summary>
+        public bool ChatPressed;
         /// <summary>Push-to-talk held (voice chat, M4C).</summary>
         public bool TalkHeld;
     }
@@ -55,6 +57,7 @@ namespace SpiritMovers.Player
             Next.ReadyPressed = false;
             Next.ConfirmPressed = false;
             Next.PausePressed = false;
+            Next.ChatPressed = false;
             return state;
         }
     }

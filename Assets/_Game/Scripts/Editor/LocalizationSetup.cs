@@ -24,7 +24,7 @@ namespace SpiritMovers.Editor
         // Seed entries (key, Thai, English); running Setup writes them into the tables.
         private static readonly (string Key, string Th, string En)[] s_Seed =
         {
-            ("chat.hint", "กด Enter เพื่อพิมพ์แชต", "Press Enter to chat"),
+            ("chat.hint", "กด {0} เพื่อพิมพ์", "Press {0} to chat"),
             ("chat.placeholder", "พิมพ์ข้อความ…", "Type a message…"),
             ("language.switch", "F2 เปลี่ยนภาษา (ไทย/English)", "F2 change language (ไทย/English)"),
             ("interact.pickup", "ยก", "Pick up"),
@@ -84,6 +84,8 @@ namespace SpiritMovers.Editor
             ("settings.speaker", "ลำโพง: {0}", "Speaker: {0}"),
             ("settings.device_default", "ค่าเริ่มต้นของ Windows", "Windows default"),
             ("settings.mic_help", "เพื่อนไม่ได้ยิน? Windows > Settings > Privacy & security > Microphone > เปิดให้แอปใช้ไมค์", "Friends can't hear you? Windows > Settings > Privacy & security > Microphone > let apps use it"),
+            ("chat.unavailable", "แชตใช้ไม่ได้ตอนเสียงหลุด", "Chat is unavailable while voice is down"),
+            ("action.chat", "แชต", "Chat"),
             ("voice.radio_tag", "[วิทยุ]", "[radio]"),
             ("voice.mute", "ปิดเสียง", "Mute"),
             ("voice.unmute", "เปิดเสียง", "Unmute"),

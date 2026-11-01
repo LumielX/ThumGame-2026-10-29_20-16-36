@@ -19,7 +19,7 @@ MonoBehaviour:
     m_Items: []
   m_TableData:
   - m_Id: 881618944
-    m_Localized: Press Enter to chat
+    m_Localized: Press {0} to chat
     m_Metadata:
       m_Items: []
   - m_Id: 952922112
@@ -534,6 +534,14 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 449462238212099
     m_Localized: Close
+    m_Metadata:
+      m_Items: []
+  - m_Id: 451590742634496
+    m_Localized: Chat is unavailable while voice is down
+    m_Metadata:
+      m_Items: []
+  - m_Id: 451590797160448
+    m_Localized: Chat
     m_Metadata:
       m_Items: []
   references:

@@ -22,6 +22,7 @@ namespace SpiritMovers.Session
         private Transform m_Canvas;
         private SettingsPanel m_Settings;
         private Voice.PlayerVoicePanel m_Players;
+        private Voice.ChatPanel m_Chat;
 
         public bool IsOpen { get; private set; }
 
@@ -30,6 +31,7 @@ namespace SpiritMovers.Session
             m_Session = GetComponent<GameSession>();
             m_Settings = GetComponent<SettingsPanel>();
             m_Players = GetComponent<Voice.PlayerVoicePanel>();
+            m_Chat = GetComponent<Voice.ChatPanel>();
             ThaiFontSupport.Register(m_Font, m_GlyphMap);
             Build();
             m_Panel.SetActive(false);
@@ -71,6 +73,9 @@ namespace SpiritMovers.Session
             if (m_Settings != null && (m_Settings.IsOpen || m_Settings.ClosedThisFrame))
                 return;
             if (m_Players != null && (m_Players.IsOpen || m_Players.ClosedThisFrame))
+                return;
+            // Esc while typing a chat message cancels the message, not opens this menu.
+            if (m_Chat != null && (m_Chat.IsTyping || m_Chat.ClosedThisFrame))
                 return;
             if (local.CurrentInput.PausePressed)
                 SetOpen(!IsOpen);
