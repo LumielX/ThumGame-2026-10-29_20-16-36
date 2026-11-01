@@ -8,18 +8,21 @@ using UnityEngine;
 
 namespace SpiritMovers.Session
 {
-    /// <summary>One player in the van: who, ready or not, and the number shown as "ผู้เล่น N".</summary>
+    /// <summary>One player in the van: who, their chosen name ("" shows as "ผู้เล่น N"), ready or not.</summary>
     public struct LobbyMember : INetworkSerializable, IEquatable<LobbyMember>
     {
         public ulong ClientId;
         public bool Ready;
         public int Number;
+        public FixedString64Bytes Name;
 
-        public LobbyMember(ulong clientId, bool ready, int number)
+        public LobbyMember(ulong clientId, bool ready, int number, string name = "")
         {
             ClientId = clientId;
             Ready = ready;
             Number = number;
+            // FixedString64Bytes holds 61 bytes of UTF-8; a cleaned name (20 characters) always fits, this is the guard.
+            Name = new FixedString64Bytes(Core.Save.PlayerName.FitUtf8(name, FixedString64Bytes.UTF8MaxLengthInBytes));
         }
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
@@ -27,9 +30,11 @@ namespace SpiritMovers.Session
             serializer.SerializeValue(ref ClientId);
             serializer.SerializeValue(ref Ready);
             serializer.SerializeValue(ref Number);
+            serializer.SerializeValue(ref Name);
         }
 
-        public bool Equals(LobbyMember other) => ClientId == other.ClientId && Ready == other.Ready && Number == other.Number;
+        public bool Equals(LobbyMember other) =>
+            ClientId == other.ClientId && Ready == other.Ready && Number == other.Number && Name.Equals(other.Name);
     }
 
     /// <summary>
@@ -138,7 +143,7 @@ namespace SpiritMovers.Session
                 return;
             var taken = Members.Select(m => m.Number).ToHashSet();
             var number = Enumerable.Range(1, SessionRules.MaxPlayers + 1).First(n => !taken.Contains(n));
-            m_Members.Add(new LobbyMember(clientId, false, number));
+            m_Members.Add(new LobbyMember(clientId, false, number, LobbyGate.NameFor(clientId)));
             Cancel("a player joined");
         }
 

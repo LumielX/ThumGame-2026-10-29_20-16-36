@@ -213,7 +213,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 224611397300225
-    m_Localized: "Player {0} \u2014 {1}"
+    m_Localized: "{0} \u2014 {1}"
     m_Metadata:
       m_Items: []
   - m_Id: 224611397300226
@@ -296,6 +296,14 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 399612222140420
     m_Localized: "Could not save \u2014 check your disk space"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 401743125704704
+    m_Localized: Player {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 401743171842048
+    m_Localized: Your name
     m_Metadata:
       m_Items: []
   references:

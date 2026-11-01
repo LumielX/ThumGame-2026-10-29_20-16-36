@@ -1,6 +1,7 @@
 using System;
 using SpiritMovers.Core.Text;
 using SpiritMovers.Job;
+using SpiritMovers.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -63,6 +64,19 @@ namespace SpiritMovers.Session
             var button = go.GetComponent<Button>();
             button.onClick.AddListener(onClick);
             return button;
+        }
+
+        /// <summary>A single-line field for the player's name: Thai shaped while typing (read it back with Unshape).</summary>
+        public static TMP_InputField CreateNameField(Transform parent, TMP_FontAsset font, string placeholderKey)
+        {
+            var field = CreateCodeField(parent, font, placeholderKey);
+            field.name = "NameField";
+            field.contentType = TMP_InputField.ContentType.Standard;
+            field.lineType = TMP_InputField.LineType.SingleLine;
+            // Room for combining marks: the name itself is cut to 20 characters when it is saved.
+            field.characterLimit = 40;
+            field.EnableThaiShaping();
+            return field;
         }
 
         /// <summary>A single-line field for letters and digits (room codes).</summary>

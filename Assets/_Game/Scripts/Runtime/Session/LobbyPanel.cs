@@ -61,7 +61,10 @@ namespace SpiritMovers.Session
             if (!solo && !string.IsNullOrEmpty(joinCode))
                 lines.Add(SessionUi.Text("lobby.code", joinCode));
             foreach (var member in members.OrderBy(m => m.Number))
-                lines.Add(SessionUi.Text("lobby.member", member.Number, SessionUi.Text(member.Ready ? "lobby.ready" : "lobby.not_ready")));
+            {
+                var name = member.Name.IsEmpty ? SessionUi.Text("lobby.player_n", member.Number) : member.Name.ToString();
+                lines.Add(SessionUi.Text("lobby.member", name, SessionUi.Text(member.Ready ? "lobby.ready" : "lobby.not_ready")));
+            }
             if (SessionRules.SizeLabel(members.Count) == CrewSize.Experimental)
                 lines.Add(SessionUi.Text("lobby.experimental"));
             lines.Add(SessionUi.Text("menu.money", GameData.Money));

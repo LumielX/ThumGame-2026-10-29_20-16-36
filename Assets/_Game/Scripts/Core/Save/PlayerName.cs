@@ -49,6 +49,26 @@ namespace SpiritMovers.Core.Save
             return text.ToString(0, cut);
         }
 
+        /// <summary>
+        /// The longest start of <paramref name="name"/> that fits <paramref name="maxBytes"/> of UTF-8 (a network
+        /// FixedString), never leaving a letter without its marks.
+        /// </summary>
+        public static string FitUtf8(string name, int maxBytes)
+        {
+            if (string.IsNullOrEmpty(name))
+                return "";
+            var cut = 0;
+            var bytes = 0;
+            while (cut < name.Length && bytes + Encoding.UTF8.GetByteCount(name, cut, 1) <= maxBytes)
+                bytes += Encoding.UTF8.GetByteCount(name, cut++, 1);
+            if (cut < name.Length)
+            {
+                while (cut > 0 && IsMark(name[cut]))
+                    cut--;
+            }
+            return name.Substring(0, cut);
+        }
+
         /// <summary>The first-run name, "พนักงาน" and four digits from <paramref name="seed"/> (⚙ M4B plan).</summary>
         public static string Default(int seed) => $"พนักงาน {1000 + (int)(((long)seed % 9000 + 9000) % 9000)}";
 

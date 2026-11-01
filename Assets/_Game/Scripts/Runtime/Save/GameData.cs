@@ -21,6 +21,22 @@ namespace SpiritMovers.Save
         public static int Money => Save.money;
 
         /// <summary>
+        /// The player's name, cleaned (TECHNICAL_DESIGN 19); setting an empty name brings back this install's default
+        /// "พนักงาน dddd". Saved at once.
+        /// </summary>
+        public static string PlayerName
+        {
+            get => string.IsNullOrEmpty(Save.playerName) ? Core.Save.PlayerName.Default(Save.nameSeed) : Save.playerName;
+            set
+            {
+                var clean = Core.Save.PlayerName.Clean(value);
+                Save.playerName = clean.Length > 0 ? clean : Core.Save.PlayerName.Default(Save.nameSeed);
+                SaveNow();
+                Changed?.Invoke();
+            }
+        }
+
+        /// <summary>
         /// What the main menu should tell the player about the files (save.restored, save.reset, save.newer) or a save
         /// that failed later (save.failed); the menu clears it once shown.
         /// </summary>

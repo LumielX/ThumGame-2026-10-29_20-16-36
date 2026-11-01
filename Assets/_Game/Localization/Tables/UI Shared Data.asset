@@ -291,6 +291,14 @@ MonoBehaviour:
     m_Key: save.failed
     m_Metadata:
       m_Items: []
+  - m_Id: 401743125704704
+    m_Key: lobby.player_n
+    m_Metadata:
+      m_Items: []
+  - m_Id: 401743171842048
+    m_Key: menu.name_hint
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

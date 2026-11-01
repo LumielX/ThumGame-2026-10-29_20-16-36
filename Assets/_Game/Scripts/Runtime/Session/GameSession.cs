@@ -314,7 +314,8 @@ namespace SpiritMovers.Session
 
         /// <summary>Our game version goes with the connection request; the host's LobbyGate checks it (TECHNICAL_DESIGN 7).</summary>
         private void SetVersionPayload() =>
-            m_Network.NetworkConfig.ConnectionData = System.Text.Encoding.UTF8.GetBytes(Bootstrap.Version.ToString());
+            m_Network.NetworkConfig.ConnectionData = System.Text.Encoding.UTF8.GetBytes(
+                ConnectionPayload.Write(Bootstrap.Version.ToString(), Save.GameData.PlayerName));
 
         /// <summary>Host: the lobby countdown ended and the job scene is about to load.</summary>
         public void MarkLoading() => m_Loading = true;

@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using SpiritMovers.Core.Session;
+using SpiritMovers.Core.Text;
 using SpiritMovers.Player;
 using SpiritMovers.Save;
 using SpiritMovers.Text;
@@ -23,6 +24,7 @@ namespace SpiritMovers.Session
 
         private Button[] m_Buttons = Array.Empty<Button>();
         private TMP_InputField m_Code;
+        private TMP_InputField m_Name;
         private TextMeshProUGUI m_Status;
         private TextMeshProUGUI m_Money;
         private GameSession m_Session;
@@ -34,6 +36,8 @@ namespace SpiritMovers.Session
         public bool ButtonsInteractable { get; private set; } = true;
         /// <summary>The saved-money line as shown.</summary>
         public string MoneyText => m_Money != null ? m_Money.text : "";
+        /// <summary>The name field (holds shaped Thai).</summary>
+        internal TMP_InputField NameField => m_Name;
 
         private void Start()
         {
@@ -110,6 +114,13 @@ namespace SpiritMovers.Session
             title.alignment = TextAlignmentOptions.Center;
             m_Money = SessionUi.CreateLabel(column, m_Font, 40, 26);
             m_Money.alignment = TextAlignmentOptions.Center;
+            m_Name = SessionUi.CreateNameField(column, m_Font, "menu.name_hint");
+            m_Name.SetTextWithoutNotify(ThaiShaper.Shape(GameData.PlayerName));
+            m_Name.onEndEdit.AddListener(typed =>
+            {
+                GameData.PlayerName = ThaiShaper.Unshape(typed);
+                m_Name.SetTextWithoutNotify(ThaiShaper.Shape(GameData.PlayerName));
+            });
             var host = SessionUi.CreateButton(column, m_Font, "menu.host", ClickHost);
             m_Code = SessionUi.CreateCodeField(column, m_Font, "menu.code_hint");
             var join = SessionUi.CreateButton(column, m_Font, "menu.join", () => ClickJoin(m_Code.text));

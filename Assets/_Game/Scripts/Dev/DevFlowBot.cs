@@ -35,6 +35,9 @@ namespace SpiritMovers.Dev
         private float m_QuitAt;
         private int m_Jobs;
         private string m_Refused = "none";
+        private string m_Name;
+        /// <summary>The names on the van board, last seen (M4B).</summary>
+        private string m_Names = "none";
         private string m_Message = "none";
         private int m_Pay = -1;
         private string m_Failure = "";
@@ -56,6 +59,7 @@ namespace SpiritMovers.Dev
             bot.m_Role = role;
             bot.m_CodeFile = Arg("-dev-codefile");
             bot.m_ShotDir = Arg("-dev-shot-dir");
+            bot.m_Name = Arg("-dev-name");
             int.TryParse(Arg("-dev-players"), out bot.m_Players);
             float.TryParse(Arg("-dev-seconds"), NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds);
             bot.m_QuitAt = Time.realtimeSinceStartup + (seconds > 0f ? seconds : 120f);
@@ -63,6 +67,19 @@ namespace SpiritMovers.Dev
         }
 
         private bool Failed => m_Failure != "";
+
+        private void UseName()
+        {
+            if (m_Name != null)
+                Save.GameData.PlayerName = m_Name;
+        }
+
+        private void LateUpdate()
+        {
+            var lobby = Lobby;
+            if (lobby != null && lobby.IsSpawned && lobby.Members.Count > 0)
+                m_Names = string.Join(",", lobby.Members.OrderBy(m => m.Number).Select(m => m.Name.ToString()));
+        }
         private static string Scene => SceneManager.GetActiveScene().name;
         private static JobDirector Director => FindAnyObjectByType<JobDirector>();
         private static LobbyState Lobby => FindAnyObjectByType<LobbyState>();
@@ -155,6 +172,7 @@ namespace SpiritMovers.Dev
 
         private IEnumerator OpenRoom()
         {
+            UseName();
             Menu.ClickHost();
             yield return Until(() => Scene == GameSession.LobbyScene && GameSession.Instance.JoinCode != null, "room open");
             if (!Failed && m_CodeFile != null)
@@ -225,6 +243,7 @@ namespace SpiritMovers.Dev
             yield return Until(() => (code = TryReadCode()) != null, "join code");
             if (Failed)
                 yield break;
+            UseName();
             Menu.ClickJoin(code);
             if (m_Role == "late" || Arg("-dev-version") != null)
             {
@@ -333,9 +352,9 @@ namespace SpiritMovers.Dev
             if (m_Role == "client" && Arg("-dev-version") != null)
                 ok = m_Done && m_Refused == "error.version";
             Debug.Log(string.Format(CultureInfo.InvariantCulture,
-                "[M4A] SUMMARY role={0} scenes={1} jobs={2} refused={3} message={4} pay={5} failed={6} ok={7}",
+                "[M4A] SUMMARY role={0} scenes={1} jobs={2} refused={3} message={4} pay={5} failed={6} name={7} names={8} ok={9}",
                 m_Role, string.Join(">", m_Scenes), m_Jobs, m_Refused, m_Message, m_Pay, Failed ? m_Failure : "none",
-                ok ? "true" : "false"));
+                Save.GameData.PlayerName.Replace(' ', '_'), m_Names.Replace(' ', '_'), ok ? "true" : "false"));
             Application.Quit();
         }
 

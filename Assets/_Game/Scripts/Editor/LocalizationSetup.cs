@@ -21,7 +21,7 @@ namespace SpiritMovers.Editor
         public const string UiTable = "UI";
         public static readonly string[] LocaleCodes = { "th", "en" };
 
-        // Seed entries; the tables are the source of truth once created.
+        // Seed entries (key, Thai, English); running Setup writes them into the tables.
         private static readonly (string Key, string Th, string En)[] s_Seed =
         {
             ("chat.hint", "กด Enter เพื่อพิมพ์แชต", "Press Enter to chat"),
@@ -59,7 +59,9 @@ namespace SpiritMovers.Editor
             ("results.back_in", "กลับรถตู้ใน {0} วินาที (หัวหน้ากด Enter เพื่อไปเลย)", "Back to the van in {0} s (host: Enter to go now)"),
             ("lobby.title", "รถตู้ Spirit Movers", "Spirit Movers van"),
             ("lobby.code", "รหัสห้อง: {0}", "Room code: {0}"),
-            ("lobby.member", "ผู้เล่น {0} — {1}", "Player {0} — {1}"),
+            ("lobby.member", "{0} — {1}", "{0} — {1}"),
+            ("lobby.player_n", "ผู้เล่น {0}", "Player {0}"),
+            ("menu.name_hint", "ชื่อของคุณ", "Your name"),
             ("lobby.ready", "พร้อม", "ready"),
             ("lobby.not_ready", "ยังไม่พร้อม", "not ready"),
             ("lobby.experimental", "5–6 คน: โหมดทดลอง", "5–6 players: experimental"),
@@ -123,8 +125,9 @@ namespace SpiritMovers.Editor
             var en = (StringTable)collection.GetTable("en");
             foreach (var (key, thText, enText) in s_Seed)
             {
-                if (th.GetEntry(key) == null) th.AddEntry(key, thText);
-                if (en.GetEntry(key) == null) en.AddEntry(key, enText);
+                // The seed is the source of the text: a changed line here updates the table (M4B).
+                SetEntry(th, key, thText);
+                SetEntry(en, key, enText);
             }
             EditorUtility.SetDirty(th);
             EditorUtility.SetDirty(en);
@@ -137,6 +140,15 @@ namespace SpiritMovers.Editor
 
             AssetDatabase.SaveAssets();
             Debug.Log($"[Localization] locales={string.Join(",", LocaleCodes)} table={UiTable} entries={collection.SharedData.Entries.Count}");
+        }
+
+        private static void SetEntry(StringTable table, string key, string text)
+        {
+            var entry = table.GetEntry(key);
+            if (entry == null)
+                table.AddEntry(key, text);
+            else
+                entry.Value = text;
         }
     }
 }
