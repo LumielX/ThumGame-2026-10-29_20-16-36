@@ -565,6 +565,7 @@ namespace SpiritMovers.Editor
             root.AddComponent<PlayerCarrier>();
             root.AddComponent<PlayerEmote>();
             root.AddComponent<PlayerCapture>();
+            root.AddComponent<SpiritMovers.Voice.MicNoise>();
             var interactor = new SerializedObject(root.AddComponent<PlayerInteractor>());
             interactor.FindProperty("m_PromptFont").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontPath);
             interactor.FindProperty("m_PromptGlyphMap").objectReferenceValue = AssetDatabase.LoadAssetAtPath<ThaiGlyphMap>(GlyphMapPath);
