@@ -14,5 +14,8 @@ namespace SpiritMovers.Core.Ghost
 
         /// <summary>Spirit cameras in the team toolbox: 1 for 1–3 players, 2 for 4–6 (GDD 8.3).</summary>
         public static int SpiritCameras(int players) => players >= 4 ? 2 : 1;
+
+        /// <summary>Walkie-talkies in the toolbox: none alone, 2 for 2–4 players, 3 for 5–6 (GDD 8.3, ⚙ M4C plan).</summary>
+        public static int Radios(int players) => players <= 1 ? 0 : players >= 5 ? 3 : 2;
     }
 }
