@@ -54,7 +54,7 @@ namespace SpiritMovers.Job
             LastText = ThaiShaper.Shape(string.Join("\n", lines));
             m_Text.text = LastText;
             m_Text.transform.parent.gameObject.SetActive(true);
-            Cursor.lockState = CursorLockMode.None;
+            GameCursor.Capture(false);
         }
     }
 }

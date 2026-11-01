@@ -264,6 +264,14 @@ MonoBehaviour:
     m_Localized: Leave the room
     m_Metadata:
       m_Items: []
+  - m_Id: 369502500712448
+    m_Localized: Connection lost
+    m_Metadata:
+      m_Items: []
+  - m_Id: 369502546849792
+    m_Localized: "Connection lost \u2014 you keep the pay for accepted rooms: {0}"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

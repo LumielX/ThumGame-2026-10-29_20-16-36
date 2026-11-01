@@ -40,6 +40,20 @@ namespace SpiritMovers.Tests
         }
 
         [UnityTest]
+        public IEnumerator ConnectionLost_GoesBackToMenuWithMessage()
+        {
+            // Final review: a Relay or transport failure shuts NGO down without a disconnect callback, which left the
+            // player in a dead van or house. Stop the network underneath the session, as such a failure does.
+            yield return SoloIntoLobby();
+            NetworkManager.Singleton.Shutdown();
+            yield return WaitFor(() => ActiveScene == GameSession.MainMenuScene, 5f, "main menu");
+            var menu = Object.FindAnyObjectByType<MainMenuPanel>();
+            yield return WaitFor(() => menu.StatusKey != null, 2f, "message");
+            Assert.AreEqual(GameSession.ConnectionLostKey, menu.StatusKey);
+            Assert.IsFalse(GameCursor.Captured);
+        }
+
+        [UnityTest]
         public IEnumerator Pause_ResumeGivesControlBack()
         {
             yield return SoloIntoLobby();

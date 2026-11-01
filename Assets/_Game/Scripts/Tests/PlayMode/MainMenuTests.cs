@@ -116,6 +116,31 @@ namespace SpiritMovers.Tests
         }
 
         [UnityTest]
+        public IEnumerator StaleRefusal_DoesNotHideTheRealError()
+        {
+            // Final review: NGO keeps the last refusal reason until it starts again, so a wrong code typed after
+            // "the room is full" was reported as "the room is full". Plant such a leftover reason the way NGO keeps it.
+            var connections = typeof(Unity.Netcode.NetworkManager).GetField("ConnectionManager",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(Session.Network);
+            var serverReason = connections.GetType().GetField("ServerDisconnectReason",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            serverReason.SetValue(connections, SessionErrors.Full);
+            try
+            {
+                var fake = UseFake();
+                fake.JoinFailure = new Unity.Services.Multiplayer.SessionException("not found",
+                    Unity.Services.Multiplayer.SessionError.SessionNotFound, null);
+                Menu.ClickJoin("ABC123");
+                yield return WaitFor(() => Menu.StatusKey != "menu.connecting" && Menu.StatusKey != null, 3f, "join error");
+                Assert.AreEqual(SessionErrors.Code, Menu.StatusKey);
+            }
+            finally
+            {
+                serverReason.SetValue(connections, string.Empty);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator FailureAwayFromMenu_GoesBackWithMessage()
         {
             // Final-pass finding: a join that failed after the host's scene had synced left the player in a dead van.

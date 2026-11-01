@@ -68,6 +68,13 @@ namespace SpiritMovers.Ghost
             TeleportRpc(feet, yaw);
         }
 
+        /// <summary>Host: the cabinet is gone (the job scene unloaded) — free to walk wherever the player is now.</summary>
+        internal void SetFreed()
+        {
+            if (IsSpawned)
+                m_Cabinet.Value = default;
+        }
+
         /// <summary>The owner moves its own body (owner-authoritative movement).</summary>
         [Rpc(SendTo.Owner)]
         private void TeleportRpc(Vector3 feet, float yaw) => m_Motor.Teleport(feet, yaw);

@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using SpiritMovers.Core.Session;
+using SpiritMovers.Player;
 using SpiritMovers.Text;
 using TMPro;
 using UnityEngine;
@@ -33,8 +34,7 @@ namespace SpiritMovers.Session
         private void Start()
         {
             ThaiFontSupport.Register(m_Font, m_GlyphMap);
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
+            GameCursor.Capture(false);
             m_Session = GameSession.Instance;
             if (m_Session != null)
                 m_Session.Failed += OnFailed;

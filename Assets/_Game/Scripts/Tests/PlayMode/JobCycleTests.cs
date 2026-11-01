@@ -60,12 +60,22 @@ namespace SpiritMovers.Tests
             var cabinet = Object.FindObjectsByType<MemoryCabinet>(FindObjectsSortMode.None).First();
             Assert.IsTrue(cabinet.Capture(PlayerMotor.Local.GetComponent<PlayerCapture>()));
             Object.FindAnyObjectByType<SpiritCamera>().SetFilmForTest(2);
+            // Move everything the team had to tidy 2 m away, so a house that is not unpacked again shows.
+            foreach (var moved in Director.Plan.Rooms.SelectMany(r => r.Slots))
+            {
+                var body = Director.House.Slot(moved.Slot.Id).Item.GetComponent<Rigidbody>();
+                body.position += new Vector3(2f, 0f, 0f);
+                body.transform.position = body.position;
+            }
             Director.LeaveEarly();
             yield return Press(i => i.Next.ConfirmPressed = true);
             yield return WaitFor(() => ActiveScene == GameSession.LobbyScene, 3f, "van");
 
             yield return WaitFor(() => Object.FindAnyObjectByType<LobbyState>()?.Members.Count == 1, 3f, "lobby members");
             Assert.IsNull(Object.FindAnyObjectByType<SpiritCamera>(), "job tools stay in the job scene");
+            // Final review: caught in a cabinet as the job closed, and the mouse freed by the results screen.
+            Assert.IsFalse(PlayerMotor.Local.MovementLocked, "free to walk in the van");
+            Assert.IsTrue(GameCursor.Captured, "the mouse looks around again in the van");
             yield return Press(i => i.Next.ReadyPressed = true);
             yield return Press(i => i.Next.ConfirmPressed = true);
             yield return WaitFor(() => ActiveScene == GameSession.JobScene && Director?.Phase == JobPhase.Exploring, 10f, "second job");
@@ -76,9 +86,30 @@ namespace SpiritMovers.Tests
             var cameras = Object.FindObjectsByType<SpiritCamera>(FindObjectsSortMode.None);
             Assert.AreEqual(ToolConfig.SpiritCameras(1), cameras.Length, "only this job's cameras");
             Assert.AreEqual(6, cameras[0].Film, "a fresh camera");
-            var task = Director.Plan.Rooms[0].Slots[0];
-            var item = Director.House.Slot(task.Slot.Id).Item.transform.position;
-            Assert.Less(Vector3.Distance(item, task.StartPlacement.Position.ToUnity()), 0.1f, "the house was unpacked again");
+            // Items start exactly on their spots; physics may then nudge two neighbours apart by a few centimetres
+            // (a random seed decides who stands where), far less than the 2 m the first job moved them.
+            foreach (var task in Director.Plan.Rooms.SelectMany(r => r.Slots))
+            {
+                var offset = Director.House.Slot(task.Slot.Id).Item.transform.position - task.StartPlacement.Position.ToUnity();
+                Assert.Less(offset.magnitude, 0.3f, $"slot {task.Slot.Id} unpacked again (off by {offset})");
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator CabinetUnloaded_FreesItsCaptive()
+        {
+            // Final review: the job scene can unload before the cabinet's next check lets its captive out, which left
+            // that player unable to walk in the van and every later job.
+            yield return SoloIntoJob();
+            var cabinet = Object.FindObjectsByType<MemoryCabinet>(FindObjectsSortMode.None).First();
+            Assert.IsTrue(cabinet.Capture(PlayerMotor.Local.GetComponent<PlayerCapture>()));
+            yield return null;
+            Assert.IsTrue(PlayerMotor.Local.MovementLocked);
+            Session.Network.SceneManager.LoadScene(GameSession.LobbyScene, UnityEngine.SceneManagement.LoadSceneMode.Single);
+            yield return WaitFor(() => ActiveScene == GameSession.LobbyScene, 5f, "van");
+            yield return null;
+            Assert.IsFalse(PlayerMotor.Local.GetComponent<PlayerCapture>().IsCaptured);
+            Assert.IsFalse(PlayerMotor.Local.MovementLocked, "free to walk in the van");
         }
 
         [UnityTest]

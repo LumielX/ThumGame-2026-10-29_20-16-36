@@ -23,6 +23,10 @@ namespace SpiritMovers.Session
         public const string LobbyScene = "Lobby";
         public const string JobScene = "Job_Greybox";
         private const ushort SoloPort = 7777;
+        /// <summary>Shown when the network stopped under us (Relay or transport failure), host or client.</summary>
+        public const string ConnectionLostKey = "session.connection_lost";
+        /// <summary>The same during a job or its results, with the pay for rooms the ghost already accepted.</summary>
+        public const string ConnectionLostJobKey = "session.connection_lost_job";
 
         private readonly UgsSessionService m_Ugs = new();
         private NetworkManager m_Network;
@@ -30,6 +34,10 @@ namespace SpiritMovers.Session
         private bool m_Leaving;
         private bool m_Joining;
         private string m_Refusal;
+        /// <summary>NGO started during the current host/join attempt, so its disconnect reason belongs to it.</summary>
+        private bool m_StartedThisAttempt;
+        /// <summary>We shut NGO down ourselves; the stop that follows is not a lost connection.</summary>
+        private bool m_StopExpected;
 
         public static GameSession Instance { get; private set; }
 
@@ -80,7 +88,13 @@ namespace SpiritMovers.Session
             DontDestroyOnLoad(gameObject);
             SceneManager.sceneLoaded += OnSceneLoaded;
             m_Network.OnClientDisconnectCallback += OnDisconnected;
-            m_Network.OnClientStarted += () => m_Network.SceneManager.OnSceneEvent += OnSceneEvent;
+            m_Network.OnClientStarted += () =>
+            {
+                m_StartedThisAttempt = true;
+                m_StopExpected = false;
+                m_Network.SceneManager.OnSceneEvent += OnSceneEvent;
+            };
+            m_Network.OnClientStopped += OnStopped;
         }
 
         /// <summary>Host: every player has finished loading the job scene (NGO's load-complete event).</summary>
@@ -127,10 +141,41 @@ namespace SpiritMovers.Session
             {
                 var phase = Phase;
                 PendingMessageKey = MessageForHostLeft(phase);
+                PendingArgs = null;
                 PendingPay = PayForHostLeft(phase);
                 Debug.Log($"[Net] the host left during {phase}; pay {PendingPay}");
             }
             _ = LeaveAsync();
+        }
+
+        /// <summary>
+        /// NGO stopped without us asking: a Relay or transport failure shuts it down with no disconnect callback, on the
+        /// host as well as a client (M4A final review). Back to the menu with a message instead of a dead scene.
+        /// </summary>
+        private void OnStopped(bool wasHost)
+        {
+            if (m_StopExpected)
+            {
+                m_StopExpected = false;
+                return;
+            }
+            if (m_Leaving || PendingMessageKey != null || SceneManager.GetActiveScene().name == MainMenuScene)
+                return;
+            var phase = Phase;
+            PendingMessageKey = phase is SessionPhase.Job or SessionPhase.Results ? ConnectionLostJobKey : ConnectionLostKey;
+            PendingArgs = null;
+            PendingPay = PayForHostLeft(phase);
+            Debug.LogWarning($"[Net] the connection stopped during {phase} ({(wasHost ? "host" : "client")}); pay {PendingPay}");
+            _ = LeaveAsync();
+        }
+
+        /// <summary>Shut NGO down on purpose (leaving, a failed attempt).</summary>
+        private void StopNetwork()
+        {
+            if (!m_Network.IsListening)
+                return;
+            m_StopExpected = true;
+            m_Network.Shutdown();
         }
 
         internal void FailForTest(Exception e) => Fail(e);
@@ -181,6 +226,7 @@ namespace SpiritMovers.Session
         /// <summary>Create an online room: on success this machine hosts and the team goes to the van.</summary>
         public async Task HostAsync()
         {
+            m_StartedThisAttempt = false;
             try
             {
                 await Service.InitializeAsync(Profile);
@@ -205,6 +251,7 @@ namespace SpiritMovers.Session
             }
             m_Joining = true;
             m_Refusal = null;
+            m_StartedThisAttempt = false;
             SetVersionPayload();
             try
             {
@@ -243,7 +290,7 @@ namespace SpiritMovers.Session
         {
             var online = !IsSolo && JoinCode != null;
             m_Leaving = true;
-            m_Network.Shutdown();
+            StopNetwork();
             IsSolo = false;
             JoinCode = null;
             m_Loading = false;
@@ -296,10 +343,10 @@ namespace SpiritMovers.Session
         private void Fail(Exception e)
         {
             Debug.LogWarning($"[Net] session failed: {e.GetType().Name}: {e.Message}");
-            if (m_Network.IsListening)
-                m_Network.Shutdown();
+            StopNetwork();
             // A refusal by the host says more than the SDK's generic join error (final-pass finding, 150 ms run).
-            var reason = m_Refusal ?? m_Network.DisconnectReason;
+            // NGO keeps its last reason until it starts again, so only this attempt's counts (M4A final review).
+            var reason = m_Refusal ?? (m_StartedThisAttempt ? m_Network.DisconnectReason : null);
             m_Refusal = null;
             var (key, args) = !string.IsNullOrEmpty(reason) && reason.StartsWith("error.")
                 ? ParseRefusal(reason)

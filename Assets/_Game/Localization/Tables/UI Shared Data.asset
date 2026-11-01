@@ -259,6 +259,14 @@ MonoBehaviour:
     m_Key: pause.leave
     m_Metadata:
       m_Items: []
+  - m_Id: 369502500712448
+    m_Key: session.connection_lost
+    m_Metadata:
+      m_Items: []
+  - m_Id: 369502546849792
+    m_Key: session.connection_lost_job
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

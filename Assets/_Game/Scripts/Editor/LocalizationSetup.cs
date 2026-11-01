@@ -44,6 +44,8 @@ namespace SpiritMovers.Editor
             ("menu.connecting", "กำลังเชื่อมต่อ…", "Connecting…"),
             ("session.host_left_lobby", "หัวหน้าห้องออกแล้ว", "The host left"),
             ("session.host_left_job", "หัวหน้าห้องออกระหว่างงาน — ได้ค่าจ้างห้องที่ผีรับแล้ว {0}", "The host left during the job — you keep the pay for accepted rooms: {0}"),
+            ("session.connection_lost", "การเชื่อมต่อหลุด", "Connection lost"),
+            ("session.connection_lost_job", "การเชื่อมต่อหลุด — ได้ค่าจ้างห้องที่ผีรับแล้ว {0}", "Connection lost — you keep the pay for accepted rooms: {0}"),
             ("session.host_left_results", "หัวหน้าห้องออก — ค่าจ้างงานนี้ {0}", "The host left — your pay for this job: {0}"),
             ("pause.resume", "กลับเข้าเกม", "Back to the game"),
             ("pause.leave", "ออกจากห้อง", "Leave the room"),

@@ -64,8 +64,7 @@ namespace SpiritMovers.Session
             if (local != null)
                 local.InputEnabled = !open;
             // The motor keeps reading Esc while its gameplay input is off, so the menu can still be closed with Esc.
-            Cursor.lockState = open || local == null || Application.isBatchMode ? CursorLockMode.None : CursorLockMode.Locked;
-            Cursor.visible = open || local == null;
+            GameCursor.Capture(!open && local != null);
         }
     }
 }

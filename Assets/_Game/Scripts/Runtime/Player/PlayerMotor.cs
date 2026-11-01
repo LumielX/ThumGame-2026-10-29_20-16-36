@@ -92,7 +92,6 @@ namespace SpiritMovers.Player
             {
                 m_Head.gameObject.AddComponent<Camera>().nearClipPlane = 0.05f;
                 m_Head.gameObject.AddComponent<AudioListener>();
-                Cursor.lockState = CursorLockMode.Locked;
             }
             EnterScene();
             // The player object outlives scene changes (MainMenu → Lobby → job → Lobby): stand at each new scene's spawn.
@@ -106,8 +105,7 @@ namespace SpiritMovers.Player
             SceneManager.sceneLoaded -= OnSceneLoaded;
             Local = null;
             // Back to menus: give the mouse back (M3B carry-over 5).
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
+            GameCursor.Capture(false);
         }
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -122,6 +120,8 @@ namespace SpiritMovers.Player
             var spawn = GameObject.Find($"PlayerSpawn{OwnerClientId % 6}") ?? GameObject.Find("PlayerSpawn0");
             if (spawn != null)
                 Teleport(spawn.transform.position, spawn.transform.eulerAngles.y);
+            // Every scene starts with the mouse looking around, unless the pause menu is open (the results screen frees it).
+            GameCursor.Capture(InputEnabled);
             if (Application.isBatchMode)
                 return;
             foreach (var other in FindObjectsByType<Camera>(FindObjectsSortMode.None))

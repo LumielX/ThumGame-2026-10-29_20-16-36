@@ -126,6 +126,14 @@ namespace SpiritMovers.Ghost
             m_Light.enabled = false;
         }
 
+        public override void OnNetworkDespawn()
+        {
+            // The job scene can unload before the next check lets the captive out (M4A final review).
+            if (IsServer && m_Captive != null)
+                m_Captive.SetFreed();
+            m_Captive = null;
+        }
+
         private void Update()
         {
             if (!IsSpawned || !IsServer || !IsOccupied || Time.time < m_NextCheckAt)
