@@ -277,7 +277,8 @@ namespace SpiritMovers.Job
             for (var i = 0; i < ToolConfig.SpiritCameras(players); i++)
             {
                 var camera = Instantiate(m_CameraPrefab, m_ToolSpot.position + m_ToolSpot.right * (0.4f * i), m_ToolSpot.rotation);
-                camera.GetComponent<NetworkObject>().Spawn();
+                // Tools belong to this house: they go when the job scene unloads (M4A, back to the van).
+                camera.GetComponent<NetworkObject>().Spawn(destroyWithScene: true);
             }
         }
 

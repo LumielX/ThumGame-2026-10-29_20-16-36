@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Linq;
 using NUnit.Framework;
+using SpiritMovers.Core.Ghost;
 using SpiritMovers.Core.Job;
 using SpiritMovers.Ghost;
 using SpiritMovers.Job;
@@ -64,6 +65,7 @@ namespace SpiritMovers.Tests
             yield return WaitFor(() => ActiveScene == GameSession.LobbyScene, 3f, "van");
 
             yield return WaitFor(() => Object.FindAnyObjectByType<LobbyState>()?.Members.Count == 1, 3f, "lobby members");
+            Assert.IsNull(Object.FindAnyObjectByType<SpiritCamera>(), "job tools stay in the job scene");
             yield return Press(i => i.Next.ReadyPressed = true);
             yield return Press(i => i.Next.ConfirmPressed = true);
             yield return WaitFor(() => ActiveScene == GameSession.JobScene && Director?.Phase == JobPhase.Exploring, 10f, "second job");
@@ -71,7 +73,9 @@ namespace SpiritMovers.Tests
 
             Assert.Less(Director.AngerValue, 1f, "a calm ghost");
             Assert.IsFalse(PlayerMotor.Local.GetComponent<PlayerCapture>().IsCaptured, "nobody in a cabinet");
-            Assert.AreEqual(6, Object.FindAnyObjectByType<SpiritCamera>().Film, "a fresh camera");
+            var cameras = Object.FindObjectsByType<SpiritCamera>(FindObjectsSortMode.None);
+            Assert.AreEqual(ToolConfig.SpiritCameras(1), cameras.Length, "only this job's cameras");
+            Assert.AreEqual(6, cameras[0].Film, "a fresh camera");
             var task = Director.Plan.Rooms[0].Slots[0];
             var item = Director.House.Slot(task.Slot.Id).Item.transform.position;
             Assert.Less(Vector3.Distance(item, task.StartPlacement.Position.ToUnity()), 0.1f, "the house was unpacked again");
