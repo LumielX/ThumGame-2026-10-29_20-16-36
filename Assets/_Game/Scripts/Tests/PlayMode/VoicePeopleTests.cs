@@ -61,6 +61,20 @@ namespace SpiritMovers.Tests
         }
 
         [UnityTest]
+        public IEnumerator Vivox_LogoutForgetsMutes()
+        {
+            // Final review: the Vivox service kept its own list of muted players after leaving a room, so a friend
+            // muted once stayed silent in the next room while the Players page showed them unmuted.
+            var vivox = new VivoxVoiceService();
+            vivox.SetParticipantMuted("p2", true);
+            vivox.SetParticipantVolume("p2", 0.3f);
+            Assert.IsTrue(vivox.RemembersForTest("p2"));
+            var logout = vivox.LogoutAsync();
+            yield return WaitFor(() => logout.IsCompleted, 6f, "logout");
+            Assert.IsFalse(vivox.RemembersForTest("p2"));
+        }
+
+        [UnityTest]
         public IEnumerator Volume_PerPersonApplied()
         {
             var voice = new FakeVoiceService();

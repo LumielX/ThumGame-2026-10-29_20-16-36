@@ -35,9 +35,20 @@ namespace SpiritMovers.Voice
         private float m_NextSendAt;
         private int m_ClosedFrame = -1;
 
+        private static int s_ConfirmBlockedUntil = -1;
+
         public bool IsTyping { get; private set; }
+
+        /// <summary>
+        /// The Enter that sent a message must not also be Confirm (set off from the van, leave the results early): the
+        /// player's input drops Confirm in the frame the field closes and the next (M4C final review).
+        /// </summary>
+        public static bool SwallowsConfirm => Time.frameCount <= s_ConfirmBlockedUntil;
         /// <summary>The Esc that closed the field must not also open the pause menu.</summary>
         public bool ClosedThisFrame => m_ClosedFrame == Time.frameCount;
+
+        /// <summary>Tests: whether the chat box reads TMP markup in messages.</summary>
+        internal bool FeedRichText => m_Feed != null && m_Feed.richText;
 
         /// <summary>The chat box as shown (shaped), for tests.</summary>
         internal string LastText { get; private set; } = "";
@@ -54,6 +65,8 @@ namespace SpiritMovers.Voice
             rect.anchoredPosition = new Vector2(24f, 110f);
             rect.sizeDelta = new Vector2(640f, 140f);
             m_Feed.alignment = TextAlignmentOptions.BottomLeft;
+            // Messages are shown as written: "<size=600>" must not take over the screen, and "<3" must stay.
+            m_Feed.richText = false;
 
             var column = SessionUi.CreateColumn(canvas, new Vector2(0.5f, 0f), new Vector2(680, 96));
             column.anchoredPosition = new Vector2(0f, 24f);
@@ -130,6 +143,7 @@ namespace SpiritMovers.Voice
         {
             IsTyping = false;
             m_ClosedFrame = Time.frameCount;
+            s_ConfirmBlockedUntil = Time.frameCount + 1;
             m_Field.DeactivateInputField();
             m_Field.transform.parent.gameObject.SetActive(false);
             var local = PlayerMotor.Local;

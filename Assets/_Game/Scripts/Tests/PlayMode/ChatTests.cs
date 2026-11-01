@@ -100,6 +100,35 @@ namespace SpiritMovers.Tests
         }
 
         [UnityTest]
+        public IEnumerator Chat_EnterDoesNotConfirm()
+        {
+            // Final review: Enter sends the message and is also Confirm — the host's message started the countdown.
+            var voice = new FakeVoiceService();
+            yield return VanWithFriend(voice);
+            yield return Press(i => i.Next.ReadyPressed = true);
+            yield return Press(i => i.Next.ChatPressed = true);
+            yield return null;
+            Assert.IsTrue(Chat.IsTyping);
+            LocalInput.Next.ConfirmPressed = true; // the same Enter press
+            Chat.Type("ไปกันหรือยัง");
+            for (var i = 0; i < 4; i++)
+                yield return null;
+            Assert.IsFalse(Object.FindAnyObjectByType<LobbyState>().IsCountingDown, "sending a message does not set off");
+        }
+
+        [UnityTest]
+        public IEnumerator Chat_ShowsTextNotMarkup()
+        {
+            // Final review: "<size=600>" in a message made the chat box huge; "<3" vanished.
+            var voice = new FakeVoiceService();
+            yield return VanWithFriend(voice);
+            voice.DeliverText("p2", "van-FAKE01", "<size=600>ใหญ่ <3");
+            yield return null;
+            Assert.IsFalse(Chat.FeedRichText, "chat shows text as written");
+            StringAssert.Contains("<size=600>ใหญ่ <3", Shown);
+        }
+
+        [UnityTest]
         public IEnumerator Chat_RebindableKey()
         {
             var voice = new FakeVoiceService();

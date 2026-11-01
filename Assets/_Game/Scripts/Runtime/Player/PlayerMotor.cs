@@ -167,6 +167,8 @@ namespace SpiritMovers.Player
             var raw = Input != null ? Input.Read() : default;
             // With gameplay input off (pause menu, chat field) only Esc gets through, so the menu can be closed again.
             var input = InputEnabled ? raw : new PlayerInputState { PausePressed = raw.PausePressed };
+            if (Voice.ChatPanel.SwallowsConfirm)
+                input.ConfirmPressed = false;
             CurrentInput = input;
             if (MovementLocked)
             {

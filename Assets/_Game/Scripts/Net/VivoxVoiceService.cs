@@ -81,6 +81,9 @@ namespace SpiritMovers.Net
 
         public async Task LogoutAsync()
         {
+            // Mutes and volumes belong to the room being left (VoiceDirector keeps the session's own).
+            m_MutedPlayers.Clear();
+            m_PlayerVolumes.Clear();
             foreach (var tap in m_Taps.Values)
                 if (tap != null)
                     Object.Destroy(tap);
@@ -210,6 +213,9 @@ namespace SpiritMovers.Net
             if (!string.IsNullOrEmpty(name) && device != null)
                 await Vivox.SetActiveOutputDeviceAsync(device);
         }
+
+        /// <summary>Tests: this player still has a mute or volume remembered.</summary>
+        internal bool RemembersForTest(string playerId) => m_MutedPlayers.Contains(playerId) || m_PlayerVolumes.ContainsKey(playerId);
 
         /// <summary>0..1 of the default loudness → Vivox's −50..0 (decibel-like); never boosted past the default.</summary>
         public static int ToVivoxVolume(float gain01)

@@ -68,6 +68,48 @@ namespace SpiritMovers.Tests
         }
 
         [UnityTest]
+        public IEnumerator Radio_RightClickTalksNotThrows()
+        {
+            // Final review: Use and Throw are both the right mouse button, so a real right-click on a held walkie
+            // reads as Use + Throw — the walkie flew away instead of talking.
+            var voice = new FakeVoiceService();
+            yield return JobWithRadios(voice);
+            var walkie = Walkies[0];
+            yield return Hold(walkie);
+            LocalInput.Next.UsePressed = true;
+            LocalInput.Next.ThrowPressed = true;
+            LocalInput.Next.UseHeld = true;
+            for (var i = 0; i < 10; i++)
+                yield return null;
+            Assert.IsTrue(walkie.GetComponent<Carryable>().IsCarriedBy(NetworkManager.ServerClientId), "still in hand");
+            Assert.IsTrue(Voice.RadioHeld, "talking");
+            LocalInput.Next.UseHeld = false;
+        }
+
+        [UnityTest]
+        public IEnumerator Radio_MutedPlayerSilentOnRadio()
+        {
+            // Final review: radio voices come through a tap (a Unity AudioSource), which Vivox's own per-player mute,
+            // per-player volume and voice volume never reach.
+            var voice = new FakeVoiceService();
+            yield return JobWithRadios(voice);
+            voice.AddParticipant(new VoiceParticipant("p2", Radio, true, 0.7, false));
+            yield return Hold(Walkies[0]);
+            yield return null;
+            var source = voice.TapParticipant("p2", Radio);
+            Assert.IsFalse(source.mute);
+            Voice.SetPlayerMuted("p2", true);
+            yield return null;
+            Assert.IsTrue(source.mute, "muted players stay silent on the radio");
+            Voice.SetPlayerMuted("p2", false);
+            Voice.SetPlayerVolume("p2", 0.4f);
+            SpiritMovers.Save.GameData.Settings.SetVolume(Core.Save.AudioGroup.Voice, 0.5f);
+            yield return null;
+            Assert.IsFalse(source.mute);
+            Assert.AreEqual(0.2f, source.volume, 0.001f, "player volume × voice volume");
+        }
+
+        [UnityTest]
         public IEnumerator Radio_DropWhileTalkingStops()
         {
             var voice = new FakeVoiceService();

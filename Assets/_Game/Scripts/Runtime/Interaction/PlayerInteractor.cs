@@ -66,9 +66,12 @@ namespace SpiritMovers.Interaction
                 else
                     Focus?.Interact(m_Carrier);
             }
-            if (held != null && input.UsePressed && held.TryGetComponent<IUsable>(out var tool))
-                tool.Use(m_Carrier);
-            if (held != null && input.ThrowPressed && CarryRules.CanThrow(held.Mass, held.CarrierCount, m_Config))
+            // Use and Throw share the right mouse button: a held tool is used (put it down with Interact to pass it on),
+            // anything else is thrown (M4C final review — a walkie flew away when its owner pressed to talk).
+            var heldTool = held != null && held.TryGetComponent<IUsable>(out var tool) ? tool : null;
+            if (heldTool != null && input.UsePressed)
+                heldTool.Use(m_Carrier);
+            if (held != null && heldTool == null && input.ThrowPressed && CarryRules.CanThrow(held.Mass, held.CarrierCount, m_Config))
                 held.RequestThrowRpc(motor.Head.forward);
             if (held != null && input.RotateSteps != 0f)
                 held.RequestRotateRpc(input.RotateSteps);

@@ -3,6 +3,7 @@ using System.Linq;
 using SpiritMovers.Core.Voice;
 using SpiritMovers.Job;
 using SpiritMovers.Net;
+using SpiritMovers.Save;
 using UnityEngine;
 
 namespace SpiritMovers.Voice
@@ -51,11 +52,15 @@ namespace SpiritMovers.Voice
 
             var hear = Walkie.LocalHolds;
             var stage = m_Director != null ? m_Director.AngerStage : 0;
-            foreach (var filter in m_Filters.Values)
+            // A tapped voice plays through Unity, past Vivox's own per-player mute and volume and the voice volume:
+            // they are applied here (M4C final review).
+            var voiceVolume = GameData.Settings.voice;
+            foreach (var (id, filter) in m_Filters)
             {
                 if (filter == null)
                     continue;
-                filter.Source.mute = !hear;
+                filter.Source.mute = !hear || voice.IsPlayerMuted(id);
+                filter.Source.volume = voice.PlayerVolume(id) * voiceVolume;
                 filter.Apply(stage, Time.time);
             }
         }
