@@ -46,6 +46,8 @@ namespace SpiritMovers.Voice
         private string m_LastTransmit;
         private bool? m_LastMute;
         private float m_LastVolume = -1f;
+        private readonly Dictionary<string, bool> m_PlayerMuted = new();
+        private readonly Dictionary<string, float> m_PlayerVolume = new();
 
         public static VoiceDirector Instance { get; private set; }
 
@@ -105,6 +107,35 @@ namespace SpiritMovers.Voice
             _ = SyncAsync();
         }
 
+        /// <summary>Mute one player for this session (D-009); applied again whenever voice joins new channels.</summary>
+        public void SetPlayerMuted(string playerId, bool muted)
+        {
+            m_PlayerMuted[playerId] = muted;
+            if (State == VoiceState.On)
+                Service.SetParticipantMuted(playerId, muted);
+        }
+
+        public void SetPlayerVolume(string playerId, float gain01)
+        {
+            m_PlayerVolume[playerId] = Mathf.Clamp01(gain01);
+            if (State == VoiceState.On)
+                Service.SetParticipantVolume(playerId, m_PlayerVolume[playerId]);
+        }
+
+        public bool IsPlayerMuted(string playerId) => m_PlayerMuted.TryGetValue(playerId, out var muted) && muted;
+        public float PlayerVolume(string playerId) => m_PlayerVolume.TryGetValue(playerId, out var gain) ? gain : 1f;
+
+        /// <summary>That player (or we ourselves) is talking right now.</summary>
+        public bool IsSpeaking(string playerId)
+        {
+            if (State != VoiceState.On || string.IsNullOrEmpty(playerId))
+                return false;
+            foreach (var p in Service.Participants)
+                if (p.PlayerId == playerId && p.Speaking)
+                    return true;
+            return false;
+        }
+
         /// <summary>The settings page changed the microphone or speaker.</summary>
         public void ApplyDevices()
         {
@@ -138,6 +169,8 @@ namespace SpiritMovers.Voice
                         await Service.LogoutAsync();
                     Space = VoiceSpace.None;
                     RoomCode = null;
+                    m_PlayerMuted.Clear();
+                    m_PlayerVolume.Clear();
                     SetState(VoiceState.Off);
                     return;
                 }
@@ -159,6 +192,10 @@ namespace SpiritMovers.Voice
                 m_LastTransmit = null;
                 m_LastMute = null;
                 m_LastVolume = -1f;
+                foreach (var (id, muted) in m_PlayerMuted)
+                    Service.SetParticipantMuted(id, muted);
+                foreach (var (id, gain) in m_PlayerVolume)
+                    Service.SetParticipantVolume(id, gain);
                 SetState(VoiceState.On);
                 Debug.Log($"[Voice] {Space}: {string.Join(", ", target.Select(c => c.Name))}");
             }

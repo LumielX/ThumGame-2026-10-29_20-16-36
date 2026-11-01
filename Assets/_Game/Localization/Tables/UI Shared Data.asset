@@ -507,6 +507,26 @@ MonoBehaviour:
     m_Key: radio.on_air
     m_Metadata:
       m_Items: []
+  - m_Id: 449462183686144
+    m_Key: voice.radio_tag
+    m_Metadata:
+      m_Items: []
+  - m_Id: 449462238212096
+    m_Key: voice.mute
+    m_Metadata:
+      m_Items: []
+  - m_Id: 449462238212097
+    m_Key: voice.unmute
+    m_Metadata:
+      m_Items: []
+  - m_Id: 449462238212098
+    m_Key: pause.players
+    m_Metadata:
+      m_Items: []
+  - m_Id: 449462238212099
+    m_Key: players.close
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

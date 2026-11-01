@@ -8,6 +8,9 @@ namespace SpiritMovers.Net
     {
         Task InitializeAsync(string profile = null);
 
+        /// <summary>This machine's UGS player id once signed in ("" before) — voice chat knows players by it.</summary>
+        string PlayerId { get; }
+
         /// <summary>Creates a session, starts this machine as the network host and returns the join code.</summary>
         Task<string> HostAsync(int maxPlayers, GameVersion version);
 

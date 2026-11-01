@@ -516,6 +516,26 @@ MonoBehaviour:
     m_Localized: On the radio
     m_Metadata:
       m_Items: []
+  - m_Id: 449462183686144
+    m_Localized: '[radio]'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 449462238212096
+    m_Localized: Mute
+    m_Metadata:
+      m_Items: []
+  - m_Id: 449462238212097
+    m_Localized: Unmute
+    m_Metadata:
+      m_Items: []
+  - m_Id: 449462238212098
+    m_Localized: Players
+    m_Metadata:
+      m_Items: []
+  - m_Id: 449462238212099
+    m_Localized: Close
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

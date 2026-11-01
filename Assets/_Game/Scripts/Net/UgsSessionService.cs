@@ -30,6 +30,10 @@ namespace SpiritMovers.Net
     /// </summary>
     public sealed class UgsSessionService : ISessionService
     {
+        public string PlayerId => UnityServices.State == ServicesInitializationState.Initialized && AuthenticationService.Instance.IsSignedIn
+            ? AuthenticationService.Instance.PlayerId
+            : "";
+
         private const string VersionProperty = "ver";
 
         public ISession Session { get; private set; }

@@ -21,6 +21,7 @@ namespace SpiritMovers.Session
         private GameObject m_Panel;
         private Transform m_Canvas;
         private SettingsPanel m_Settings;
+        private Voice.PlayerVoicePanel m_Players;
 
         public bool IsOpen { get; private set; }
 
@@ -28,6 +29,7 @@ namespace SpiritMovers.Session
         {
             m_Session = GetComponent<GameSession>();
             m_Settings = GetComponent<SettingsPanel>();
+            m_Players = GetComponent<Voice.PlayerVoicePanel>();
             ThaiFontSupport.Register(m_Font, m_GlyphMap);
             Build();
             m_Panel.SetActive(false);
@@ -48,8 +50,9 @@ namespace SpiritMovers.Session
             var canvas = SessionUi.CreateCanvas(transform, "PauseCanvas");
             m_Canvas = canvas;
             canvas.GetComponent<Canvas>().sortingOrder = 50;
-            var column = SessionUi.CreateColumn(canvas, new Vector2(0.5f, 0.5f), new Vector2(560, 340));
+            var column = SessionUi.CreateColumn(canvas, new Vector2(0.5f, 0.5f), new Vector2(560, 420));
             SessionUi.CreateButton(column, m_Font, "pause.resume", ClickResume);
+            SessionUi.CreateButton(column, m_Font, "pause.players", ClickPlayers);
             SessionUi.CreateButton(column, m_Font, "menu.settings", ClickSettings);
             SessionUi.CreateButton(column, m_Font, "pause.leave", ClickLeave);
             m_Panel = column.gameObject;
@@ -67,8 +70,16 @@ namespace SpiritMovers.Session
             // Esc belongs to the settings page while it is open (it closes the page, not this menu).
             if (m_Settings != null && (m_Settings.IsOpen || m_Settings.ClosedThisFrame))
                 return;
+            if (m_Players != null && (m_Players.IsOpen || m_Players.ClosedThisFrame))
+                return;
             if (local.CurrentInput.PausePressed)
                 SetOpen(!IsOpen);
+        }
+
+        internal void ClickPlayers()
+        {
+            if (m_Players != null)
+                m_Players.Open();
         }
 
         internal void ClickSettings()

@@ -94,8 +94,17 @@ namespace SpiritMovers.Dev
         }
 
         public void SetOutputVolume(float gain01) => OutputVolume = gain01;
-        public void SetParticipantMuted(string playerId, bool muted) => ParticipantMuted[playerId] = muted;
-        public void SetParticipantVolume(string playerId, float gain01) => ParticipantVolume[playerId] = gain01;
+        public void SetParticipantMuted(string playerId, bool muted)
+        {
+            ParticipantMuted[playerId] = muted;
+            Calls.Add($"Mute {playerId} {muted}");
+        }
+
+        public void SetParticipantVolume(string playerId, float gain01)
+        {
+            ParticipantVolume[playerId] = gain01;
+            Calls.Add($"Volume {playerId} {gain01:0.00}");
+        }
         public void UpdatePosition(Transform head, string channelName) => PositionUpdates++;
         public int PositionUpdates { get; private set; }
 

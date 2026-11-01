@@ -17,6 +17,8 @@ namespace SpiritMovers.Tests
         public bool? Joinable;
 
         public Task InitializeAsync(string profile = null) => Task.CompletedTask;
+        /// <summary>The same id FakeVoiceService signs in with, so rosters and voice line up in tests.</summary>
+        public string PlayerId => "self-player";
         public Task LeaveAsync() => Task.CompletedTask;
 
         /// <summary>Hosts on this machine (no Relay) so the online host path runs without the internet.</summary>

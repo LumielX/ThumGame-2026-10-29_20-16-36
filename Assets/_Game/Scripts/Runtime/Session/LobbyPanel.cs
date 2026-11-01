@@ -64,7 +64,9 @@ namespace SpiritMovers.Session
             foreach (var member in members.OrderBy(m => m.Number))
             {
                 var name = member.Name.IsEmpty ? SessionUi.Text("lobby.player_n", member.Number) : member.Name.ToString();
-                lines.Add(SessionUi.Text("lobby.member", name, SessionUi.Text(member.Ready ? "lobby.ready" : "lobby.not_ready")));
+                var speaking = Voice.VoiceDirector.Instance != null && Voice.VoiceDirector.Instance.IsSpeaking(member.VoiceId.ToString());
+                lines.Add((speaking ? "● " : "") +
+                          SessionUi.Text("lobby.member", name, SessionUi.Text(member.Ready ? "lobby.ready" : "lobby.not_ready")));
             }
             if (SessionRules.SizeLabel(members.Count) == CrewSize.Experimental)
                 lines.Add(SessionUi.Text("lobby.experimental"));

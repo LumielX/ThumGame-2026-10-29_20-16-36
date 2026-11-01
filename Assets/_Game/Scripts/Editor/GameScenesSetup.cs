@@ -68,6 +68,8 @@ namespace SpiritMovers.Editor
             SetFont(go.AddComponent<SpiritMovers.Settings.SettingsPanel>());
             go.AddComponent<SpiritMovers.Voice.VoiceDirector>();
             SetFont(go.AddComponent<SpiritMovers.Voice.VoiceStatus>());
+            SetFont(go.AddComponent<SpiritMovers.Voice.VoiceHud>());
+            SetFont(go.AddComponent<SpiritMovers.Voice.PlayerVoicePanel>());
             var settings = new SerializedObject(go.AddComponent<SpiritMovers.Settings.SettingsHost>());
             settings.FindProperty("m_Actions").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<UnityEngine.InputSystem.InputActionAsset>("Assets/_Game/Settings/Input/SpiritMovers.inputactions");

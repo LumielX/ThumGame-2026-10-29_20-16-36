@@ -25,6 +25,9 @@ namespace SpiritMovers.Voice
 
         public AudioSource Source { get; private set; }
         public float Crackle { get; private set; }
+        /// <summary>How loud the radio voice is lately (peak, slowly falling) — the HUD's "on the radio" check.</summary>
+        public float Level => m_Level;
+        private volatile float m_Level;
         public bool Dropped { get; private set; }
 
         /// <summary>Add the radio chain to a tapped voice; <paramref name="seed"/> keeps every listener's drop-outs alike.</summary>
@@ -64,15 +67,21 @@ namespace SpiritMovers.Voice
             }
             var crackle = m_AudioCrackle * StaticLevel;
             var peak = m_Peak;
+            var voice = 0f;
             for (var i = 0; i < data.Length; i++)
             {
+                // The voice level is taken before the static, so static alone never looks like someone talking.
+                var level = data[i] < 0f ? -data[i] : data[i];
+                if (level > voice)
+                    voice = level;
                 if (crackle > 0f)
                     data[i] += (float)(m_Noise.NextDouble() * 2.0 - 1.0) * crackle;
-                var level = data[i] < 0f ? -data[i] : data[i];
-                if (level > peak)
-                    peak = level;
+                var heard = data[i] < 0f ? -data[i] : data[i];
+                if (heard > peak)
+                    peak = heard;
             }
             m_Peak = peak;
+            m_Level = Mathf.Max(voice, m_Level * 0.9f);
         }
     }
 }

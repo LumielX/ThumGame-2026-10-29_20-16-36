@@ -15,9 +15,14 @@ namespace SpiritMovers.Session
         public bool Ready;
         public int Number;
         public FixedString64Bytes Name;
+        /// <summary>The player's UGS id, which voice chat knows them by ("" when unknown).</summary>
+        public FixedString64Bytes VoiceId;
 
-        public LobbyMember(ulong clientId, bool ready, int number, string name = "")
+        public LobbyMember(ulong clientId, bool ready, int number, string name = "", string voiceId = "")
         {
+            VoiceId = new FixedString64Bytes(Core.Session.ConnectionPayload.CleanVoiceId(voiceId).Length > 61
+                ? Core.Session.ConnectionPayload.CleanVoiceId(voiceId).Substring(0, 61)
+                : Core.Session.ConnectionPayload.CleanVoiceId(voiceId));
             ClientId = clientId;
             Ready = ready;
             Number = number;
@@ -31,10 +36,12 @@ namespace SpiritMovers.Session
             serializer.SerializeValue(ref Ready);
             serializer.SerializeValue(ref Number);
             serializer.SerializeValue(ref Name);
+            serializer.SerializeValue(ref VoiceId);
         }
 
         public bool Equals(LobbyMember other) =>
-            ClientId == other.ClientId && Ready == other.Ready && Number == other.Number && Name.Equals(other.Name);
+            ClientId == other.ClientId && Ready == other.Ready && Number == other.Number && Name.Equals(other.Name) &&
+            VoiceId.Equals(other.VoiceId);
     }
 
     /// <summary>
@@ -67,10 +74,40 @@ namespace SpiritMovers.Session
         public bool IsCountingDown => m_CountdownEndsAt.Value >= 0d;
         public float SecondsLeft => IsCountingDown ? (float)Math.Max(0d, m_CountdownEndsAt.Value - NetworkManager.ServerTime.Time) : 0f;
 
+        private static readonly List<LobbyMember> s_Roster = new();
+
+        /// <summary>
+        /// Everyone in the room as last seen in the van, kept on every machine for the job scene (the van scene is gone
+        /// by then): names for voice chat and the player list. Cleared on the main menu.
+        /// </summary>
+        public static IReadOnlyList<LobbyMember> Roster => s_Roster;
+
+        public static void ClearRoster() => s_Roster.Clear();
+
+        /// <summary>The name for a voice id ("" if unknown or unnamed).</summary>
+        public static string NameForVoice(string voiceId)
+        {
+            foreach (var member in s_Roster)
+                if (!member.VoiceId.IsEmpty && member.VoiceId.ToString() == voiceId)
+                    return member.Name.IsEmpty ? "" : member.Name.ToString();
+            return "";
+        }
+
+        internal static void AddToRosterForTest(LobbyMember member) => s_Roster.Add(member);
+
         private void Awake() => m_Members = new NetworkList<LobbyMember>();
+
+        private void CopyRoster()
+        {
+            s_Roster.Clear();
+            foreach (var member in m_Members)
+                s_Roster.Add(member);
+        }
 
         public override void OnNetworkSpawn()
         {
+            m_Members.OnListChanged += _ => CopyRoster();
+            CopyRoster();
             if (!IsServer)
                 return;
             foreach (var id in NetworkManager.ConnectedClientsIds)
@@ -143,7 +180,7 @@ namespace SpiritMovers.Session
                 return;
             var taken = Members.Select(m => m.Number).ToHashSet();
             var number = Enumerable.Range(1, SessionRules.MaxPlayers + 1).First(n => !taken.Contains(n));
-            m_Members.Add(new LobbyMember(clientId, false, number, LobbyGate.NameFor(clientId)));
+            m_Members.Add(new LobbyMember(clientId, false, number, LobbyGate.NameFor(clientId), LobbyGate.VoiceIdFor(clientId)));
             Cancel("a player joined");
         }
 

@@ -13,7 +13,8 @@
         "Unity.ResourceManager",
         "SpiritMovers.Net",
         "Unity.Services.Multiplayer",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "Unity.Collections"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

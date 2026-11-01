@@ -52,6 +52,8 @@ namespace SpiritMovers.Session
 
         public NetworkManager Network => m_Network;
         public string JoinCode { get; private set; }
+        /// <summary>Our UGS player id in an online room ("" when solo or not in a room) — voice knows us by it.</summary>
+        public string PlayerId => IsSolo || JoinCode == null ? "" : Service.PlayerId ?? "";
         public bool IsSolo { get; private set; }
 
         /// <summary>
@@ -255,10 +257,11 @@ namespace SpiritMovers.Session
             m_Joining = true;
             m_Refusal = null;
             m_StartedThisAttempt = false;
-            SetVersionPayload();
             try
             {
                 await Service.InitializeAsync(Save.DataLocation.DevProfile);
+                // After signing in, so the payload carries our player id for voice chat (M4C).
+                SetVersionPayload(Service.PlayerId);
                 await Service.JoinAsync(code, Bootstrap.Version);
                 JoinCode = code;
                 IsSolo = false;
@@ -313,9 +316,9 @@ namespace SpiritMovers.Session
         }
 
         /// <summary>Our game version goes with the connection request; the host's LobbyGate checks it (TECHNICAL_DESIGN 7).</summary>
-        private void SetVersionPayload() =>
+        private void SetVersionPayload(string voiceId = "") =>
             m_Network.NetworkConfig.ConnectionData = System.Text.Encoding.UTF8.GetBytes(
-                ConnectionPayload.Write(Bootstrap.Version.ToString(), Save.GameData.PlayerName));
+                ConnectionPayload.Write(Bootstrap.Version.ToString(), Save.GameData.PlayerName, voiceId));
 
         /// <summary>Host: the lobby countdown ended and the job scene is about to load.</summary>
         public void MarkLoading() => m_Loading = true;

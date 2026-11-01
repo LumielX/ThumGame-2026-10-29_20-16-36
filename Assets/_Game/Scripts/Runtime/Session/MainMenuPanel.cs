@@ -50,6 +50,7 @@ namespace SpiritMovers.Session
         {
             ThaiFontSupport.Register(m_Font, m_GlyphMap);
             GameCursor.Capture(false);
+            LobbyState.ClearRoster();
             m_Session = GameSession.Instance;
             if (m_Session != null)
                 m_Session.Failed += OnFailed;

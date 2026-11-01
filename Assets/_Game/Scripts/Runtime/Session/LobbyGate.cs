@@ -15,6 +15,7 @@ namespace SpiritMovers.Session
     {
         /// <summary>Host: the names joining players sent (cleaned), by client id.</summary>
         private static readonly Dictionary<ulong, string> s_Names = new();
+        private static readonly Dictionary<ulong, string> s_VoiceIds = new();
 
         private NetworkManager m_Network;
 
@@ -23,11 +24,17 @@ namespace SpiritMovers.Session
             m_Network = GetComponent<NetworkManager>();
             m_Network.ConnectionApprovalCallback = Approve;
             m_Network.OnServerStarted += s_Names.Clear;
+            m_Network.OnServerStarted += s_VoiceIds.Clear;
         }
 
         /// <summary>Host: the name to show for a player — the host's own from its save, "" if a client sent none.</summary>
         internal static string NameFor(ulong clientId) =>
             clientId == NetworkManager.ServerClientId ? GameData.PlayerName : s_Names.TryGetValue(clientId, out var name) ? name : "";
+
+        /// <summary>Host: a player's voice id — the host's own from its session, "" if a client sent none.</summary>
+        internal static string VoiceIdFor(ulong clientId) =>
+            clientId == NetworkManager.ServerClientId ? GameSession.Instance?.PlayerId ?? ""
+            : s_VoiceIds.TryGetValue(clientId, out var id) ? id : "";
 
         internal void Approve(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response)
         {
@@ -35,8 +42,11 @@ namespace SpiritMovers.Session
             // The host itself connects with an empty payload; everyone else sends their game version (TECHNICAL_DESIGN 7).
             var isHost = request.ClientNetworkId == NetworkManager.ServerClientId;
             var versionMatches = isHost || VersionMatches(request.Payload, Bootstrap.Version);
-            if (!isHost && ConnectionPayload.TryRead(request.Payload, out _, out var name))
+            if (!isHost && ConnectionPayload.TryRead(request.Payload, out _, out var name, out var voiceId))
+            {
                 s_Names[request.ClientNetworkId] = name;
+                s_VoiceIds[request.ClientNetworkId] = voiceId;
+            }
             var refusal = Decide(phase, m_Network.ConnectedClientsIds.Count, versionMatches);
             response.Approved = refusal == JoinRefusal.None;
             response.CreatePlayerObject = response.Approved;
