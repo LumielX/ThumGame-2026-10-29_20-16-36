@@ -71,6 +71,7 @@ namespace SpiritMovers.Editor
             SetFont(go.AddComponent<SpiritMovers.Voice.VoiceHud>());
             SetFont(go.AddComponent<SpiritMovers.Voice.PlayerVoicePanel>());
             SetFont(go.AddComponent<SpiritMovers.Voice.ChatPanel>());
+            SetFont(go.AddComponent<SpiritMovers.Voice.QuickWheel>());
             var settings = new SerializedObject(go.AddComponent<SpiritMovers.Settings.SettingsHost>());
             settings.FindProperty("m_Actions").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<UnityEngine.InputSystem.InputActionAsset>("Assets/_Game/Settings/Input/SpiritMovers.inputactions");
@@ -119,6 +120,7 @@ namespace SpiritMovers.Editor
                 new GameObject($"PlayerSpawn{i}").transform.SetPositionAndRotation(
                     new Vector3(i % 2 == 0 ? -0.9f : 0.9f, 0f, -2.5f + i / 2 * 1.5f), Quaternion.identity);
             PrefabUtility.InstantiatePrefab(prefabs.LobbyState, scene);
+            PrefabUtility.InstantiatePrefab(prefabs.CommsHub, scene);
             var panel = new SerializedObject(new GameObject("LobbyBoard").AddComponent<LobbyPanel>());
             panel.FindProperty("m_Font").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(TestRoomSetup.FontPath);
             panel.FindProperty("m_GlyphMap").objectReferenceValue = AssetDatabase.LoadAssetAtPath<ThaiGlyphMap>(TestRoomSetup.GlyphMapPath);
@@ -133,6 +135,7 @@ namespace SpiritMovers.Editor
             new GameObject("JobAutoStart").AddComponent<JobAutoStart>();
             new GameObject("JobPay").AddComponent<SpiritMovers.Save.JobPay>();
             new GameObject("RadioListener").AddComponent<SpiritMovers.Voice.RadioListener>();
+            PrefabUtility.InstantiatePrefab(prefabs.CommsHub, scene);
             SetFont(new GameObject("ReturnToLobby").AddComponent<ReturnToLobby>());
             SaveWithSceneIds(scene, JobPath);
         }

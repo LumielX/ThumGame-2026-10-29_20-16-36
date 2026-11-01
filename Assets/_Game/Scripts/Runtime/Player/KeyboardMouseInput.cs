@@ -21,6 +21,9 @@ namespace SpiritMovers.Player
         private readonly InputAction m_Confirm;
         private readonly InputAction m_Pause;
         private readonly InputAction m_Chat;
+        private readonly InputAction m_Ping;
+        private readonly InputAction m_QuickWheel;
+        private readonly InputAction[] m_Quick = new InputAction[6];
         private readonly InputAction m_Talk;
 
         public KeyboardMouseInput(InputActionAsset actions)
@@ -41,10 +44,22 @@ namespace SpiritMovers.Player
             m_Confirm = map.FindAction("Confirm", true);
             m_Pause = map.FindAction("Pause", true);
             m_Chat = map.FindAction("Chat", true);
+            m_Ping = map.FindAction("Ping", true);
+            m_QuickWheel = map.FindAction("QuickWheel", true);
+            for (var i = 0; i < m_Quick.Length; i++)
+                m_Quick[i] = map.FindAction($"Quick{i + 1}", true);
             map.Enable();
             var voice = actions.FindActionMap("Voice", true);
             m_Talk = voice.FindAction("PushToTalk", true);
             voice.Enable();
+        }
+
+        private int QuickKey()
+        {
+            for (var i = 0; i < m_Quick.Length; i++)
+                if (m_Quick[i].WasPressedThisFrame())
+                    return i + 1;
+            return 0;
         }
 
         public PlayerInputState Read()
@@ -69,6 +84,9 @@ namespace SpiritMovers.Player
                 ConfirmPressed = m_Confirm.WasPressedThisFrame(),
                 PausePressed = m_Pause.WasPressedThisFrame(),
                 ChatPressed = m_Chat.WasPressedThisFrame(),
+                PingPressed = m_Ping.WasPressedThisFrame(),
+                QuickWheelHeld = m_QuickWheel.IsPressed(),
+                QuickPressed = QuickKey(),
                 TalkHeld = m_Talk.IsPressed(),
             };
         }

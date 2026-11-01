@@ -30,6 +30,12 @@ namespace SpiritMovers.Player
         public bool PausePressed;
         /// <summary>Open the chat field (M4C).</summary>
         public bool ChatPressed;
+        /// <summary>Mark where we look (M4C).</summary>
+        public bool PingPressed;
+        /// <summary>The quick-message wheel is held open (M4C).</summary>
+        public bool QuickWheelHeld;
+        /// <summary>A quick-message number key, 1–6 (0 = none).</summary>
+        public int QuickPressed;
         /// <summary>Push-to-talk held (voice chat, M4C).</summary>
         public bool TalkHeld;
     }
@@ -58,6 +64,8 @@ namespace SpiritMovers.Player
             Next.ConfirmPressed = false;
             Next.PausePressed = false;
             Next.ChatPressed = false;
+            Next.PingPressed = false;
+            Next.QuickPressed = 0;
             return state;
         }
     }

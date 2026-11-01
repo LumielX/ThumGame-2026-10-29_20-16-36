@@ -535,6 +535,38 @@ MonoBehaviour:
     m_Key: action.chat
     m_Metadata:
       m_Items: []
+  - m_Id: 453947320725504
+    m_Key: action.ping
+    m_Metadata:
+      m_Items: []
+  - m_Id: 453947366862848
+    m_Key: action.quick_wheel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 453947366862849
+    m_Key: quick.need_hands
+    m_Metadata:
+      m_Items: []
+  - m_Id: 453947366862850
+    m_Key: quick.ghost_here
+    m_Metadata:
+      m_Items: []
+  - m_Id: 453947366862851
+    m_Key: quick.watch
+    m_Metadata:
+      m_Items: []
+  - m_Id: 453947366862852
+    m_Key: quick.to_van
+    m_Metadata:
+      m_Items: []
+  - m_Id: 453947366862853
+    m_Key: quick.okay
+    m_Metadata:
+      m_Items: []
+  - m_Id: 453947366862854
+    m_Key: quick.no
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

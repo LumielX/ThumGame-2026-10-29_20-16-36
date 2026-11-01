@@ -22,6 +22,7 @@ GameObject:
   - component: {fileID: 7435839252176358714}
   - component: {fileID: 6049545630330540823}
   - component: {fileID: 3452253530809550292}
+  - component: {fileID: 5379986652548409944}
   - component: {fileID: 3071514040948534894}
   m_Layer: 0
   m_Name: GameNetwork
@@ -133,7 +134,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Multiplayer.Tools.NetworkSimulator.Runtime::Unity.Multiplayer.Tools.NetworkSimulator.Runtime.NetworkSimulator
   m_PresetAsset: {fileID: 0}
   m_PresetReference:
-    rid: 5115185407811387392
+    rid: 5115185407958712320
   m_Scenario:
     rid: -2
   m_IsScenarioSettingsFolded: 0
@@ -143,7 +144,7 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 5115185407811387392
+    - rid: 5115185407958712320
       type: {class: NetworkSimulatorPreset, ns: Unity.Multiplayer.Tools.NetworkSimulator.Runtime, asm: Unity.Multiplayer.Tools.NetworkSimulator.Runtime}
       data:
         <Name>k__BackingField: 
@@ -284,6 +285,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 43a8172f29c3da44a8f9d2b0633d9eb9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SpiritMovers.Runtime::SpiritMovers.Voice.ChatPanel
+  m_Font: {fileID: 11400000, guid: 65a822db624332f40a59f21d4c31acb2, type: 2}
+  m_GlyphMap: {fileID: 11400000, guid: e7d66ad960549204085d8f0835160c66, type: 2}
+--- !u!114 &5379986652548409944
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 612032786755669571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c736a6d98243ecb41af9dc892a8db2c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpiritMovers.Runtime::SpiritMovers.Voice.QuickWheel
   m_Font: {fileID: 11400000, guid: 65a822db624332f40a59f21d4c31acb2, type: 2}
   m_GlyphMap: {fileID: 11400000, guid: e7d66ad960549204085d8f0835160c66, type: 2}
 --- !u!114 &3071514040948534894

@@ -189,6 +189,9 @@ namespace SpiritMovers.Player
             SetPitch(m_Pitch - (settings.invertY ? -delta.y : delta.y) * sensitivity);
         }
 
+        /// <summary>Test hook: look up or down (degrees, down is positive).</summary>
+        internal void SetPitchForTest(float pitch) => SetPitch(pitch);
+
         private void SetPitch(float pitch)
         {
             m_Pitch = Mathf.Clamp(pitch, -85f, 85f);

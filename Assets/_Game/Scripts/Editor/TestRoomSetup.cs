@@ -42,7 +42,7 @@ namespace SpiritMovers.Editor
 
         internal struct Prefabs
         {
-            public GameObject Player, LightBox, HeavyCrate, JobDirector, GhostBell, Van, Ghost, Cabinet, SpiritCamera, Walkie, LobbyState;
+            public GameObject Player, LightBox, HeavyCrate, JobDirector, GhostBell, Van, Ghost, Cabinet, SpiritCamera, Walkie, LobbyState, CommsHub;
             public NetworkPrefabsList List;
         }
 
@@ -65,8 +65,9 @@ namespace SpiritMovers.Editor
             result.Walkie = CreateCarryablePrefab(PrefabDir + "/Walkie.prefab", "Walkie",
                 new Vector3(0.08f, 0.22f, 0.06f), 0.6f, new Color(0.22f, 0.32f, 0.2f), typeof(SpiritMovers.Voice.Walkie));
             result.LobbyState = CreateLobbyStatePrefab();
+            result.CommsHub = CreateCommsHubPrefab();
             result.List = CreatePrefabList(result.Player, result.LightBox, result.HeavyCrate, result.JobDirector, result.GhostBell,
-                result.Van, result.Ghost, result.Cabinet, result.SpiritCamera, result.Walkie, result.LobbyState);
+                result.Van, result.Ghost, result.Cabinet, result.SpiritCamera, result.Walkie, result.LobbyState, result.CommsHub);
             return result;
         }
 
@@ -413,6 +414,39 @@ namespace SpiritMovers.Editor
         }
 
         /// <summary>The van's networked state (an in-scene NetworkObject must be a registered prefab instance).</summary>
+        /// <summary>Pings and quick messages (M4C): a scene object in the van and the house, with its marker prefab.</summary>
+        private static GameObject CreateCommsHubPrefab()
+        {
+            var marker = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            marker.name = "PingMarker";
+            Object.DestroyImmediate(marker.GetComponent<Collider>());
+            marker.transform.localScale = Vector3.one * 0.3f;
+            marker.GetComponent<Renderer>().sharedMaterial = LitMaterial(PrefabDir + "/PingMarker.mat", new Color(1f, 0.65f, 0.15f));
+            var label = new GameObject("Label").AddComponent<TMPro.TextMeshPro>();
+            label.transform.SetParent(marker.transform, false);
+            label.transform.localPosition = new Vector3(0f, 1.6f, 0f);
+            label.transform.localScale = Vector3.one * 3.3f; // undo the sphere's 0.3 scale
+            label.font = AssetDatabase.LoadAssetAtPath<TMPro.TMP_FontAsset>(FontPath);
+            label.fontSize = 2f;
+            label.alignment = TMPro.TextAlignmentOptions.Center;
+            label.color = new Color(1f, 0.9f, 0.7f);
+            var view = marker.AddComponent<SpiritMovers.Voice.PingMarker>();
+            var markerSo = new SerializedObject(view);
+            markerSo.FindProperty("m_Label").objectReferenceValue = label;
+            markerSo.ApplyModifiedPropertiesWithoutUndo();
+            var markerPrefab = PrefabUtility.SaveAsPrefabAsset(marker, PrefabDir + "/PingMarker.prefab");
+            Object.DestroyImmediate(marker);
+
+            var go = new GameObject("CommsHub");
+            go.AddComponent<NetworkObject>();
+            var hub = new SerializedObject(go.AddComponent<SpiritMovers.Voice.CommsHub>());
+            hub.FindProperty("m_MarkerPrefab").objectReferenceValue = markerPrefab;
+            hub.ApplyModifiedPropertiesWithoutUndo();
+            var prefab = PrefabUtility.SaveAsPrefabAsset(go, PrefabDir + "/CommsHub.prefab");
+            Object.DestroyImmediate(go);
+            return prefab;
+        }
+
         private static GameObject CreateLobbyStatePrefab()
         {
             var go = new GameObject("LobbyState");
